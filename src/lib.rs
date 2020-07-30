@@ -12,6 +12,7 @@ extern crate cgmath;
 pub mod ray;
 pub mod geometry;
 pub mod math;
+pub mod tracer;
 pub mod utils;
 pub mod output;
 pub mod world;
