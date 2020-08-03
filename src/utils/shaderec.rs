@@ -6,7 +6,7 @@ use std::option::Option;
 use crate::ray::Ray;
 use crate::world::world::World;
 use std::sync::Arc;
-use crate::utils::color::Color;
+use crate::utils::color::Colorf;
 use std::f32::INFINITY;
 
 #[derive(Clone, Copy, Debug)]
@@ -17,7 +17,7 @@ pub struct ShadeRec<'a>
     pub m_hitpoint: Vector3<f32>,
     pub m_ray: Ray,
     pub m_worldref: &'a World,
-    pub m_color: Color,
+    pub m_color: Colorf,
     pub m_time: f32,
     pub m_depth: u16
 }
@@ -33,7 +33,7 @@ impl<'a> ShadeRec<'a>
             m_ray: Ray::new(Vector3::new(0.0, 0.0, 0.0),
                             Vector3::new(0.0, 0.0, 0.0)),
             m_worldref: worldref,
-            m_color: Color::new(0.0, 0.0, 0.0),
+            m_color: Colorf::new(0.0, 0.0, 0.0),
             m_time: INFINITY,
             m_depth: 0,
         }

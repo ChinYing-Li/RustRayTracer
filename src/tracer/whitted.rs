@@ -1,5 +1,5 @@
 use crate::ray::Ray;
-use crate::utils::color::Color;
+use crate::utils::color::{Colorf};
 use crate::world::world::World;
 use std::sync::Arc;
 use crate::tracer::Tracer;
@@ -17,11 +17,11 @@ impl Whitted
 
 impl Tracer for Whitted
 {
-    fn traceRay(&self, world: &World, ray: &Ray, currentdepth: u16) -> Color
+    fn traceRay(&self, world: &World, ray: &Ray, currentdepth: u16) -> Colorf
     {
         if currentdepth > world.m_viewplaneptr.m_maxdepth
         {
-            Color::new(0.0, 0.0, 0.0)
+            Colorf::new(0.0, 0.0, 0.0)
         }
         else
         {

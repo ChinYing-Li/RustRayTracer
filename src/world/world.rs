@@ -1,9 +1,8 @@
 use std::sync::Arc;
-use std::cell::Cell;
 use cgmath::{Vector2, Vector3};
-use std::{f32, f32::INFINITY};
+use std::{f32};
 
-use crate::utils::color::Color;
+use crate::utils::color::Colorf;
 use crate::world::viewplane::ViewPlane;
 use crate::output::OutputManager;
 use crate::utils::shaderec::ShadeRec;
@@ -14,7 +13,7 @@ use crate::tracer::Tracer;
 #[derive(Debug)]
 pub struct World
 {
-    pub m_backgroundcolor: Color,
+    pub m_backgroundcolor: Colorf,
     pub m_viewplaneptr: Box<ViewPlane>,
     pub m_objects: Vec<Arc<dyn Geometry>>,
     pub m_tracerptr: Box<dyn Tracer>,
@@ -26,14 +25,14 @@ impl World
     {
         World
         {
-            m_backgroundcolor: Color::new(0.0, 0.0, 0.0),
+            m_backgroundcolor: Colorf::new(0.0, 0.0, 0.0),
             m_viewplaneptr: viewplane,
             m_objects: Vec::new(),
             m_tracerptr: tracer,
         }
     }
 
-    pub fn setBackgroundColor(&mut self, newColor: Color)
+    pub fn setBackgroundColor(&mut self, newColor: Colorf)
     {
         self.m_backgroundcolor = newColor;
     }
@@ -101,7 +100,7 @@ impl World
         let zdepth = 100.0;
         let mut ray = Ray::new(Vector3::new(0.0, 0.0, -1.0),
                                 Vector3::new(0.0, 0.0, 0.0));
-        let mut pixcolor = Color::new(0.0, 0.0, 0.0);
+        let mut pixcolor = Colorf::new(0.0, 0.0, 0.0);
         let mut samplecoord = Vector2::new(0.0, 0.0);
 
         for i in 0..self.m_viewplaneptr.m_hres
@@ -121,7 +120,7 @@ impl World
         }
     }
 
-    pub fn writePixel(rownum: i32, colnum:i32, color: Color, opmanager: Arc<dyn OutputManager>)
+    pub fn writePixel(rownum: i32, colnum:i32, color: Colorf, opmanager: Arc<dyn OutputManager>)
     {
 
     }
@@ -150,9 +149,11 @@ mod WorldTest
 #[cfg(test)]
 mod WorldSphereTest
 {
+    use cgmath::Vector3;
+    use std::f32::INFINITY;
+
     use super::*;
     use crate::geometry::sphere::Sphere;
-    use cgmath::Vector3;
     use crate::ray::Ray;
     use crate::utils::shaderec::ShadeRec;
     use crate::world::world::World;
@@ -161,7 +162,7 @@ mod WorldSphereTest
     #[test]
     fn checkHitSingleSphere()
     {
-        let sphere = Sphere::new(5.0, Vector3::new(0.0, 0.0, 0.0), Color::new(1.0, 0.0, 0.0));
+        let sphere = Sphere::new(5.0, Vector3::new(0.0, 0.0, 0.0), Colorf::new(1.0, 0.0, 0.0));
         let boxedtracer = Box::new(Whitted::new());
         let boxedvp = Box::new(ViewPlane::new());
         let mut world = World::new(boxedvp, boxedtracer);
@@ -179,7 +180,7 @@ mod WorldSphereTest
     #[test]
     fn checkNoHit()
     {
-        let sphere = Sphere::new(5.0, Vector3::new(0.0, 0.0, 0.0), Color::new(0.0, 0.0, 1.0));
+        let sphere = Sphere::new(5.0, Vector3::new(0.0, 0.0, 0.0), Colorf::new(0.0, 0.0, 1.0));
         let mut ray = Ray::new(Vector3::new(7.0, 0.5, 0.0), Vector3::new(-3.0, 3.0, 0.0));
         let boxedtracer = Box::new(Whitted::new());
         let boxedvp = Box::new(ViewPlane::new());

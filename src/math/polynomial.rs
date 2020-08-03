@@ -20,6 +20,8 @@ pub fn getQuadraticPolyRoot(quadterm: f32, linearterm: f32, constant: f32) -> [O
 mod PolynomialTest
 {
     use super::*;
+    use approx::{assert_relative_eq};
+    use std::f32;
 
     #[test]
     fn checkTwoRoots()
@@ -28,7 +30,8 @@ mod PolynomialTest
         let lt = 3.0;
         let cons = -2.0;
         let res = getQuadraticPolyRoot(qt, lt, cons);
-        assert_eq!(res, [Some(-1.0), Some(0.4)]);
+        assert_relative_eq!(res[0].unwrap(), -1.0, epsilon=f32::EPSILON);
+        assert_relative_eq!(res[1].unwrap(), 0.4, epsilon=f32::EPSILON);
     }
 
     #[test]

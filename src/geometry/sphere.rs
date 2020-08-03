@@ -7,21 +7,21 @@ use crate::ray::Ray;
 use crate::utils::shaderec::ShadeRec;
 use crate::math::polynomial::*;
 use std::fmt;
-use crate::utils::color::Color;
+use crate::utils::color::Colorf;
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct Sphere
 {
     m_radius: f32,
     m_center: Vector3<f32>,
-    m_color: Color,
+    m_color: Colorf,
 }
 
 impl Sphere
 {
     const KEPSILON: f32 = 0.0001;
 
-    pub fn new(radius: f32, center: Vector3<f32>, color: Color) -> Sphere
+    pub fn new(radius: f32, center: Vector3<f32>, color: Colorf) -> Sphere
     {
         Sphere{m_radius: radius, m_center: center, m_color: color}
     }
@@ -76,5 +76,5 @@ impl Geometry for Sphere
         res
     }
 
-    fn getColor(&self) -> Color { self.m_color }
+    fn getColor(&self) -> Colorf { self.m_color }
 }
