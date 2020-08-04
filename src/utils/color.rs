@@ -179,13 +179,14 @@ mod ColorTest
         assert_relative_eq!(lhs, rhs);
     }
 
-    //#[test]
+    #[test]
     fn Mulf32ClampedTest()
     {
         let mut lhs = Colorf::new(0.5, 0.6, 0.7);
         lhs *= 1.5;
         assert_relative_eq!(lhs, Colorf::new(0.75, 0.9, 1.0));
-    }*/
+    }
+    */
 
     #[test]
     fn AddAssignTest()

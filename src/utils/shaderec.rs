@@ -1,4 +1,3 @@
-use cgmath::prelude::*;
 use cgmath::Vector3;
 use std::{f32};
 use std::option::Option;

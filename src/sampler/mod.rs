@@ -1,4 +1,4 @@
-pub mod Jittered;
+pub mod jittered;
 
 use cgmath::Vector2;
 use std::{f32, f32::consts::PI};

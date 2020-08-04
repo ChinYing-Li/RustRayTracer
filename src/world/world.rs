@@ -95,14 +95,13 @@ impl World
         sr
     }
 
-    pub fn renderScence(&self)
+    pub fn renderScene(&self, output: Box<dyn OutputManager>)
     {
         let zdepth = 100.0;
         let mut ray = Ray::new(Vector3::new(0.0, 0.0, -1.0),
                                 Vector3::new(0.0, 0.0, 0.0));
         let mut pixcolor = Colorf::new(0.0, 0.0, 0.0);
-        let mut samplecoord = Vector2::new(0.0, 0.0);
-
+        let mut out = output;
         for i in 0..self.m_viewplaneptr.m_hres
         {
             for j in 0..self.m_viewplaneptr.m_vres
@@ -111,6 +110,7 @@ impl World
                 {
                     ray.m_origin = Vector3::new(coord[0], coord[1], zdepth);
                     pixcolor = self.m_tracerptr.traceRay(&self, &ray, 0); // Not yet implemented tracer!!!
+                    (*out).writePixel(i.into(), j.into(), pixcolor);
                 }
                 else
                 {
@@ -118,11 +118,6 @@ impl World
                 }
             }
         }
-    }
-
-    pub fn writePixel(rownum: i32, colnum:i32, color: Colorf, opmanager: Arc<dyn OutputManager>)
-    {
-
     }
 }
 
@@ -168,8 +163,8 @@ mod WorldSphereTest
         let mut world = World::new(boxedvp, boxedtracer);
         world.addObject(Arc::new(sphere));
 
-        let mut ray = Ray::new(Vector3::new(10.0, 3.0, 0.0),
-                               Vector3::new(-1.0, 0.0, 0.0));
+        let mut ray = Ray::new( Vector3::new(10.0, 3.0, 0.0),
+                                Vector3::new(-1.0, 0.0, 0.0));
         let mut shaderecord = world.hitObjects(&mut ray, INFINITY);
 
         assert!(shaderecord.m_ishitting);

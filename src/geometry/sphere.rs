@@ -35,6 +35,8 @@ impl Sphere
     {
         self.m_center = newcenter;
     }
+
+    pub fn setColor(&mut self, newcolor: Colorf) { self.m_color = newcolor; }
 }
 
 impl fmt::Debug for Sphere

@@ -4,5 +4,6 @@ pub mod imagewriter;
 
 pub trait OutputManager
 {
-    fn writePixel(&self, x: i32, y: i32, colorf: Colorf);
+    fn writePixel(&mut self, x: u32, y: u32, colorf: Colorf);
+    fn output(&self);
 }
