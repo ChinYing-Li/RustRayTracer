@@ -23,7 +23,7 @@ pub struct ShadeRec<'a>
 
 impl<'a> ShadeRec<'a>
 {
-    pub fn new(worldref: &'a World) -> ShadeRec
+    pub fn new(worldref: &'a World) -> ShadeRec<'a>
     {
         ShadeRec{
             m_ishitting: false,

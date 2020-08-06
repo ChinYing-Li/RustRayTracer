@@ -75,7 +75,7 @@ fn MapSampleToDisk(samplecore: &mut SamplerCore) -> Vec<Vector2<f32>>
         }
 
         phi *= PI / 4.0;
-        diskpattern[i as usize] = Vector2::new(radius*phi.cos(), radius*phi.sin());
+        diskpattern.push(Vector2::new(radius*phi.cos(), radius*phi.sin()));
     }
     diskpattern
 }

@@ -6,7 +6,7 @@ use crate::utils::shaderec::ShadeRec;
 
 const INV_PI: f32 = 1.0 / PI;
 
-struct Lambertian
+pub struct Lambertian
 {
     m_kd: f32,
     m_colord: Colorf,

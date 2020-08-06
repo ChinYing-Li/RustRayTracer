@@ -6,7 +6,7 @@ use std::f32::consts::PI;
 
 const INV_PI: f32 = 1.0 / PI;
 
-struct GlossySpecular
+pub struct GlossySpecular
 {
     m_kd: f32,
     m_colord: Colorf,

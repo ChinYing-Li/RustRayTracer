@@ -9,6 +9,9 @@ use crate::utils::shaderec::ShadeRec;
 use crate::ray::Ray;
 use crate::geometry::Geometry;
 use crate::tracer::Tracer;
+use crate::light::ambient::Ambient;
+use crate::light::Light;
+use std::ptr::null;
 
 #[derive(Debug)]
 pub struct World
@@ -17,6 +20,8 @@ pub struct World
     pub m_viewplaneptr: Box<ViewPlane>,
     pub m_objects: Vec<Arc<dyn Geometry>>,
     pub m_tracerptr: Box<dyn Tracer>,
+    pub m_ambientlight: Arc<Ambient>,
+    pub m_lights: Vec<Arc<dyn Light<'static>>>
 }
 
 impl World
@@ -29,6 +34,8 @@ impl World
             m_viewplaneptr: viewplane,
             m_objects: Vec::new(),
             m_tracerptr: tracer,
+            m_ambientlight: Arc::new(Ambient::new(Colorf::new(1.0 , 1.0, 1.0))),
+            m_lights: Vec::with_capacity(30)
         }
     }
 
@@ -39,7 +46,7 @@ impl World
 
     pub fn build(&mut self)
     {
-
+        // Not following the book
     }
 
     pub fn addObject(&mut self, object: Arc<dyn Geometry>)
@@ -50,6 +57,16 @@ impl World
     pub fn removeObject(&mut self, index: usize)
     {
         self.m_objects.remove(index);
+    }
+
+    pub fn removeLight(&mut self, index: usize)
+    {
+        self.m_lights.remove(index);
+    }
+
+    pub fn setAmbient(&mut self, ambient: Arc<Ambient>)
+    {
+        self.m_ambientlight = ambient;
     }
 
     pub fn hitObjects<'a>(&'a self, ray: &'a mut Ray, tmin: f32) -> ShadeRec<'a>
