@@ -1,9 +1,8 @@
+use std::fmt;
 use cgmath::prelude::*;
 
-use crate::ray::Ray;
-use crate::utils::shaderec::ShadeRec;
-use std::fmt;
-use crate::utils::color::Colorf;
+use crate::{ray::Ray,
+            utils::{shaderec::ShadeRec, color::Colorf}};
 
 pub mod sphere;
 

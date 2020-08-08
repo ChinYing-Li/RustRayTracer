@@ -1,4 +1,4 @@
-use cgmath::{Vector3, InnerSpace, dot, ElementWise, Zero};
+use cgmath::{Vector3, InnerSpace, dot, ElementWise, Zero, Vector2};
 use std::{f32};
 use crate::world::world::World;
 use crate::camera::pinhole::Pinhole;
@@ -52,7 +52,8 @@ impl CamStruct
 
 pub trait Camera
 {
-    fn renderScene(&mut self, worldref: &World);
+    fn getRayDirection(&self, vp_coords: Vector2<f32>) -> Vector3<f32>;
+    fn renderScene(&mut self, worldref: &mut World, zoom: f32);
 }
 
 pub mod pinhole;

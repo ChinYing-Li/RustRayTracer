@@ -1,16 +1,17 @@
 use cgmath::prelude::*;
 
 use std::{f32, convert::{From, Into}};
-use std::ops::{Add, Mul, Div, Sub, MulAssign, AddAssign, SubAssign};
+use std::ops::{Add, Mul, Div, Sub, MulAssign, AddAssign, SubAssign, DivAssign};
+use approx::{RelativeEq, AbsDiffEq};
 
 const INV_255 : f32 = 1.0 / 255.0;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Colorf
 {
-    m_r: f32,
-    m_g: f32,
-    m_b: f32,
+    pub m_r: f32,
+    pub m_g: f32,
+    pub m_b: f32,
 }
 
 // Colorf values are float numbers within the range [0.0, 1.0]
@@ -100,6 +101,16 @@ impl Div<f32> for Colorf
     {
         let res = Colorf{ m_r: self.m_r/rhs, m_g: self.m_g/rhs, m_b: self.m_b/rhs};
         res.clamp()
+    }
+}
+
+impl DivAssign<f32> for Colorf
+{
+    /// Divide and assign color by a scalar
+    fn div_assign(&mut self, rhs: f32) {
+        self.m_r *= rhs;
+        self.m_g *= rhs;
+        self.m_b *= rhs;
     }
 }
 

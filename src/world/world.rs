@@ -21,12 +21,13 @@ pub struct World
     pub m_objects: Vec<Arc<dyn Geometry>>,
     pub m_tracerptr: Box<dyn Tracer>,
     pub m_ambientlight: Arc<Ambient>,
-    pub m_lights: Vec<Arc<dyn Light<'static>>>
+    pub m_lights: Vec<Arc<dyn Light<'static>>>,
+    m_outputmgr: Box<dyn OutputManager<'static>>,
 }
 
 impl World
 {
-    pub fn new(viewplane: Box<ViewPlane>, tracer: Box<dyn Tracer>) -> World
+    pub fn new(viewplane: Box<ViewPlane>, tracer: Box<dyn Tracer>, outmgr: Box<dyn OutputManager<'static>>) -> World
     {
         World
         {
@@ -35,7 +36,8 @@ impl World
             m_objects: Vec::new(),
             m_tracerptr: tracer,
             m_ambientlight: Arc::new(Ambient::new(Colorf::new(1.0 , 1.0, 1.0))),
-            m_lights: Vec::with_capacity(30)
+            m_lights: Vec::with_capacity(30),
+            m_outputmgr: outmgr,
         }
     }
 
@@ -69,7 +71,14 @@ impl World
         self.m_ambientlight = ambient;
     }
 
-    pub fn hitObjects<'a>(&'a self, ray: &'a mut Ray, tmin: f32) -> ShadeRec<'a>
+    pub fn writePixel(&mut self, x: u32, y: u32, color: Colorf)
+    {
+        self.m_outputmgr.writePixel(x, y, color);
+    }
+
+    pub fn output(&mut self) { self.m_outputmgr.output(); }
+
+    pub fn hitObjects<'a>(&'a self, ray: &'a Ray, tmin: f32) -> ShadeRec<'a>
     {
         let mut sr = ShadeRec::new(self);
         let srref = &mut sr;
@@ -170,6 +179,8 @@ mod WorldSphereTest
     use crate::utils::shaderec::ShadeRec;
     use crate::world::world::World;
     use crate::tracer::whitted::Whitted;
+    use crate::utils::colorconstant::COLOR_BLUE;
+    use crate::output::imagewriter::ImageWriter;
 
     #[test]
     fn checkHitSingleSphere()
@@ -177,12 +188,15 @@ mod WorldSphereTest
         let sphere = Sphere::new(5.0, Vector3::new(0.0, 0.0, 0.0), Colorf::new(1.0, 0.0, 0.0));
         let boxedtracer = Box::new(Whitted::new());
         let boxedvp = Box::new(ViewPlane::new());
-        let mut world = World::new(boxedvp, boxedtracer);
+
+        let imgwriter = Box::new(ImageWriter::new("dummy", 100, 100));
+        let mut world = World::new(boxedvp, boxedtracer, imgwriter);
+
         world.addObject(Arc::new(sphere));
 
         let mut ray = Ray::new( Vector3::new(10.0, 3.0, 0.0),
                                 Vector3::new(-1.0, 0.0, 0.0));
-        let mut shaderecord = world.hitObjects(&mut ray, INFINITY);
+        let mut shaderecord = world.hitObjects(&ray, INFINITY);
 
         assert!(shaderecord.m_ishitting);
         assert_eq!(shaderecord.m_time, 6.0);
@@ -192,14 +206,18 @@ mod WorldSphereTest
     #[test]
     fn checkNoHit()
     {
-        let sphere = Sphere::new(5.0, Vector3::new(0.0, 0.0, 0.0), Colorf::new(0.0, 0.0, 1.0));
+        let sphere = Sphere::new(5.0, Vector3::new(0.0, 0.0, 0.0), COLOR_BLUE);
         let mut ray = Ray::new(Vector3::new(7.0, 0.5, 0.0), Vector3::new(-3.0, 3.0, 0.0));
+
         let boxedtracer = Box::new(Whitted::new());
         let boxedvp = Box::new(ViewPlane::new());
-        let world = World::new(boxedvp, boxedtracer);
+
+        let imgwriter = Box::new(ImageWriter::new("dummy", 100, 100));
+
+        let mut world = World::new(boxedvp, boxedtracer, imgwriter);
         let mut shaderecord = ShadeRec::new(&world);
         let mut tmin = 100.0;
-        let res = sphere.hit(&mut ray, &mut tmin, &mut shaderecord);
+        let res = sphere.hit(&ray, &mut tmin, &mut shaderecord);
         assert!(!res);
     }
 }
