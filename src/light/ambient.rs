@@ -29,14 +29,14 @@ impl Ambient
     }
 }
 
-impl Light<'_> for Ambient
+impl Light for Ambient
 {
-    fn getDirection<'a>(&self, sr: &'a mut ShadeRec) -> Vector3<f32>
+    fn getDirection(&self, sr: &mut ShadeRec) -> Vector3<f32>
     {
         Vector3::zero()
     }
 
-    fn L<'a>(&self, sr: &'a mut ShadeRec) -> Colorf
+    fn L(&self, sr: & mut ShadeRec) -> Colorf
     {
         self.m_color * self.m_ls
     }

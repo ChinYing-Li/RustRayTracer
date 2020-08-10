@@ -6,7 +6,6 @@ use crate::utils::shaderec::ShadeRec;
 #[derive(Debug)]
 pub struct PointLight
 {
-
     m_ls: f32, // Radiance scaling factor
     m_color: Colorf,
     m_location: Vector3<f32>
@@ -30,14 +29,14 @@ impl PointLight
     }
 }
 
-impl Light<'_> for PointLight
+impl Light for PointLight
 {
-    fn getDirection<'a>(&self, sr: &'a mut ShadeRec) -> Vector3<f32>
+    fn getDirection(&self, sr: &mut ShadeRec) -> Vector3<f32>
     {
         (self.m_location - sr.m_hitpoint)
     }
 
-    fn L<'a>(&self, sr: &'a mut ShadeRec) -> Colorf
+    fn L(&self, sr: &mut ShadeRec) -> Colorf
     {
         self.m_color * self.m_ls
     }

@@ -7,6 +7,8 @@ use crate::world::world::World;
 use std::sync::Arc;
 use crate::utils::color::Colorf;
 use std::f32::INFINITY;
+use crate::geometry::Geometry;
+use crate::light::Light;
 
 #[derive(Clone, Copy, Debug)]
 pub struct ShadeRec<'a>
@@ -21,9 +23,9 @@ pub struct ShadeRec<'a>
     pub m_depth: u16
 }
 
-impl<'a> ShadeRec<'a>
+impl ShadeRec<'_>
 {
-    pub fn new(worldref: &'a World) -> ShadeRec<'a>
+    pub fn new(worldref: &World) -> ShadeRec
     {
         ShadeRec{
             m_ishitting: false,

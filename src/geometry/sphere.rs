@@ -12,9 +12,9 @@ use crate::utils::color::Colorf;
 #[derive(Clone, Copy, PartialEq)]
 pub struct Sphere
 {
-    m_radius: f32,
-    m_center: Vector3<f32>,
-    m_color: Colorf,
+    pub(crate) m_radius: f32,
+    pub(crate) m_center: Vector3<f32>,
+    pub(crate) m_color: Colorf,
 }
 
 impl Sphere

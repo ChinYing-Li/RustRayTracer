@@ -14,16 +14,16 @@ use raytracer::output::imagewriter::ImageWriter;
 use raytracer::output::OutputManager;
 use raytracer::camera::pinhole::Pinhole;
 use cgmath::num_traits::zero;
+use raytracer::camera::Camera;
 
 fn main()
 {
-    let mut sphereA = Sphere::new(30.0,
+    let mut sphereA = Arc::new(Sphere::new(30.0,
                                   Vector3::new(70.0, 30.0, 20.0),
-                                 Colorf::new(0.0, 1.0, 0.0));
-    sphereA.setColor(Colorf::new(0.5, 0.7, 0.0));
-    let mut sphereB = Sphere::new(30.0,
+                                 Colorf::new(0.0, 1.0, 0.0)));
+    let mut sphereB = Arc::new(Sphere::new(30.0,
                                     Vector3::new(80.0, 90.0, 100.0),
-                                    Colorf::new(1.0, 1.0, 0.0));
+                                    Colorf::new(1.0, 1.0, 0.0)));
 
     let tracer = Box::new(Whitted::new());
 
@@ -34,28 +34,15 @@ fn main()
     let mut imgwriter = Box::new(ImageWriter::new("test.jpg", 100, 100));
     let mut world = World::new(boxed_vp, tracer, imgwriter);
 
-    world.addObject(Arc::new(sphereA));
-    world.addObject(Arc::new(sphereB));
+    world.addObject(sphereA);
+    world.addObject(sphereB);
 
     let eye = Vector3::new(10.0, 20.0, -10.0);
     let lookat = Vector3::new(20.0, 30.0, 100.0);
     let up = Vector3::new(0.0, 1.0, 0.0);
 
-    let ph_camera = Pinhole::new(eye, lookat, up);
+    let mut ph_camera = Pinhole::new(eye, lookat, up);
 
-    let width = 200;
-    let height = 100;
-    let mut r = Ray::new(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
-    let mut shaderecord = world.hitObjects(&mut r, INFINITY);
-    for i in 0..width
-    {
-        for j in 0..height
-        {
-            r.m_origin.x = i as f32;
-            r.m_origin.y = j as f32;
-            shaderecord = world.hitObjects(&mut r, INFINITY);
-            world.writePixel(i, j, shaderecord.m_color);
-        }
-    }
+    ph_camera.renderScene(&mut world, 1.0);
     world.output();
 }

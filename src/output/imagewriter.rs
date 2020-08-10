@@ -13,9 +13,9 @@ pub struct ImageWriter<'a>
     m_imgbuffer: RgbaImage,
 }
 
-impl<'a> ImageWriter<'a>
+impl ImageWriter<'_>
 {
-    pub fn new(imgdst: &'a str, width: u32, height: u32) -> ImageWriter
+    pub fn new<'a>(imgdst: &'a str, width: u32, height: u32) -> ImageWriter
     {
         ImageWriter{ m_imgdst: imgdst,
                     m_imgresolution: Vector2::new(width, height),
@@ -34,7 +34,7 @@ impl fmt::Debug for ImageWriter<'_>
     }
 }
 
-impl OutputManager<'_> for ImageWriter<'_>
+impl OutputManager for ImageWriter<'_>
 {
     fn writePixel(&mut self, x: u32, y: u32, color: Colorf)
     {

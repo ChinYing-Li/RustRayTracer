@@ -30,14 +30,14 @@ impl Directional
     }
 }
 
-impl Light<'_> for Directional
+impl Light for Directional
 {
-    fn getDirection<'a>(&self, sr: &'a mut ShadeRec) -> Vector3<f32>
+    fn getDirection(&self, sr: &mut ShadeRec) -> Vector3<f32>
     {
         self.m_direction
     }
 
-    fn L<'a>(&self, sr: &'a mut ShadeRec) -> Colorf
+    fn L(&self, sr: &mut ShadeRec) -> Colorf
     {
         self.m_color * self.m_ls
     }

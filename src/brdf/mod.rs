@@ -8,8 +8,14 @@ use crate::utils::shaderec::ShadeRec;
 
 pub trait BRDF
 {
+    /// the Bidirectional Reflectance Distribution Function itself
     fn func(&self, sr: &ShadeRec, w_i: Vector3<f32>, w_o: Vector3<f32>) -> Colorf;
+
+    /// For computing the direction of the reflected ray
+    ///
     fn sampleFunc(&self, sr: &ShadeRec, w_i: Vector3<f32>, w_o: Vector3<f32>) -> Colorf;
+
+    /// Reflectance of the material
     fn rho(&self, sr: &ShadeRec, w_o: Vector3<f32>) -> Colorf;
 }
 

@@ -64,10 +64,19 @@ impl Mul for Colorf
 {
     type Output = Colorf;
     /// Multiply two rgb color.
-    fn mul(self, rhs: Colorf) -> Colorf
+    fn mul(self, rhs: Self) -> Colorf
     {
         let res = Colorf{ m_r: self.m_r*rhs.m_r, m_g: self.m_g*rhs.m_g, m_b: self.m_b*rhs.m_b};
         res.clamp()
+    }
+}
+
+impl MulAssign for Colorf
+{
+    fn mul_assign(&mut self, rhs: Self) {
+        self.m_r *= rhs.m_r;
+        self.m_g *= rhs.m_g;
+        self.m_b *= rhs.m_b;
     }
 }
 

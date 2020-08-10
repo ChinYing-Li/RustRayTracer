@@ -60,16 +60,18 @@ mod WhittedTest
         World::new(boxed_vp, tracer, imgwriter)
     }
 
+    const sphereA: Sphere = Sphere
+                            {
+                                m_radius: 30.0,
+                                m_center: Vector3::new(70.0, 30.0, 20.0),
+                                m_color: COLOR_RED
+                                                };
     #[test]
     fn HitOneSphereTest()
     {
         let mut world = setUpDummyWorld();
         world.m_viewplaneptr.m_pixsize = 0.5;
         world.m_viewplaneptr.m_numsample = 3;
-
-        let mut sphereA = Sphere::new(30.0,
-                                      Vector3::new(70.0, 30.0, 20.0),
-                                      COLOR_RED);
         world.addObject(Arc::new(sphereA));
 
         let ray = Ray::new(Vector3::new(50.0, 30.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
@@ -83,10 +85,6 @@ mod WhittedTest
         let mut world = setUpDummyWorld();
         world.m_viewplaneptr.m_pixsize = 0.5;
         world.m_viewplaneptr.m_numsample = 3;
-
-        let mut sphereA = Sphere::new(25.0,
-                                      Vector3::new(70.0, 30.0, 20.0),
-                                      COLOR_RED);
         world.addObject(Arc::new(sphereA));
 
         let ray = Ray::new(Vector3::new(90.0, 10.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
