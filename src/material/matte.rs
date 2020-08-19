@@ -7,10 +7,11 @@ use crate::brdf::BRDF;
 use cgmath::InnerSpace;
 use crate::light::Light;
 
+#[derive(Clone, Debug)]
 pub struct Matte
 {
-    m_ambient_brdf: Arc<Lambertian>,
-    m_diffuse_brdf: Arc<Lambertian>
+    pub(crate) m_ambient_brdf: Arc<Lambertian>,
+    pub(crate) m_diffuse_brdf: Arc<Lambertian>
 }
 
 impl Matte
@@ -26,21 +27,22 @@ impl Material for Matte
     fn shade(&self, sr: &mut ShadeRec) -> Colorf
     {
         let direction = -sr.m_ray.m_velocity;
-        let mut res_color = sr.m_worldref.m_ambientlight.L(sr) * self.m_ambient_brdf.rho(sr, direction);
+        let worldptr = sr.m_worldptr.clone().unwrap();
+        let mut res_color = worldptr.m_ambientlight.L(sr) * self.m_ambient_brdf.rho(sr, direction);
 
-        for i in 0..(sr.m_worldref.m_lights.len())
+        for i in 0..(worldptr.m_lights.len())
         {
-            let in_direction = sr.m_worldref.m_lights[i].getDirection(sr);
+            let in_direction = worldptr.m_lights[i].getDirection(sr);
             let in_dot_normal = in_direction.dot(sr.m_normal);
 
             if in_dot_normal > 0.0
             {
-                res_color += sr.m_worldref.m_lights[i].L(sr) * in_dot_normal * self.m_diffuse_brdf.func(sr, direction, in_direction);
+                res_color += worldptr.m_lights[i].L(sr) * in_dot_normal * self.m_diffuse_brdf.func(sr, direction, in_direction);
             }
         }
         res_color
     }
-/*
+/* TODO: shading functions for different lights
     fn areaLightShade<'a>(&self, sr: &'a mut ShadeRec);
     fn pathShade<'a>(&self, sr: &'a mut ShadeRec);
 

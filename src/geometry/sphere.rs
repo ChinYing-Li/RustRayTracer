@@ -8,22 +8,32 @@ use crate::utils::shaderec::ShadeRec;
 use crate::math::polynomial::*;
 use std::fmt;
 use crate::utils::color::Colorf;
+use crate::material::Material;
+use std::sync::Arc;
+use std::ops::Deref;
 
-#[derive(Clone, Copy, PartialEq)]
-pub struct Sphere
+#[derive(Clone)]
+pub struct Sphere<'a>
 {
-    pub(crate) m_radius: f32,
-    pub(crate) m_center: Vector3<f32>,
-    pub(crate) m_color: Colorf,
+    pub m_radius: f32,
+    pub m_center: Vector3<f32>,
+    pub m_color: Colorf,
+    pub m_material: Option<&'a Material>,
 }
 
-impl Sphere
+impl Sphere<'_>
 {
     const KEPSILON: f32 = 0.0001;
 
-    pub fn new(radius: f32, center: Vector3<f32>, color: Colorf) -> Sphere
+    pub fn new<'a>(radius: f32, center: Vector3<f32>, color: Colorf) -> Sphere<'a>
     {
-        Sphere{m_radius: radius, m_center: center, m_color: color}
+        Sphere
+        {
+            m_radius: radius,
+            m_center: center,
+            m_color: color,
+            m_material: None
+        }
     }
 
     pub fn setRadius(&mut self, newradius: f32)
@@ -35,11 +45,9 @@ impl Sphere
     {
         self.m_center = newcenter;
     }
-
-    pub fn setColor(&mut self, newcolor: Colorf) { self.m_color = newcolor; }
 }
 
-impl fmt::Debug for Sphere
+impl fmt::Debug for Sphere<'_>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
@@ -50,7 +58,7 @@ impl fmt::Debug for Sphere
     }
 }
 
-impl Geometry for Sphere
+impl<'a> Geometry<'a> for Sphere<'a>
 {
     fn hit(&self, incomeray: &Ray, tmin: &mut f32, shaderecord: &mut ShadeRec) -> bool
     {
@@ -79,4 +87,17 @@ impl Geometry for Sphere
     }
 
     fn getColor(&self) -> Colorf { self.m_color }
+
+    fn setColor(&mut self, newcolor: Colorf) { self.m_color = newcolor; }
+
+    fn getMaterial(&self) -> &'a Material
+    {
+        if let Some(x) = self.m_material { x }
+        else { panic!("The material is Not set") }
+    }
+
+    fn setMaterial(&'a mut self, material: &'a Material)
+    {
+        self.m_material = Some(material.clone());
+    }
 }

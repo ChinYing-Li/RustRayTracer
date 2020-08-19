@@ -6,6 +6,9 @@ use crate::{camera::{CamStruct, Camera},
 use cgmath::{Vector3, Vector2, Zero, ElementWise, InnerSpace};
 use rand::Rng;
 use crate::utils::colorconstant::COLOR_BLACK;
+use crate::tracer::Tracer;
+use crate::output::OutputManager;
+use std::rc::Rc;
 
 pub struct Pinhole
 {
@@ -34,11 +37,11 @@ impl Camera for Pinhole
              .normalize()
     }
 
-    fn renderScene(&mut self, worldref: &mut World, zoom: f32)
+    fn renderScene<'a>(&mut self, worldptr: Rc<World>, tracer: &'a Tracer, outmgr: &'a mut OutputManager, zoom: f32)
     {
         let mut clr = COLOR_BLACK;
-        let mut vp = (worldref.m_viewplaneptr).clone();
-        let mut ray = Ray::new(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
+        let mut vp = (worldptr.m_viewplaneptr).clone();
+        let mut ray = Ray::new(self.m_core.m_eye, Vector3::new(0.0, 0.0, 1.0));
         let mut sq_sample_point = 0.0;
         let mut actual_sample_point = Vector2::zero();
         let mut rng = rand::thread_rng();
@@ -55,14 +58,15 @@ impl Camera for Pinhole
                 {
                     sq_sample_point = rng.gen_range(0.0, 1.0);
                     actual_sample_point = vp.getCoordinateFromIndex(x, y)
-                                            .unwrap()
+                                            .unwrap_or(Vector2::zero())
                                             .add_element_wise(sq_sample_point);
+
                     ray.m_velocity = self.getRayDirection(actual_sample_point);
-                    clr += worldref.m_tracerptr.traceRay(worldref, &ray, 0);
+                    clr += tracer.traceRay(worldptr.clone(), &ray, 0);
                 }
                 clr /= vp.m_numsample as f32;
                 clr *= self.m_core.m_exposure_time;
-                worldref.writePixel(x.into(), y.into(), clr);
+                outmgr.writePixel(x.into(), y.into(), clr);
             }
         }
     }

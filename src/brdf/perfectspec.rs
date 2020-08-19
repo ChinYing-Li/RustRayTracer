@@ -3,9 +3,10 @@ use cgmath::Vector3;
 use crate::utils::color::Colorf;
 use crate::utils::shaderec::ShadeRec;
 
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PerfectSpecular
 {
-
+    // TODO: Perfect Specular BRDF
 }
 
 impl PerfectSpecular

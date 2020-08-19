@@ -2,12 +2,13 @@ use crate::ray::Ray;
 use crate::utils::color::Colorf;
 use crate::world::world::World;
 use std::sync::Arc;
+use std::rc::Rc;
 
 pub mod whitted;
 
 pub trait Tracer
 {
-    fn traceRay(&self, world: &World, ray: &Ray, depth: u16) -> Colorf;
+    fn traceRay<'a, 'b>(&self, worldptr: Rc<World>, ray: &'b Ray, depth: u16) -> Colorf;
 }
 
 impl std::fmt::Debug for Tracer

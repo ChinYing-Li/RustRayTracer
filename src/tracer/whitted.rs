@@ -5,6 +5,8 @@ use std::sync::Arc;
 use crate::tracer::Tracer;
 use crate::utils::shaderec::ShadeRec;
 use std::f32::INFINITY;
+use crate::utils::colorconstant::COLOR_BLACK;
+use std::rc::Rc;
 
 pub struct Whitted
 {
@@ -18,22 +20,24 @@ impl Whitted
 
 impl Tracer for Whitted
 {
-    fn traceRay(&self, world: &World, ray: &Ray, currentdepth: u16) -> Colorf
+    fn traceRay(&self, worldptr: Rc<World>, ray: &Ray, currentdepth: u16) -> Colorf
     {
-        if currentdepth > world.m_viewplaneptr.m_maxdepth
+        let worldptr_cloned = worldptr.clone();
+        if currentdepth > worldptr_cloned.m_viewplaneptr.m_maxdepth
         {
-            Colorf::new(0.0, 0.0, 0.0)
+            COLOR_BLACK
         }
         else
         {
-            let mut sr = world.hitObjects(ray, INFINITY);
+            let mut sr = World::hitObjects(worldptr, ray, INFINITY);
             if sr.m_ishitting
             {
                 sr.m_depth = currentdepth;
                 sr.m_ray = *ray;
-                sr.m_color
+                let mat_clone = sr.m_material.clone();
+                mat_clone.unwrap().shade(&mut sr)
             }
-            else { world.m_backgroundcolor }
+            else { worldptr_cloned.m_backgroundcolor }
         }
 
     }
@@ -64,8 +68,9 @@ mod WhittedTest
                             {
                                 m_radius: 30.0,
                                 m_center: Vector3::new(70.0, 30.0, 20.0),
-                                m_color: COLOR_RED
-                                                };
+                                m_color: COLOR_RED,
+                                m_material: None
+                            };
     #[test]
     fn HitOneSphereTest()
     {

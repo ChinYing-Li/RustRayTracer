@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use cgmath::{Vector2, Vector3};
+use cgmath::{Vector2, Vector3, Zero};
 use std::{f32};
 
 use crate::utils::color::Colorf;
@@ -11,32 +11,30 @@ use crate::geometry::Geometry;
 use crate::tracer::Tracer;
 use crate::light::ambient::Ambient;
 use crate::light::Light;
+use std::ops::Deref;
+use std::rc::Rc;
 
 #[derive(Debug)]
-pub struct World
+pub struct World<'a>
 {
     pub m_backgroundcolor: Colorf,
     pub m_viewplaneptr: Box<ViewPlane>,
-    pub m_objects: Vec<Arc<dyn Geometry>>,
-    pub m_tracerptr: Box<dyn Tracer>,
+    pub m_objects: Vec<Arc<dyn Geometry<'a>>>,
     pub m_ambientlight: Arc<Ambient>,
     pub m_lights: Vec<Arc<dyn Light>>,
-    m_outputmgr: Box<dyn OutputManager>,
 }
 
-impl World
+impl<'a> World<'a>
 {
-    pub fn new(viewplane: Box<ViewPlane>, tracer: Box<dyn Tracer>, outmgr: Box<dyn OutputManager>) -> World
+    pub fn new(viewplane: Box<ViewPlane>) -> World<'a>
     {
         World
         {
             m_backgroundcolor: Colorf::new(0.0, 0.0, 0.0),
             m_viewplaneptr: viewplane,
             m_objects: Vec::new(),
-            m_tracerptr: tracer,
             m_ambientlight: Arc::new(Ambient::new(Colorf::new(1.0 , 1.0, 1.0))),
             m_lights: Vec::with_capacity(30),
-            m_outputmgr: outmgr,
         }
     }
 
@@ -50,7 +48,7 @@ impl World
         // Not following the book
     }
 
-    pub fn addObject(&mut self, object: Arc<dyn Geometry>)
+    pub fn addObject(&mut self, object: Arc<dyn Geometry<'a>>)
     {
         self.m_objects.push(object);
     }
@@ -75,44 +73,31 @@ impl World
         self.m_ambientlight = ambient;
     }
 
-    pub fn writePixel(&mut self, x: u32, y: u32, color: Colorf)
+    pub fn hitObjects<'b>(worldptr: Rc<World<'a>>, ray: &'b Ray, tmin: f32) -> ShadeRec<'a>
     {
-        self.m_outputmgr.writePixel(x, y, color);
-    }
-
-    pub fn output(&mut self) { self.m_outputmgr.output(); }
-
-    pub fn hitObjects(&self, ray: &Ray, tmin: f32) -> ShadeRec
-    {
-        let mut sr = ShadeRec::new(self);
+        let mut sr = ShadeRec::new(worldptr.clone());
         let srref = &mut sr;
-        let mut normal = Vector3::new(0.0, 0.0, 0.0);
-        let mut hitpoint = Vector3::new(0.0, 0.0,0.0);
+        let mut normal = Vector3::zero();
+        let mut hitpoint = Vector3::zero();
+        let mut local_hitpoint = Vector3::zero();
         let mut tglobal = 100000.0;
         let mut tminglobal = tmin;
-        let numobj = self.m_objects.len();
 
-        /*let c_updateShadeRec = | time: &mut f32 |
-            {
-                tminglobal = *time;
-                srref.m_ishitting = true;
-                srref.m_hitpoint = ray.m_origin + tminglobal * ray.m_velocity;
-                normal = srref.m_normal;
-                hitpoint = srref.m_hitpoint;
-            };
-        */
-        println!("number of objects: {}", numobj);
-        for i in 0..numobj
+        for i in 0..worldptr.clone().m_objects.len()
         {
-            if self.m_objects[i].hit(ray, &mut tglobal, srref) && tglobal < tminglobal
+            if worldptr.clone().m_objects[i].hit(ray, &mut tglobal, srref) && tglobal < tminglobal
             {
                 println!("does hit!");
                 tminglobal = tglobal;
-                srref.m_color = self.m_objects[i].getColor();
+                srref.m_color = worldptr.clone()
+                                .m_objects[i].getColor();
+                srref.m_material = Some(worldptr.clone()
+                                        .m_objects[i].getMaterial());
                 srref.m_ishitting = true;
                 srref.m_hitpoint = ray.m_origin + tminglobal * ray.m_velocity;
                 normal = srref.m_normal;
                 hitpoint = srref.m_hitpoint;
+                local_hitpoint = srref.m_local_hitpoint;
             }
         }
 
@@ -124,8 +109,13 @@ impl World
         }
         sr
     }
+/*
+    fn addWorldRefToShadeRec(&self, sr: &'a mut ShadeRec<'a>)
+    {
+        sr.m_worldref = Option::from(self.clone());
+    }
 
-    pub fn renderScene(&self, output: Box<dyn OutputManager>)
+    pub fn renderScene(&self)
     {
         let zdepth = 100.0;
         let mut ray = Ray::new(Vector3::new(0.0, 0.0, -1.0),
@@ -148,7 +138,7 @@ impl World
                 }
             }
         }
-    }
+    }*/
 }
 
 #[cfg(test)]
@@ -185,6 +175,8 @@ mod WorldSphereTest
     use crate::tracer::whitted::Whitted;
     use crate::utils::colorconstant::{COLOR_BLUE, COLOR_RED};
     use crate::output::imagewriter::ImageWriter;
+    use crate::material::matte::Matte;
+    use crate::brdf::lambertian::Lambertian;
 
     fn setUpDummyWorld() -> World
     {
@@ -192,12 +184,20 @@ mod WorldSphereTest
         let mut boxed_vp = Box::new(ViewPlane::new());
         let mut imgwriter = Box::new(ImageWriter::new("filedest", 100, 100));
 
-        World::new(boxed_vp, tracer, imgwriter)
+        World::new(boxed_vp)
     }
+
+    const matte: Matte = Matte
+    {
+        m_ambient_brdf: Arc::new(Lambertian::new(2.0, COLOR_RED)),
+        m_diffuse_brdf: Arc::new(Lambertian::new(1.0, COLOR_RED)),
+    };
 
     const sphere: Sphere = Sphere{ m_radius: 5.0,
         m_center: Vector3::new(0.0, 0.0, 0.0),
-        m_color: COLOR_RED};
+        m_color: COLOR_RED,
+        m_material: Some(&matte),
+    };
 
     #[test]
     fn checkHitSingleSphere()
@@ -219,7 +219,7 @@ mod WorldSphereTest
     {
         let mut ray = Ray::new(Vector3::new(7.0, 0.5, 0.0), Vector3::new(-3.0, 3.0, 0.0));
         let mut world = setUpDummyWorld();
-        let mut shaderecord = ShadeRec::new(&world);
+        let mut shaderecord = ShadeRec::new(Rc::new(world));
         let mut tmin = 100.0;
         let res = sphere.hit(&ray, &mut tmin, &mut shaderecord);
         assert!(!res);

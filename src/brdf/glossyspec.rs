@@ -7,6 +7,7 @@ use crate::utils::colorconstant::COLOR_BLACK;
 
 const INV_PI: f32 = 1.0 / PI;
 
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct GlossySpecular
 {
     pub m_kd: f32,

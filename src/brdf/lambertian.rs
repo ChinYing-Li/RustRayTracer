@@ -6,6 +6,7 @@ use crate::utils::shaderec::ShadeRec;
 
 const INV_PI: f32 = 1.0 / PI;
 
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Lambertian
 {
     m_kd: f32,

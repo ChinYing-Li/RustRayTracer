@@ -2,6 +2,9 @@ use cgmath::{Vector3, InnerSpace, dot, ElementWise, Zero, Vector2};
 use std::{f32};
 use crate::world::world::World;
 use crate::camera::pinhole::Pinhole;
+use crate::tracer::Tracer;
+use crate::output::OutputManager;
+use std::rc::Rc;
 
 type Point3<T> = Vector3<T>;
 
@@ -53,7 +56,10 @@ impl CamStruct
 pub trait Camera
 {
     fn getRayDirection(&self, vp_coords: Vector2<f32>) -> Vector3<f32>;
-    fn renderScene(&mut self, worldref: &mut World, zoom: f32);
+    fn renderScene<'a>(&mut self, worldptr: Rc<World>,
+                   tracer: &'a Tracer,
+                   outmgr: &'a mut OutputManager,
+                   zoom: f32);
 }
 
 pub mod pinhole;

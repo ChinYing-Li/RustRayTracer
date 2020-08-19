@@ -9,17 +9,17 @@ use cgmath::Vector2;
 pub struct ImageWriter<'a>
 {
     m_imgdst: &'a str,
-    m_imgresolution: Vector2<u32>,
+    m_imgresolution: Vector2<u16>,
     m_imgbuffer: RgbaImage,
 }
 
 impl ImageWriter<'_>
 {
-    pub fn new<'a>(imgdst: &'a str, width: u32, height: u32) -> ImageWriter
+    pub fn new<'a>(imgdst: &'a str, width: u16, height: u16) -> ImageWriter
     {
         ImageWriter{ m_imgdst: imgdst,
                     m_imgresolution: Vector2::new(width, height),
-                    m_imgbuffer: RgbaImage::new(width, height) }
+                    m_imgbuffer: RgbaImage::new(width.into(), height.into()) }
     }
 }
 
@@ -36,13 +36,13 @@ impl fmt::Debug for ImageWriter<'_>
 
 impl OutputManager for ImageWriter<'_>
 {
-    fn writePixel(&mut self, x: u32, y: u32, color: Colorf)
+    fn writePixel(&mut self, x: u16, y: u16, color: Colorf)
     {
         let convcolor = Color8bit::from(color);
-        self.m_imgbuffer.put_pixel(x, y, Rgba([convcolor.m_r, convcolor.m_g, convcolor.m_b, 255]));
+        self.m_imgbuffer.put_pixel(x.into(), y.into(), Rgba([convcolor.m_r, convcolor.m_g, convcolor.m_b, 255]));
     }
 
-    fn output(&self)
+    fn output(&mut self)
     {
         self.m_imgbuffer.save(self.m_imgdst).unwrap();
     }

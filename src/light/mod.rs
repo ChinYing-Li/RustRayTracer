@@ -4,8 +4,8 @@ use crate::utils::shaderec::ShadeRec;
 use crate::utils::color::Colorf;
 use std::fmt::{Debug, Formatter, Error};
 
-mod directional;
-mod pointlight;
+pub mod directional;
+pub mod pointlight;
 pub mod ambient;
 
 pub trait Light
