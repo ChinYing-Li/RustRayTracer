@@ -20,7 +20,7 @@ impl Whitted
 
 impl Tracer for Whitted
 {
-    fn traceRay(&self, worldptr: Arc<World>, ray: &Ray, currentdepth: u16) -> Colorf
+    fn trace_ray(&self, worldptr: Arc<World>, ray: &Ray, currentdepth: u16) -> Colorf
     {
         let worldptr_cloned = worldptr.clone();
         if currentdepth > worldptr_cloned.m_viewplaneptr.m_maxdepth
@@ -54,14 +54,12 @@ mod WhittedTest
     use crate::world::viewplane::ViewPlane;
     use crate::output::imagewriter::ImageWriter;
     use crate::utils::colorconstant::{COLOR_RED, COLOR_BLACK};
+    use std::sync::Mutex;
 
     fn setUpDummyWorld() -> World
     {
-        let tracer = Box::new(Whitted::new());
         let mut boxed_vp = Box::new(ViewPlane::new());
-        let mut imgwriter = Box::new(ImageWriter::new("filedest", 100, 100));
-
-        World::new(boxed_vp, tracer, imgwriter)
+        World::new(boxed_vp)
     }
 
     const sphereA: Sphere = Sphere
@@ -77,10 +75,11 @@ mod WhittedTest
         let mut world = setUpDummyWorld();
         world.m_viewplaneptr.m_pixsize = 0.5;
         world.m_viewplaneptr.m_numsample = 3;
-        world.add_object(Arc::new(sphereA));
+        world.add_object(Arc::new(Mutex::new(sphereA)));
 
         let ray = Ray::new(Vector3::new(50.0, 30.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
-        let res_color = world.m_tracerptr.traceRay(&world, &ray, 0);
+        let tracer = Box::new(Whitted::new());
+        let res_color = tracer.trace_ray(Arc::new(world), &ray, 0);
         assert_relative_eq!(res_color.m_r, 1.0);
     }
 
@@ -90,10 +89,11 @@ mod WhittedTest
         let mut world = setUpDummyWorld();
         world.m_viewplaneptr.m_pixsize = 0.5;
         world.m_viewplaneptr.m_numsample = 3;
-        world.add_object(Arc::new(sphereA));
+        world.add_object(Arc::new(Mutex::new(sphereA)));
 
+        let tracer = Box::new(Whitted::new());
         let ray = Ray::new(Vector3::new(90.0, 10.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
-        let res_color = world.m_tracerptr.traceRay(&world, &ray, 0);
+        let res_color = tracer.trace_ray(Arc::new(world), &ray, 0);
         assert_relative_eq!(res_color.m_r, 0.0);
     }
 }

@@ -85,7 +85,7 @@ impl World
 
         for i in 0..worldptr.clone().m_objects.len()
         {
-            if let mut x = worldptr.m_objects[i].lock().unwrap()
+            if let mut x = worldptr.clone().m_objects[i].lock().unwrap()
             {
                 if  x.hit(ray, &mut tglobal, srref) && tglobal < tminglobal
                 {
@@ -208,7 +208,7 @@ mod WorldSphereTest
 
         let mut ray = Ray::new( Vector3::new(10.0, 3.0, 0.0),
                                 Vector3::new(-1.0, 0.0, 0.0));
-        let mut shaderecord = world.hitObjects(&ray, INFINITY);
+        let mut shaderecord = World::hit_objects( Arc::new(world), &ray, INFINITY);
 
         assert!(shaderecord.m_ishitting);
         assert_eq!(shaderecord.m_time, 6.0);

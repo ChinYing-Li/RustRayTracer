@@ -18,7 +18,7 @@ use raytracer::camera::Camera;
 use raytracer::material::phong::Phong;
 use raytracer::brdf::lambertian::Lambertian;
 use raytracer::brdf::glossyspec::GlossySpecular;
-use raytracer::utils::colorconstant::{COLOR_BLUE, COLOR_RED};
+use raytracer::utils::colorconstant::{COLOR_BLUE, COLOR_RED, COLOR_WHITE};
 use raytracer::light::pointlight::PointLight;
 use raytracer::material::Material;
 use std::rc::Rc;
@@ -33,17 +33,17 @@ fn main()
     boxed_vp.m_hres = vp_hres;
     boxed_vp.m_vres = vp_vres;
     boxed_vp.m_pixsize = 0.5;
-    boxed_vp.m_numsample = 3;
+    boxed_vp.m_numsample = 10;
 
     let mut imgwriter = ImageWriter::new("test.jpg", vp_hres, vp_vres);
     let mut world = World::new(boxed_vp);
 
 
-    let mut sphereA = Arc::new(Mutex::new(Sphere::new(40.0,
-                                           Vector3::new(-5.0, 0.0, 20.0),
+    let mut sphereA = Arc::new(Mutex::new(Sphere::new(22.0,
+                                           Vector3::new(12.0, 20.0, 20.0),
                                            Colorf::new(0.0, 1.0, 0.0))));
-    let mut sphereB = Arc::new(Mutex::new(Sphere::new(30.0,
-                                           Vector3::new(50.0, 50.0, 30.0),
+    let mut sphereB = Arc::new(Mutex::new(Sphere::new(20.0,
+                                           Vector3::new(50.0, 10.0, 20.0),
                                            Colorf::new(1.0, 0.0, 0.0))));
     world.add_object(sphereA);
     world.add_object(sphereB);
@@ -86,7 +86,7 @@ fn setUpMaterial(r: f32, g: f32, b: f32) -> Phong
 
 fn setUpLights(world: &mut World)
 {
-    let point = PointLight::new(2.0, COLOR_RED, Vector3::new(50.0, 60.0, 50.0));
+    let point = PointLight::new(2.0, COLOR_WHITE, Vector3::new(50.0, 60.0, -10.0));
     world.add_light(Arc::new(point));
 }
 

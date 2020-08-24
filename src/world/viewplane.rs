@@ -36,7 +36,7 @@ impl ViewPlane
             false => Err("invalid coordinates"),
             _ => {
                 Ok(Vector2::new(self.m_pixsize * (i as f32 - 0.5 * (self.m_hres as f32 - 1.0)),
-                                self.m_pixsize * (j as f32 - 0.5 * (self.m_hres as f32 - 1.0))))
+                                self.m_pixsize * (j as f32 - 0.5 * (self.m_vres as f32 - 1.0))))
             }
         }
     }
@@ -73,6 +73,6 @@ mod ViewPlaneTest
         vp.m_hres = 500;
         vp.m_vres = 300;
         vp.m_pixsize = 0.5;
-        let coordinate = vp.getCoordinateFromIndex(30, 50);
+        let coordinate = vp.get_coordinate_from_index(30, 50);
     }
 }

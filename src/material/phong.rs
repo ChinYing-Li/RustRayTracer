@@ -34,8 +34,8 @@ impl Material for Phong
         for i in 0..(worldptr.m_lights.len())
         {
             let w_i = worldptr.m_lights[i].get_direction(sr);
-            let n_dot_w_i = sr.m_normal.dot(sr.m_normal);
-
+            let n_dot_w_i = sr.m_normal.dot(w_i);
+            println!("n_dot_w_i{}", n_dot_w_i);
             if(n_dot_w_i > 0.0)
             {
                 let mut in_shadow = false;

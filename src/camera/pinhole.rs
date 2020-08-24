@@ -24,7 +24,7 @@ impl Pinhole
     {
         let mut core = CamStruct::new(eye, lookat, up);
         core.ComputeUVW();
-        Pinhole{ m_core: core, m_zoom: 1.0, m_distance_from_vp: 5.0}
+        Pinhole{ m_core: core, m_zoom: 1.0, m_distance_from_vp: 50.0}
     }
 }
 
@@ -34,7 +34,7 @@ impl Camera for Pinhole
     {
          (self.m_core.m_u.mul_element_wise(vp_coords.x)
              + self.m_core.m_v.mul_element_wise(vp_coords.y)
-             + self.m_core.m_w.mul_element_wise(self.m_distance_from_vp))
+             - self.m_core.m_w.mul_element_wise(self.m_distance_from_vp))
              .normalize()
     }
 
@@ -63,7 +63,7 @@ impl Camera for Pinhole
                                             .add_element_wise(sq_sample_point);
 
                     ray.m_velocity = self.get_ray_direction(actual_sample_point);
-                    clr += tracer.traceRay(worldptr.clone(), &ray, 0);
+                    clr += tracer.trace_ray(worldptr.clone(), &ray, 0);
                 }
                 clr /= vp.m_numsample as f32;
                 clr *= self.m_core.m_exposure_time;
