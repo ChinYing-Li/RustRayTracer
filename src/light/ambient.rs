@@ -38,6 +38,6 @@ impl Light for Ambient
 
     fn L(&self, sr: & mut ShadeRec) -> Colorf
     {
-        self.m_color * self.m_ls
+        (self.m_color * self.m_ls).clamp()
     }
 }

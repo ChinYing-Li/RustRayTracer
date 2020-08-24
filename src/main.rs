@@ -22,28 +22,29 @@ use raytracer::utils::colorconstant::{COLOR_BLUE, COLOR_RED, COLOR_WHITE};
 use raytracer::light::pointlight::PointLight;
 use raytracer::material::Material;
 use std::rc::Rc;
+use raytracer::light::ambient::Ambient;
 
 fn main()
 {
     let tracer = Whitted::new();
 
     let mut boxed_vp = Box::new(ViewPlane::new());
-    let vp_hres = 300;
-    let vp_vres = 200;
+    let vp_hres = 400;
+    let vp_vres = 400;
     boxed_vp.m_hres = vp_hres;
     boxed_vp.m_vres = vp_vres;
     boxed_vp.m_pixsize = 0.5;
-    boxed_vp.m_numsample = 10;
+    boxed_vp.m_numsample = 16;
 
     let mut imgwriter = ImageWriter::new("test.jpg", vp_hres, vp_vres);
     let mut world = World::new(boxed_vp);
 
 
     let mut sphereA = Arc::new(Mutex::new(Sphere::new(22.0,
-                                           Vector3::new(12.0, 20.0, 20.0),
+                                           Vector3::new(12.0, 20.0, 15.0),
                                            Colorf::new(0.0, 1.0, 0.0))));
     let mut sphereB = Arc::new(Mutex::new(Sphere::new(20.0,
-                                           Vector3::new(50.0, 10.0, 20.0),
+                                           Vector3::new(60.0, 10.0, 20.0),
                                            Colorf::new(1.0, 0.0, 0.0))));
     world.add_object(sphereA);
     world.add_object(sphereB);
@@ -80,14 +81,17 @@ fn setUpObjects(world: &mut World)
 fn setUpMaterial(r: f32, g: f32, b: f32) -> Phong
 {
     Phong::new(Arc::new(Lambertian::new(0.5, Colorf::new(r, g, b))),
-                                                                Arc::new(Lambertian::new(0.8, Colorf::new(0.5*r, g, 0.5*b))),
-                                                                    Arc::new(GlossySpecular::new(1.0, Colorf::new(r, g, b))))
+                                                                Arc::new(Lambertian::new(0.4, Colorf::new(0.5*r, g, 0.5*b))),
+                                                                    Arc::new(GlossySpecular::new(0.4, Colorf::new(0.3*r, g, b))))
 }
 
 fn setUpLights(world: &mut World)
 {
-    let point = PointLight::new(2.0, COLOR_WHITE, Vector3::new(50.0, 60.0, -10.0));
+    let point = PointLight::new(0.5, COLOR_WHITE, Vector3::new(-50.0, 60.0, 0.0));
+    let mut ambient = Ambient::new(COLOR_BLUE);
+    ambient.set_radiance_scaling_factor(0.1);
     world.add_light(Arc::new(point));
+    world.set_ambient(Arc::new(ambient));
 }
 
 fn setUpCamera() -> Pinhole

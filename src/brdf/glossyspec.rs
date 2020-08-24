@@ -21,7 +21,6 @@ impl GlossySpecular
 {
     pub fn new(kd: f32, colord: Colorf) -> GlossySpecular
     {
-
         GlossySpecular{
             m_kd: kd,
             m_colord: colord,

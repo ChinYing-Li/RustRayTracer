@@ -1,4 +1,4 @@
-use cgmath::Vector3;
+use cgmath::{Vector3, InnerSpace};
 use crate::light::Light;
 use crate::utils::color::Colorf;
 use crate::utils::shaderec::ShadeRec;
@@ -16,7 +16,7 @@ impl Directional
 {
     pub fn new(ls: f32, color: Colorf, direction: Vector3<f32>) -> Directional
     {
-        Directional{ m_ls: ls, m_color: color, m_direction: direction}
+        Directional{ m_ls: ls, m_color: color, m_direction: direction.normalize()}
     }
 
     pub fn set_radiance_scaling_factor(&mut self, new_ls: f32)

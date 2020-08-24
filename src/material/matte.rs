@@ -26,7 +26,7 @@ impl Material for Matte
 {
     fn shade(&self, sr: &mut ShadeRec) -> Colorf
     {
-        let direction = -sr.m_ray.m_velocity;
+        let direction = -sr.m_ray.m_velocity.normalize();
         let worldptr = sr.m_worldptr.clone().unwrap();
         let mut res_color = worldptr.m_ambientlight.L(sr) * self.m_ambient_brdf.rho(sr, direction);
 

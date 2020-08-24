@@ -27,21 +27,21 @@ impl Phong
 impl Material for Phong
 {
     fn shade(&self, sr: &mut ShadeRec) -> Colorf {
-        let w_o = -sr.m_ray.m_velocity;
+        let w_o = -sr.m_ray.m_velocity.normalize();
         let worldptr = sr.m_worldptr.clone().unwrap();
         let mut clr = worldptr.m_ambientlight.L(sr) * self.m_ambient_brdf.rho(sr, w_o);
 
         for i in 0..(worldptr.m_lights.len())
         {
             let w_i = worldptr.m_lights[i].get_direction(sr);
-            let n_dot_w_i = sr.m_normal.dot(w_i);
+            let n_dot_w_i = sr.m_normal.normalize().dot(w_i);
             println!("n_dot_w_i{}", n_dot_w_i);
             if(n_dot_w_i > 0.0)
             {
                 let mut in_shadow = false;
-                clr += self.m_diffuse_brdf.func(sr, w_o, w_i);
-                clr += self.m_spec_brdf.func(sr, w_o, w_i);
-                clr *= worldptr.m_lights[i].L(sr)  * n_dot_w_i;
+                clr += (self.m_diffuse_brdf.func(sr, w_o, w_i) +
+                        self.m_spec_brdf.func(sr, w_o, w_i)) *
+                        worldptr.m_lights[i].L(sr)  * n_dot_w_i;
             }
         }
         clr
