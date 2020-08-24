@@ -5,6 +5,7 @@ use crate::camera::pinhole::Pinhole;
 use crate::tracer::Tracer;
 use crate::output::OutputManager;
 use std::rc::Rc;
+use std::sync::Arc;
 
 type Point3<T> = Vector3<T>;
 
@@ -55,8 +56,8 @@ impl CamStruct
 
 pub trait Camera
 {
-    fn getRayDirection(&self, vp_coords: Vector2<f32>) -> Vector3<f32>;
-    fn renderScene<'a>(&mut self, worldptr: Rc<World>,
+    fn get_ray_direction(&self, vp_coords: Vector2<f32>) -> Vector3<f32>;
+    fn render_scene<'a>(&mut self, worldptr: Arc<World>,
                    tracer: &'a Tracer,
                    outmgr: &'a mut OutputManager,
                    zoom: f32);
@@ -72,7 +73,7 @@ mod CamStructTest
     use approx::{assert_relative_eq};
 
     #[test]
-    fn ComputeUVWTest()
+    fn compute_uvwtest()
     {
         let lookat = Vector3::new(3.0,4.0,5.0);
         let eye = Vector3::new(2.0, 7.0, 8.0);

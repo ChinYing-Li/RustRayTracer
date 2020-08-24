@@ -32,7 +32,7 @@ impl Material for Matte
 
         for i in 0..(worldptr.m_lights.len())
         {
-            let in_direction = worldptr.m_lights[i].getDirection(sr);
+            let in_direction = worldptr.m_lights[i].get_direction(sr);
             let in_dot_normal = in_direction.dot(sr.m_normal);
 
             if in_dot_normal > 0.0

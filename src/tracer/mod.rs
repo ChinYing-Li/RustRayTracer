@@ -8,7 +8,7 @@ pub mod whitted;
 
 pub trait Tracer
 {
-    fn traceRay<'a, 'b>(&self, worldptr: Rc<World>, ray: &'b Ray, depth: u16) -> Colorf;
+    fn traceRay<'a>(&self, worldptr: Arc<World>, ray: &'a Ray, depth: u16) -> Colorf;
 }
 
 impl std::fmt::Debug for Tracer

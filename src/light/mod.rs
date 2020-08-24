@@ -10,11 +10,11 @@ pub mod ambient;
 
 pub trait Light
 {
-    fn getDirection(&self, sr: &mut ShadeRec) -> Vector3<f32>;
+    fn get_direction(&self, sr: &mut ShadeRec) -> Vector3<f32>;
     fn L(&self, sr: &mut ShadeRec) -> Colorf;
 }
 
-impl Debug for Light
+impl Debug for dyn Light
 {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         f.debug_struct("Light")

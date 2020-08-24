@@ -11,7 +11,7 @@ pub struct Jittered
 
 impl Sampler for Jittered
 {
-    fn generateSamplePattern(&mut self)
+    fn generate_sample_pattern(&mut self)
     {
         let sqrt_sample_per_pattern = (self.m_core.m_sample_per_pattern as f32).sqrt() as u16;
         let inv_sqrt = 1.0 / sqrt_sample_per_pattern as f32;
@@ -30,12 +30,12 @@ impl Sampler for Jittered
         }
     }
 
-    fn shuffleIndices(&mut self)
+    fn shuffle_indices(&mut self)
     {
 
     }
 
-    fn setupShuffleIndices(&mut self)
+    fn setup_shuffle_indices(&mut self)
     {
 
     }

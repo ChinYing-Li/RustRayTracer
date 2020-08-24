@@ -28,12 +28,12 @@ impl SamplerCore
 
 pub trait Sampler
 {
-    fn generateSamplePattern(&mut self);
-    fn shuffleIndices(&mut self);
-    fn setupShuffleIndices(&mut self);
+    fn generate_sample_pattern(&mut self);
+    fn shuffle_indices(&mut self);
+    fn setup_shuffle_indices(&mut self);
 }
 
-fn MapSampleToDisk(samplecore: &mut SamplerCore) -> Vec<Vector2<f32>>
+fn map_sample_to_disk(samplecore: &mut SamplerCore) -> Vec<Vector2<f32>>
 {
     let mut radius = 0.0;
     let mut phi = 0.0;
@@ -103,7 +103,7 @@ mod ConvertSampleTest
         core.m_samples.push(Vector2::new(0.5, 0.0));
         core.m_samples.push(Vector2::new(0.0, 0.0));
 
-        let res = MapSampleToDisk(&mut core);
+        let res = map_sample_to_disk(&mut core);
 
         assert_relative_eq!(res[0].y, 0.5075146273309165, epsilon = f32::EPSILON);
         assert_relative_eq!(res[1].y, 0.476012004174741, epsilon = f32::EPSILON);

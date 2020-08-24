@@ -19,12 +19,12 @@ impl Directional
         Directional{ m_ls: ls, m_color: color, m_direction: direction}
     }
 
-    pub fn setRadianceScalingFactor(&mut self, new_ls: f32)
+    pub fn set_radiance_scaling_factor(&mut self, new_ls: f32)
     {
         self.m_ls = new_ls;
     }
 
-    pub fn setColor(&mut self, newcolor: Colorf)
+    pub fn set_color(&mut self, newcolor: Colorf)
     {
         self.m_color = newcolor;
     }
@@ -32,7 +32,7 @@ impl Directional
 
 impl Light for Directional
 {
-    fn getDirection(&self, sr: &mut ShadeRec) -> Vector3<f32>
+    fn get_direction(&self, sr: &mut ShadeRec) -> Vector3<f32>
     {
         self.m_direction
     }

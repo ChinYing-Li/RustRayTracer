@@ -20,7 +20,7 @@ impl Whitted
 
 impl Tracer for Whitted
 {
-    fn traceRay(&self, worldptr: Rc<World>, ray: &Ray, currentdepth: u16) -> Colorf
+    fn traceRay(&self, worldptr: Arc<World>, ray: &Ray, currentdepth: u16) -> Colorf
     {
         let worldptr_cloned = worldptr.clone();
         if currentdepth > worldptr_cloned.m_viewplaneptr.m_maxdepth
@@ -29,7 +29,7 @@ impl Tracer for Whitted
         }
         else
         {
-            let mut sr = World::hitObjects(worldptr, ray, INFINITY);
+            let mut sr = World::hit_objects(worldptr, ray, INFINITY);
             if sr.m_ishitting
             {
                 sr.m_depth = currentdepth;
@@ -77,7 +77,7 @@ mod WhittedTest
         let mut world = setUpDummyWorld();
         world.m_viewplaneptr.m_pixsize = 0.5;
         world.m_viewplaneptr.m_numsample = 3;
-        world.addObject(Arc::new(sphereA));
+        world.add_object(Arc::new(sphereA));
 
         let ray = Ray::new(Vector3::new(50.0, 30.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
         let res_color = world.m_tracerptr.traceRay(&world, &ray, 0);
@@ -90,7 +90,7 @@ mod WhittedTest
         let mut world = setUpDummyWorld();
         world.m_viewplaneptr.m_pixsize = 0.5;
         world.m_viewplaneptr.m_numsample = 3;
-        world.addObject(Arc::new(sphereA));
+        world.add_object(Arc::new(sphereA));
 
         let ray = Ray::new(Vector3::new(90.0, 10.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
         let res_color = world.m_tracerptr.traceRay(&world, &ray, 0);

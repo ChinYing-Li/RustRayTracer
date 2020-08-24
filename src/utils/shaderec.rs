@@ -14,24 +14,24 @@ use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
 
 #[derive(Clone)]
-pub struct ShadeRec<'a>
+pub struct ShadeRec
 {
-    pub m_material: Option<&'a Material>,
+    pub m_material: Option<Arc<dyn Material>>,
     pub m_ishitting: bool,
     pub m_normal: Vector3<f32>,
     pub m_hitpoint: Vector3<f32>,
     pub m_local_hitpoint: Vector3<f32>, // For attaching texture
     pub m_ray: Ray, // For specular lights
     pub m_light_dir: Vector3<f32>, // For directional lights
-    pub m_worldptr: Option<Rc<World<'a>>>,
+    pub m_worldptr: Option<Arc<World>>,
     pub m_color: Colorf, // TODO: to be deprecated
     pub m_time: f32,
     pub m_depth: u16 // Recursion depth
 }
 
-impl<'a, 'b> ShadeRec<'a> where 'b: 'a
+impl ShadeRec
 {
-    pub fn new(worldptr: Rc<World<'b>>) -> ShadeRec<'a>
+    pub fn new(worldptr: Arc<World>) -> ShadeRec
     {
         ShadeRec{
             m_material: None,
@@ -49,7 +49,7 @@ impl<'a, 'b> ShadeRec<'a> where 'b: 'a
     }
 }
 
-impl<'a> Debug for ShadeRec<'a>
+impl Debug for ShadeRec
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("ShadeRec")

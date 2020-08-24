@@ -1,6 +1,6 @@
 use std::{f32};
 
-pub fn getQuadraticPolyRoot(quadterm: f32, linearterm: f32, constant: f32) -> [Option<f32>; 2]
+pub fn get_quadratic_poly_root(quadterm: f32, linearterm: f32, constant: f32) -> [Option<f32>; 2]
 {
     let temp = Some((linearterm).powf(2.0) - 4.0 * quadterm * constant);
     let denominator =  2.0 * quadterm;
@@ -24,23 +24,23 @@ mod PolynomialTest
     use std::f32;
 
     #[test]
-    fn checkTwoRoots()
+    fn check_two_roots()
     {
         let qt = 5.0;
         let lt = 3.0;
         let cons = -2.0;
-        let res = getQuadraticPolyRoot(qt, lt, cons);
+        let res = get_quadratic_poly_root(qt, lt, cons);
         assert_relative_eq!(res[0].unwrap(), -1.0, epsilon=f32::EPSILON);
         assert_relative_eq!(res[1].unwrap(), 0.4, epsilon=f32::EPSILON);
     }
 
     #[test]
-    fn checkNoRoot()
+    fn check_no_root()
     {
         let qt = 6.0;
         let lt = 3.0;
         let cons = 1.0;
-        let res = getQuadraticPolyRoot(qt, lt, cons);
+        let res = get_quadratic_poly_root(qt, lt, cons);
         assert_eq!(res, [None, None]);
     }
 }

@@ -9,6 +9,7 @@ use crate::utils::colorconstant::COLOR_BLACK;
 use crate::tracer::Tracer;
 use crate::output::OutputManager;
 use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct Pinhole
 {
@@ -29,7 +30,7 @@ impl Pinhole
 
 impl Camera for Pinhole
 {
-    fn getRayDirection(&self, vp_coords: Vector2<f32>) -> Vector3<f32>
+    fn get_ray_direction(&self, vp_coords: Vector2<f32>) -> Vector3<f32>
     {
          (self.m_core.m_u.mul_element_wise(vp_coords.x)
              + self.m_core.m_v.mul_element_wise(vp_coords.y)
@@ -37,7 +38,7 @@ impl Camera for Pinhole
              .normalize()
     }
 
-    fn renderScene<'a>(&mut self, worldptr: Rc<World>, tracer: &'a Tracer, outmgr: &'a mut OutputManager, zoom: f32)
+    fn render_scene<'a>(&mut self, worldptr: Arc<World>, tracer: &'a Tracer, outmgr: &'a mut OutputManager, zoom: f32)
     {
         let mut clr = COLOR_BLACK;
         let mut vp = (worldptr.m_viewplaneptr).clone();
@@ -57,16 +58,16 @@ impl Camera for Pinhole
                 for i in 0..vp.m_numsample
                 {
                     sq_sample_point = rng.gen_range(0.0, 1.0);
-                    actual_sample_point = vp.getCoordinateFromIndex(x, y)
+                    actual_sample_point = vp.get_coordinate_from_index(x, y)
                                             .unwrap_or(Vector2::zero())
                                             .add_element_wise(sq_sample_point);
 
-                    ray.m_velocity = self.getRayDirection(actual_sample_point);
+                    ray.m_velocity = self.get_ray_direction(actual_sample_point);
                     clr += tracer.traceRay(worldptr.clone(), &ray, 0);
                 }
                 clr /= vp.m_numsample as f32;
                 clr *= self.m_core.m_exposure_time;
-                outmgr.writePixel(x.into(), y.into(), clr);
+                outmgr.write_pixel(x.into(), y.into(), clr);
             }
         }
     }

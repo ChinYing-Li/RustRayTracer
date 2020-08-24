@@ -13,19 +13,19 @@ use std::sync::Arc;
 use std::ops::Deref;
 
 #[derive(Clone)]
-pub struct Sphere<'a>
+pub struct Sphere
 {
     pub m_radius: f32,
     pub m_center: Vector3<f32>,
     pub m_color: Colorf,
-    pub m_material: Option<&'a Material>,
+    pub m_material: Option<Arc<dyn Material>>,
 }
 
-impl Sphere<'_>
+impl Sphere
 {
     const KEPSILON: f32 = 0.0001;
 
-    pub fn new<'a>(radius: f32, center: Vector3<f32>, color: Colorf) -> Sphere<'a>
+    pub fn new<'a>(radius: f32, center: Vector3<f32>, color: Colorf) -> Sphere
     {
         Sphere
         {
@@ -36,18 +36,18 @@ impl Sphere<'_>
         }
     }
 
-    pub fn setRadius(&mut self, newradius: f32)
+    pub fn set_radius(&mut self, newradius: f32)
     {
         self.m_radius = newradius;
     }
 
-    pub fn setCenter(&mut self, newcenter: Vector3<f32>)
+    pub fn set_center(&mut self, newcenter: Vector3<f32>)
     {
         self.m_center = newcenter;
     }
 }
 
-impl fmt::Debug for Sphere<'_>
+impl fmt::Debug for Sphere
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
@@ -58,7 +58,7 @@ impl fmt::Debug for Sphere<'_>
     }
 }
 
-impl<'a> Geometry<'a> for Sphere<'a>
+impl Geometry for Sphere
 {
     fn hit(&self, incomeray: &Ray, tmin: &mut f32, shaderecord: &mut ShadeRec) -> bool
     {
@@ -66,7 +66,7 @@ impl<'a> Geometry<'a> for Sphere<'a>
         let a = dot(incomeray.m_velocity, incomeray.m_velocity);
         let b = 2.0 * dot(temp, incomeray.m_velocity);
         let c = dot(temp, temp) - self.m_radius.powf(2.0);
-        let roots = getQuadraticPolyRoot(a, b, c);
+        let roots = get_quadratic_poly_root(a, b, c);
 
         let mut res = false;
         for it in roots.iter()
@@ -86,17 +86,17 @@ impl<'a> Geometry<'a> for Sphere<'a>
         res
     }
 
-    fn getColor(&self) -> Colorf { self.m_color }
+    fn get_color(&self) -> Colorf { self.m_color }
 
-    fn setColor(&mut self, newcolor: Colorf) { self.m_color = newcolor; }
+    fn set_color(&mut self, newcolor: Colorf) { self.m_color = newcolor; }
 
-    fn getMaterial(&self) -> &'a Material
+    fn get_material(&self) -> Arc<dyn Material>
     {
-        if let Some(x) = self.m_material { x }
+        if let Some(x) = self.m_material.clone() { x }
         else { panic!("The material is Not set") }
     }
 
-    fn setMaterial(&'a mut self, material: &'a Material)
+    fn set_material(&mut self, material: Arc<dyn Material>)
     {
         self.m_material = Some(material.clone());
     }

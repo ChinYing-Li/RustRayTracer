@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use cgmath::{Vector2, Vector3, Zero};
 use std::{f32};
 
@@ -15,18 +15,18 @@ use std::ops::Deref;
 use std::rc::Rc;
 
 #[derive(Debug)]
-pub struct World<'a>
+pub struct World
 {
     pub m_backgroundcolor: Colorf,
     pub m_viewplaneptr: Box<ViewPlane>,
-    pub m_objects: Vec<Arc<dyn Geometry<'a>>>,
+    pub m_objects: Vec<Arc<Mutex<dyn Geometry>>>,
     pub m_ambientlight: Arc<Ambient>,
     pub m_lights: Vec<Arc<dyn Light>>,
 }
 
-impl<'a> World<'a>
+impl World
 {
-    pub fn new(viewplane: Box<ViewPlane>) -> World<'a>
+    pub fn new(viewplane: Box<ViewPlane>) -> World
     {
         World
         {
@@ -38,7 +38,7 @@ impl<'a> World<'a>
         }
     }
 
-    pub fn setBackgroundColor(&mut self, newColor: Colorf)
+    pub fn set_background_color(&mut self, newColor: Colorf)
     {
         self.m_backgroundcolor = newColor;
     }
@@ -48,32 +48,32 @@ impl<'a> World<'a>
         // Not following the book
     }
 
-    pub fn addObject(&mut self, object: Arc<dyn Geometry<'a>>)
+    pub fn add_object(&mut self, object: Arc<Mutex<dyn Geometry>>)
     {
         self.m_objects.push(object);
     }
 
-    pub fn removeObject(&mut self, index: usize)
+    pub fn remove_object(&mut self, index: usize)
     {
         self.m_objects.remove(index);
     }
 
-    pub fn addLight(&mut self, light: Arc<dyn Light>)
+    pub fn add_light(&mut self, light: Arc<dyn Light>)
     {
         self.m_lights.push(light);
     }
 
-    pub fn removeLight(&mut self, index: usize)
+    pub fn remove_light(&mut self, index: usize)
     {
         self.m_lights.remove(index);
     }
 
-    pub fn setAmbient(&mut self, ambient: Arc<Ambient>)
+    pub fn set_ambient(&mut self, ambient: Arc<Ambient>)
     {
         self.m_ambientlight = ambient;
     }
 
-    pub fn hitObjects<'b>(worldptr: Rc<World<'a>>, ray: &'b Ray, tmin: f32) -> ShadeRec<'a>
+    pub fn hit_objects(worldptr: Arc<World>, ray: &Ray, tmin: f32) -> ShadeRec
     {
         let mut sr = ShadeRec::new(worldptr.clone());
         let srref = &mut sr;
@@ -85,19 +85,20 @@ impl<'a> World<'a>
 
         for i in 0..worldptr.clone().m_objects.len()
         {
-            if worldptr.clone().m_objects[i].hit(ray, &mut tglobal, srref) && tglobal < tminglobal
+            if let mut x = worldptr.m_objects[i].lock().unwrap()
             {
-                println!("does hit!");
-                tminglobal = tglobal;
-                srref.m_color = worldptr.clone()
-                                .m_objects[i].getColor();
-                srref.m_material = Some(worldptr.clone()
-                                        .m_objects[i].getMaterial());
-                srref.m_ishitting = true;
-                srref.m_hitpoint = ray.m_origin + tminglobal * ray.m_velocity;
-                normal = srref.m_normal;
-                hitpoint = srref.m_hitpoint;
-                local_hitpoint = srref.m_local_hitpoint;
+                if  x.hit(ray, &mut tglobal, srref) && tglobal < tminglobal
+                {
+                    println!("does hit!");
+                    tminglobal = tglobal;
+                    srref.m_color = x.get_color();
+                    srref.m_material = Some(x.get_material());
+                    srref.m_ishitting = true;
+                    srref.m_hitpoint = ray.m_origin + tminglobal * ray.m_velocity;
+                    normal = srref.m_normal;
+                    hitpoint = srref.m_hitpoint;
+                    local_hitpoint = srref.m_local_hitpoint;
+                }
             }
         }
 
@@ -149,13 +150,13 @@ mod WorldTest
     use cgmath::Vector3;
 
     #[test]
-    fn checkAddObject()
+    fn check_add_object()
     {
        // TODO: Write the test that compare Geometry objects
     }
 
     #[test]
-    fn checkRemoveObject()
+    fn check_remove_object()
     {
 
     }
@@ -178,7 +179,7 @@ mod WorldSphereTest
     use crate::material::matte::Matte;
     use crate::brdf::lambertian::Lambertian;
 
-    fn setUpDummyWorld() -> World
+    fn set_up_dummy_world() -> World
     {
         let tracer = Box::new(Whitted::new());
         let mut boxed_vp = Box::new(ViewPlane::new());
@@ -196,14 +197,14 @@ mod WorldSphereTest
     const sphere: Sphere = Sphere{ m_radius: 5.0,
         m_center: Vector3::new(0.0, 0.0, 0.0),
         m_color: COLOR_RED,
-        m_material: Some(&matte),
+        m_material: Some(Arc::new(matte)),
     };
 
     #[test]
     fn checkHitSingleSphere()
     {
-        let mut world = setUpDummyWorld();
-        world.addObject(Arc::new(sphere));
+        let mut world = set_up_dummy_world();
+        world.add_object(Arc::new(Mutex::new(sphere)));
 
         let mut ray = Ray::new( Vector3::new(10.0, 3.0, 0.0),
                                 Vector3::new(-1.0, 0.0, 0.0));
@@ -218,8 +219,8 @@ mod WorldSphereTest
     fn checkNoHit()
     {
         let mut ray = Ray::new(Vector3::new(7.0, 0.5, 0.0), Vector3::new(-3.0, 3.0, 0.0));
-        let mut world = setUpDummyWorld();
-        let mut shaderecord = ShadeRec::new(Rc::new(world));
+        let mut world = set_up_dummy_world();
+        let mut shaderecord = ShadeRec::new(Arc::new(world));
         let mut tmin = 100.0;
         let res = sphere.hit(&ray, &mut tmin, &mut shaderecord);
         assert!(!res);

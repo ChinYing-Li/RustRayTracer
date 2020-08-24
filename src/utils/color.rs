@@ -209,7 +209,7 @@ mod ColorTest
     */
 
     #[test]
-    fn AddAssignTest()
+    fn add_assign_test()
     {
         let mut lhs = Colorf::new(0.2, 0.3, 0.4);
         lhs += Colorf::new(0.2, 0.05, 0.03);
@@ -217,7 +217,7 @@ mod ColorTest
     }
 
     #[test]
-    fn Colorf2Color8bit()
+    fn colorf2color8bit()
     {
         let src = Colorf::new(0.45, 0.57, 0.89);
         let dst = Color8bit::from(src);

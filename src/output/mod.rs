@@ -6,6 +6,6 @@ pub mod imagewriter;
 
 pub trait OutputManager: fmt::Debug
 {
-    fn writePixel(&mut self, x: u16, y: u16, colorf: Colorf);
+    fn write_pixel(&mut self, x: u16, y: u16, colorf: Colorf);
     fn output(&mut self);
 }

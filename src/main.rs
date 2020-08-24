@@ -1,5 +1,5 @@
 use cgmath::{Vector3, Zero};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::f32::INFINITY;
 
 use raytracer::utils::color::Colorf;
@@ -28,7 +28,7 @@ fn main()
     let tracer = Whitted::new();
 
     let mut boxed_vp = Box::new(ViewPlane::new());
-    let vp_hres = 100;
+    let vp_hres = 300;
     let vp_vres = 200;
     boxed_vp.m_hres = vp_hres;
     boxed_vp.m_vres = vp_vres;
@@ -39,14 +39,14 @@ fn main()
     let mut world = World::new(boxed_vp);
 
 
-    let mut sphereA = Arc::new(Sphere::new(30.0,
-                                           Vector3::new(70.0, 30.0, 20.0),
-                                           Colorf::new(0.0, 1.0, 0.0)));
-    let mut sphereB = Arc::new(Sphere::new(30.0,
-                                           Vector3::new(80.0, 90.0, 100.0),
-                                           Colorf::new(1.0, 1.0, 0.0)));
-    world.addObject(sphereA);
-    world.addObject(sphereB);
+    let mut sphereA = Arc::new(Mutex::new(Sphere::new(40.0,
+                                           Vector3::new(-5.0, 0.0, 20.0),
+                                           Colorf::new(0.0, 1.0, 0.0))));
+    let mut sphereB = Arc::new(Mutex::new(Sphere::new(30.0,
+                                           Vector3::new(50.0, 50.0, 30.0),
+                                           Colorf::new(1.0, 0.0, 0.0))));
+    world.add_object(sphereA);
+    world.add_object(sphereB);
 
     let c = vec![COLOR_BLUE, COLOR_RED];
     let objlen= world.m_objects.len();
@@ -58,12 +58,17 @@ fn main()
 
     for i in 0..objlen
     {
-        world.m_objects[i].setMaterial(&(materials[i]));
+        let mut obj = world.m_objects[i].lock().unwrap();
+        obj.set_material(Arc::new(materials[i].clone()));
     }
+
     setUpLights(&mut world);
     let mut ph = setUpCamera();
-    let worldptr = Rc::new(world);
-    ph.renderScene(worldptr, &tracer, &mut imgwriter,1.0);
+    ph.m_distance_from_vp = 10.0;
+    ph.m_zoom = 1.0;
+    ph.m_core.m_exposure_time = 0.05;
+    let worldptr = Arc::new(world);
+    ph.render_scene(worldptr, &tracer, &mut imgwriter,1.0);
     imgwriter.output();
 }
 
@@ -82,12 +87,12 @@ fn setUpMaterial(r: f32, g: f32, b: f32) -> Phong
 fn setUpLights(world: &mut World)
 {
     let point = PointLight::new(2.0, COLOR_RED, Vector3::new(50.0, 60.0, 50.0));
-    world.addLight(Arc::new(point));
+    world.add_light(Arc::new(point));
 }
 
 fn setUpCamera() -> Pinhole
 {
-    let eye = Vector3::new(10.0, 20.0, -10.0);
+    let eye = Vector3::new(20.0, 30.0, -10.0);
     let lookat = Vector3::new(20.0, 30.0, 100.0);
     let up = Vector3::new(0.0, 1.0, 0.0);
     Pinhole::new(eye, lookat, up)
