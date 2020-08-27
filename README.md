@@ -1,7 +1,7 @@
 # RustRayTracer
 A ray tracer written in Rust, based on "Ray-tracing From the Ground Up" by Kevin Sufferin.
 
-![Rendered output](https://github.com/ChinYing-Li/RustRayTracer/blob/master/main.jpg)
+![Rendered output](https://github.com/ChinYing-Li/RustRayTracer/blob/master/test.jpg)
 
 [create-an-anchor](##Dependencies)
 [create-an-anchor](##Build-and-Run)
@@ -23,14 +23,14 @@ A ray tracer written in Rust, based on "Ray-tracing From the Ground Up" by Kevin
 - [] Chapter 7 - Mapping Samples to a Hemisphere
 - [] Chapter 9 - A Practical Viewing System
 - [x] Chapter 14 - Lights and Materials
-- [] Chapter 15 - Specular Reflection
+- [x] Chapter 15 - Specular Reflection
 - [] Chapter 16 - Shadows
 - [] Chapter 17 - Ambient Occlusion
 - [] Chapter 18 - Area Llights
 - [] Chapter 19 - Ray-Object Intersections
 - [] Chapter 20 - Affine transformations
 - [] Chapter 22 - Regular Grids
-- [] Chapter 23 - Triangle Meshed
+- [] Chapter 23 - Triangle Mesh
 - [] Chapter 24 - Mirror Reflection
 - [] Chapter 25 - Glossy Reflection
 - [] Chapter 26 - Global Illumination
