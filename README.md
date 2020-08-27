@@ -3,6 +3,7 @@ A ray tracer written in Rust, based on "Ray-tracing From the Ground Up" by Kevin
 
 ![Rendered output](https://github.com/ChinYing-Li/RustRayTracer/blob/master/test.jpg)
 
+
 [create-an-anchor](##Dependencies)
 [create-an-anchor](##Build-and-Run)
 [create-an-anchor](##Progress)
@@ -20,8 +21,8 @@ A ray tracer written in Rust, based on "Ray-tracing From the Ground Up" by Kevin
 - [] Chapter 4 - Antialiasing
 - [x] Chapter 5 - Sampling
 - [x] Chapter 6 - Mapping Samples to a Disk
-- [] Chapter 7 - Mapping Samples to a Hemisphere
-- [] Chapter 9 - A Practical Viewing System
+- [ ] Chapter 7 - Mapping Samples to a Hemisphere
+- [x] Chapter 9 - A Practical Viewing System
 - [x] Chapter 14 - Lights and Materials
 - [x] Chapter 15 - Specular Reflection
 - [] Chapter 16 - Shadows
