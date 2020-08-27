@@ -2,7 +2,7 @@ use std::{f32};
 use cgmath::prelude::*;
 use cgmath::{Vector3, dot};
 
-use crate::geometry::Geometry;
+use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError};
 use crate::ray::Ray;
 use crate::utils::shaderec::ShadeRec;
 use crate::math::polynomial::*;
@@ -23,9 +23,7 @@ pub struct Sphere
 
 impl Sphere
 {
-    const KEPSILON: f32 = 0.0001;
-
-    pub fn new<'a>(radius: f32, center: Vector3<f32>, color: Colorf) -> Sphere
+    pub fn new(radius: f32, center: Vector3<f32>, color: Colorf) -> Sphere
     {
         Sphere
         {
@@ -60,7 +58,7 @@ impl fmt::Debug for Sphere
 
 impl Geometry for Sphere
 {
-    fn hit(&self, incomeray: &Ray, tmin: &mut f32, shaderecord: &mut ShadeRec) -> bool
+    fn hit(&self, incomeray: &Ray, tmin: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
     {
         let temp = incomeray.m_origin - self.m_center;
         let a = dot(incomeray.m_velocity, incomeray.m_velocity);
@@ -73,7 +71,7 @@ impl Geometry for Sphere
         {
             if let Some(time) = it
             {
-                if *time > Sphere::KEPSILON
+                if *time > KEPSILON
                 {
                     //c_updateShadeRecNormal(time);
                     shaderecord.m_normal = temp + *time * incomeray.m_velocity;
@@ -83,9 +81,12 @@ impl Geometry for Sphere
                 }
             }
         }
-        res
+        Ok(res)
     }
+}
 
+impl Shadable for Sphere
+{
     fn get_color(&self) -> Colorf { self.m_color }
 
     fn set_color(&mut self, newcolor: Colorf) { self.m_color = newcolor; }
@@ -93,11 +94,33 @@ impl Geometry for Sphere
     fn get_material(&self) -> Arc<dyn Material>
     {
         if let Some(x) = self.m_material.clone() { x }
-        else { panic!("The material is Not set") }
+        else { panic!("The material for sphere is Not set") }
     }
-
     fn set_material(&mut self, material: Arc<dyn Material>)
     {
         self.m_material = Some(material.clone());
+    }
+
+    fn shadow_hit(&self, shadowray: &Ray, tmin: &mut f32) -> bool {
+        let temp = shadowray.m_origin - self.m_center;
+        let a = dot(shadowray.m_velocity, shadowray.m_velocity);
+        let b = 2.0 * dot(temp, shadowray.m_velocity);
+        let c = dot(temp, temp) - self.m_radius.powf(2.0);
+        let roots = get_quadratic_poly_root(a, b, c);
+
+        let mut res = false;
+        for it in roots.iter()
+        {
+            if let Some(time) = it
+            {
+                if *time > KEPSILON
+                {
+                    *tmin = *time;
+                    println!("shadow hit!")
+                    return true;
+                }
+            }
+        }
+        false
     }
 }

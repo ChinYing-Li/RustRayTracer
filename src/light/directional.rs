@@ -2,6 +2,7 @@ use cgmath::{Vector3, InnerSpace};
 use crate::light::Light;
 use crate::utils::color::Colorf;
 use crate::utils::shaderec::ShadeRec;
+use crate::ray::Ray;
 
 #[derive(Debug)]
 pub struct Directional
@@ -40,5 +41,12 @@ impl Light for Directional
     fn L(&self, sr: &mut ShadeRec) -> Colorf
     {
         self.m_color * self.m_ls
+    }
+
+    fn does_cast_shadow(&self) -> bool { true }
+
+    fn is_in_shadow(&self, sr: &ShadeRec, ray: &Ray) -> bool
+    {
+        true
     }
 }

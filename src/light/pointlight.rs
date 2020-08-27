@@ -1,8 +1,10 @@
-use cgmath::Vector3;
+use cgmath::{Vector3, MetricSpace};
 use crate::light::Light;
 use crate::utils::color::Colorf;
 use crate::utils::shaderec::ShadeRec;
 use crate::cgmath::InnerSpace;
+use crate::ray::Ray;
+use crate::geometry::Shadable;
 
 #[derive(Debug)]
 pub struct PointLight
@@ -40,5 +42,23 @@ impl Light for PointLight
     fn L(&self, sr: &mut ShadeRec) -> Colorf
     {
         self.m_color * self.m_ls
+    }
+
+    fn does_cast_shadow(&self) -> bool { true }
+
+    fn is_in_shadow(&self, sr: &ShadeRec, ray: &Ray) -> bool
+    {
+        let disance_to_shadowed = self.m_location.distance(ray.m_origin);
+        let world_ptr = sr.m_worldptr.clone().unwrap();
+        let mut t = 0.0;
+
+        for i in 0..world_ptr.m_objects.len()
+        {
+            if world_ptr.m_objects[i].lock().unwrap()
+                .shadow_hit(ray, &mut t)
+                && t < disance_to_shadowed
+            { return true }
+        }
+        false
     }
 }

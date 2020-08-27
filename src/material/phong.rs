@@ -7,6 +7,8 @@ use crate::utils::shaderec::ShadeRec;
 use crate::brdf::BRDF;
 use crate::light::Light;
 use cgmath::InnerSpace;
+use crate::ray::Ray;
+use crate::utils::colorconstant::COLOR_BLACK;
 
 #[derive(Clone, Debug)]
 pub struct Phong
@@ -36,11 +38,19 @@ impl Material for Phong
             let w_i = worldptr.m_lights[i].get_direction(sr);
             let n_dot_w_i = sr.m_normal.normalize().dot(w_i);
             println!("n_dot_w_i{}", n_dot_w_i);
-            if(n_dot_w_i > 0.0)
+            if n_dot_w_i > 0.0
             {
                 let mut in_shadow = false;
-                clr += (self.m_diffuse_brdf.func(sr, w_o, w_i) +
-                        self.m_spec_brdf.func(sr, w_o, w_i)) *
+                if worldptr.m_lights[i].does_cast_shadow()
+                {
+                    let shadow_ray = Ray::new(sr.m_hitpoint, w_i);
+                    in_shadow = worldptr.m_lights[i].is_in_shadow(sr, &shadow_ray);
+                }
+
+                if in_shadow { return COLOR_BLACK }
+
+                clr += (self.m_diffuse_brdf.func(sr, w_i, w_o) +
+                        self.m_spec_brdf.func(sr, w_i, w_o)) *
                         worldptr.m_lights[i].L(sr)  * n_dot_w_i;
             }
         }

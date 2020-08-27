@@ -6,6 +6,8 @@ use crate::utils::color::Colorf;
 use crate::brdf::BRDF;
 use cgmath::InnerSpace;
 use crate::light::Light;
+use crate::utils::colorconstant::COLOR_BLACK;
+use crate::ray::Ray;
 
 #[derive(Clone, Debug)]
 pub struct Matte
@@ -32,12 +34,19 @@ impl Material for Matte
 
         for i in 0..(worldptr.m_lights.len())
         {
-            let in_direction = worldptr.m_lights[i].get_direction(sr);
-            let in_dot_normal = in_direction.dot(sr.m_normal);
+            let w_i = worldptr.m_lights[i].get_direction(sr);
+            let n_dot_w_i = sr.m_normal.normalize().dot(w_i);
 
-            if in_dot_normal > 0.0
+            if n_dot_w_i > 0.0
             {
-                res_color += worldptr.m_lights[i].L(sr) * in_dot_normal * self.m_diffuse_brdf.func(sr, direction, in_direction);
+                let mut in_shadow = false;
+                if worldptr.m_lights[i].does_cast_shadow()
+                {
+                    let shadow_ray = Ray::new(sr.m_hitpoint, w_i);
+                    in_shadow = worldptr.m_lights[i].is_in_shadow(sr, &shadow_ray);
+                }
+                if in_shadow { return COLOR_BLACK }
+                res_color += worldptr.m_lights[i].L(sr) * n_dot_w_i * self.m_diffuse_brdf.func(sr, w_i, direction);
             }
         }
         res_color

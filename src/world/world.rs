@@ -7,7 +7,7 @@ use crate::world::viewplane::ViewPlane;
 use crate::output::OutputManager;
 use crate::utils::shaderec::ShadeRec;
 use crate::ray::Ray;
-use crate::geometry::Geometry;
+use crate::geometry::{Geometry, Shadable, Concrete};
 use crate::tracer::Tracer;
 use crate::light::ambient::Ambient;
 use crate::light::Light;
@@ -19,7 +19,7 @@ pub struct World
 {
     pub m_backgroundcolor: Colorf,
     pub m_viewplaneptr: Box<ViewPlane>,
-    pub m_objects: Vec<Arc<Mutex<dyn Geometry>>>,
+    pub m_objects: Vec<Arc<Mutex<dyn Concrete>>>,
     pub m_ambientlight: Arc<Ambient>,
     pub m_lights: Vec<Arc<dyn Light>>,
 }
@@ -48,7 +48,7 @@ impl World
         // Not following the book
     }
 
-    pub fn add_object(&mut self, object: Arc<Mutex<dyn Geometry>>)
+    pub fn add_object(&mut self, object: Arc<Mutex<dyn Concrete>>)
     {
         self.m_objects.push(object);
     }
@@ -87,7 +87,7 @@ impl World
         {
             if let mut x = worldptr.clone().m_objects[i].lock().unwrap()
             {
-                if  x.hit(ray, &mut tglobal, srref) && tglobal < tminglobal
+                if  x.hit(ray, &mut tglobal, srref).unwrap() && tglobal < tminglobal
                 {
                     println!("does hit!");
                     tminglobal = tglobal;
@@ -110,36 +110,6 @@ impl World
         }
         sr
     }
-/*
-    fn addWorldRefToShadeRec(&self, sr: &'a mut ShadeRec<'a>)
-    {
-        sr.m_worldref = Option::from(self.clone());
-    }
-
-    pub fn renderScene(&self)
-    {
-        let zdepth = 100.0;
-        let mut ray = Ray::new(Vector3::new(0.0, 0.0, -1.0),
-                                Vector3::new(0.0, 0.0, 0.0));
-        let mut pixcolor = Colorf::new(0.0, 0.0, 0.0);
-        let mut out = output;
-        for i in 0..self.m_viewplaneptr.m_hres
-        {
-            for j in 0..self.m_viewplaneptr.m_vres
-            {
-                if let Ok(coord) = self.m_viewplaneptr.getCoordinateFromIndex(i, j)
-                {
-                    ray.m_origin = Vector3::new(coord[0], coord[1], zdepth);
-                    pixcolor = self.m_tracerptr.traceRay(&self, &ray, 0); // Not yet implemented tracer!!!
-                    (*out).writePixel(i.into(), j.into(), pixcolor);
-                }
-                else
-                {
-                    println!("Invalid coordinates");
-                }
-            }
-        }
-    }*/
 }
 
 #[cfg(test)]
@@ -179,7 +149,7 @@ mod WorldSphereTest
     use crate::material::matte::Matte;
     use crate::brdf::lambertian::Lambertian;
 
-    fn set_up_dummy_world() -> World
+    fn set_up_dummy_world() -> World<T> where T: Shadable + Geometry
     {
         let tracer = Box::new(Whitted::new());
         let mut boxed_vp = Box::new(ViewPlane::new());

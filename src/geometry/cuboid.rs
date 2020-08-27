@@ -1,0 +1,190 @@
+use cgmath::{Vector3, Zero, ElementWise};
+use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError};
+use crate::utils::color::Colorf;
+use std::sync::Arc;
+use crate::utils::shaderec::ShadeRec;
+use crate::material::Material;
+use crate::ray::Ray;
+use std::fmt;
+use std::cmp::{max, min};
+
+pub struct Cuboid
+{
+    pub m_vec0: Vector3<f32>,
+    pub m_vec1: Vector3<f32>,
+    pub m_color: Colorf,
+    pub m_material: Option<Arc<dyn Material>>,
+}
+
+pub enum Face
+{
+    SMALL_X,
+    BIG_X,
+    SMALL_Y,
+    BIG_Y,
+    SMALL_Z,
+    BIG_Z,
+}
+
+impl Cuboid
+{
+    pub fn new(vec0: Vector3<f32>, vec1: Vector3<f32>, color: Colorf) -> Cuboid
+    {
+        Cuboid
+        {
+            m_vec0: vec0,
+            m_vec1: vec1,
+            m_color: color,
+            m_material: None
+        }
+    }
+
+    pub fn get_normal(&self, face: Face) -> Vector3<f32>
+    {
+        match face
+        {
+            Face::SMALL_X => -Vector3::unit_x(),
+            Face::BIG_X => Vector3::unit_x(),
+            Face::SMALL_Y => -Vector3::unit_y(),
+            Face::BIG_Y => Vector3::unit_y(),
+            Face::SMALL_Z => -Vector3::unit_z(),
+            _ => Vector3::unit_z(),
+        }
+    }
+}
+
+impl fmt::Debug for Cuboid
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
+        f.debug_struct("Cuboid")
+            .field("Vector 0", &self.m_vec0)
+            .field("Vector 1", &self.m_vec1)
+            .finish()
+    }
+}
+
+impl Geometry for Cuboid
+{
+    fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
+    {
+        let mut t_min = Vector3::zero();
+        let mut t_max = Vector3::zero();
+        let INV_VEL = Vector3::new(1.0, 1.0, 1.0).div_element_wise(incomeray.m_velocity);
+
+        if INV_VEL.x >= 0.0
+        {
+            t_min.x = (self.m_vec0.x - incomeray.m_origin.x) * INV_VEL.x;
+            t_max.x = (self.m_vec1.x - incomeray.m_origin.x) * INV_VEL.x;
+        } else {
+            t_min.x = (self.m_vec1.x - incomeray.m_origin.x) * INV_VEL.x;
+            t_max.x = (self.m_vec0.x - incomeray.m_origin.x) * INV_VEL.x;
+        }
+
+        if INV_VEL.y >= 0.0
+        {
+            t_min.y = (self.m_vec0.y - incomeray.m_origin.y) * INV_VEL.y;
+            t_max.y = (self.m_vec1.y - incomeray.m_origin.y) * INV_VEL.y;
+        } else {
+            t_min.y = (self.m_vec1.y - incomeray.m_origin.y) * INV_VEL.y;
+            t_max.y = (self.m_vec0.y - incomeray.m_origin.y) * INV_VEL.y;
+        }
+
+        if INV_VEL.z >= 0.0
+        {
+            t_min.z = (self.m_vec0.z - incomeray.m_origin.z) * INV_VEL.z;
+            t_max.z = (self.m_vec1.z - incomeray.m_origin.z) * INV_VEL.z;
+        } else {
+            t_min.z = (self.m_vec1.z - incomeray.m_origin.z) * INV_VEL.z;
+            t_max.z = (self.m_vec0.z - incomeray.m_origin.z) * INV_VEL.z;
+        }
+
+        let mut max_tmin = 0.0;
+        let mut min_tmax = 0.0;
+        let mut face_in: Face = Face::SMALL_X;
+        let mut face_out: Face = Face::SMALL_X;
+
+        let mut t_min_max_component = if t_min.x >= t_min.y { t_min.x } else { t_min.y };
+        t_min_max_component = if t_min.z >= t_min_max_component { t_min.z } else { t_min_max_component };
+
+        if t_min_max_component == t_min.x
+        {
+                max_tmin = t_min.x;
+                face_in = if INV_VEL.x >= 0.0 { Face::SMALL_X } else { Face::BIG_X };
+        }
+        else if t_min_max_component == t_min.y
+        {
+                    max_tmin = t_min.y;
+                    face_in = if INV_VEL.y >= 0.0 {Face::SMALL_Y} else { Face::BIG_Y };
+        }
+        else
+        {
+                    max_tmin = t_min.z;
+                    face_in = if INV_VEL.z >= 0.0 {Face::SMALL_Z} else { Face::BIG_Z};
+        }
+
+        let mut t_max_min_component = if t_max.x <= t_max.y { t_max.x } else { t_min.y };
+        t_min_max_component = if t_min.z <= t_min_max_component { t_min.z } else { t_min_max_component };
+
+        if t_max_min_component == t_max.x
+        {
+                    min_tmax = t_max.x;
+                    face_out = if INV_VEL.x >= 0.0 { Face::SMALL_X } else { Face::BIG_X };
+        }
+        else if t_max_min_component == t_max.y
+        {
+                    min_tmax = t_min.y;
+                    face_in = if INV_VEL.y >= 0.0 { Face::SMALL_Y } else { Face::BIG_Y };
+        }
+        else
+        {
+                    min_tmax = t_min.z;
+                    face_in = if INV_VEL.z >= 0.0 { Face::SMALL_Z } else { Face::BIG_Z };
+        }
+
+        let mut tmin = 0.0;
+
+        if max_tmin < min_tmax && min_tmax > KEPSILON
+        {
+            if max_tmin > KEPSILON
+            {
+                tmin = max_tmin;
+                shaderecord.m_normal = self.get_normal(face_in);
+            }
+            else {
+                tmin = min_tmax;
+                shaderecord.m_normal = self.get_normal(face_out);
+            }
+            shaderecord.m_hitpoint = incomeray.m_origin + tmin * incomeray.m_velocity;
+            return Ok(true)
+        }
+        Ok(false)
+    }
+}
+
+impl Shadable for Cuboid
+{
+    fn get_color(&self) -> Colorf
+    {
+        self.m_color
+    }
+
+    fn set_color(&mut self, newcolor: Colorf)
+    {
+        self.m_color = newcolor;
+    }
+
+    fn get_material(&self) -> Arc<dyn Material>
+    {
+        if let Some(x) = self.m_material.clone() { x }
+        else { panic!("The material for Cuboid is Not set") }
+    }
+
+    fn set_material(&mut self, material: Arc<dyn Material>) {
+        self.m_material = Some(material.clone());
+    }
+
+    fn shadow_hit(&self, ray: &Ray, tmin: &mut f32) -> bool {
+        true
+    }
+}
