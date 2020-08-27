@@ -44,10 +44,10 @@ fn main()
                                            Vector3::new(12.0, 20.0, 15.0),
                                            Colorf::new(0.0, 1.0, 0.0))));
     let mut sphereB = Arc::new(Mutex::new(Sphere::new(15.0,
-                                           Vector3::new(60.0, 10.0, 20.0),
+                                           Vector3::new(30.0, 10.0, 20.0),
                                            Colorf::new(1.0, 0.0, 0.0))));
-    let mut sphereC = Arc::new(Mutex::new(Sphere::new(15.0,
-                                                      Vector3::new(50.0, 10.0, 20.0),
+    let mut sphereC = Arc::new(Mutex::new(Sphere::new(5.0,
+                                                      Vector3::new(30.0, 10.0, 10.0),
                                                       Colorf::new(0.0, 1.0, 1.0))));
     world.add_object(sphereA);
     world.add_object(sphereB);
@@ -92,9 +92,11 @@ fn setUpMaterial(r: f32, g: f32, b: f32) -> Phong
 fn setUpLights(world: &mut World)
 {
     let point = PointLight::new(0.5, COLOR_WHITE, Vector3::new(-50.0, 60.0, 0.0));
+    let point2 = PointLight::new(0.3, COLOR_RED, Vector3::new(30.0, 10.0, -5.0));
     let mut ambient = Ambient::new(COLOR_BLUE);
     ambient.set_radiance_scaling_factor(0.1);
     world.add_light(Arc::new(point));
+    world.add_light(Arc::new(point2));
     world.set_ambient(Arc::new(ambient));
 }
 

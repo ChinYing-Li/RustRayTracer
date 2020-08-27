@@ -116,7 +116,7 @@ impl Shadable for Sphere
                 if *time > KEPSILON
                 {
                     *tmin = *time;
-                    println!("shadow hit!")
+                    println!("shadow hit!");
                     return true;
                 }
             }

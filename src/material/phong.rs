@@ -47,11 +47,12 @@ impl Material for Phong
                     in_shadow = worldptr.m_lights[i].is_in_shadow(sr, &shadow_ray);
                 }
 
-                if in_shadow { return COLOR_BLACK }
-
-                clr += (self.m_diffuse_brdf.func(sr, w_i, w_o) +
+                if !in_shadow
+                {
+                    clr += (self.m_diffuse_brdf.func(sr, w_i, w_o) +
                         self.m_spec_brdf.func(sr, w_i, w_o)) *
                         worldptr.m_lights[i].L(sr)  * n_dot_w_i;
+                }
             }
         }
         clr
