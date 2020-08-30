@@ -11,7 +11,7 @@ use std::error::Error;
 pub trait Material
 {
     fn shade(&self, sr: &mut ShadeRec) -> Colorf;
-  //  fn areaLightShade<'a>(&self, sr: &'a mut ShadeRec);
+    fn area_light_shade<'a>(&self, sr: &'a mut ShadeRec) -> Colorf;
    // fn pathShade<'a>(&self, sr: &'a mut ShadeRec);
 }
 

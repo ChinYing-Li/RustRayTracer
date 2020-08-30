@@ -1,18 +1,14 @@
 use std::sync::{Arc, Mutex};
-use cgmath::{Vector2, Vector3, Zero};
+use cgmath::{Vector3, Zero};
 use std::{f32};
 
 use crate::utils::color::Colorf;
 use crate::world::viewplane::ViewPlane;
-use crate::output::OutputManager;
 use crate::utils::shaderec::ShadeRec;
 use crate::ray::Ray;
 use crate::geometry::{Geometry, Shadable, Concrete};
-use crate::tracer::Tracer;
 use crate::light::ambient::Ambient;
 use crate::light::Light;
-use std::ops::Deref;
-use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct World
@@ -75,7 +71,8 @@ impl World
 
     pub fn hit_objects(worldptr: Arc<World>, ray: &Ray, tmin: f32) -> ShadeRec
     {
-        let mut sr = ShadeRec::new(worldptr.clone());
+        let mut sr = ShadeRec::new();
+        sr.set_world(worldptr.clone());
         let srref = &mut sr;
         let mut normal = Vector3::zero();
         let mut hitpoint = Vector3::zero();
@@ -85,7 +82,7 @@ impl World
 
         for i in 0..worldptr.clone().m_objects.len()
         {
-            if let mut x = worldptr.clone().m_objects[i].lock().unwrap()
+            if let x = worldptr.clone().m_objects[i].lock().unwrap()
             {
                 if  x.hit(ray, &mut tglobal, srref).unwrap() && tglobal < tminglobal
                 {
@@ -149,7 +146,7 @@ mod WorldSphereTest
     use crate::material::matte::Matte;
     use crate::brdf::lambertian::Lambertian;
 
-    fn set_up_dummy_world() -> World<T> where T: Shadable + Geometry
+    fn set_up_dummy_world() -> World
     {
         let tracer = Box::new(Whitted::new());
         let mut boxed_vp = Box::new(ViewPlane::new());
@@ -158,23 +155,21 @@ mod WorldSphereTest
         World::new(boxed_vp)
     }
 
-    const matte: Matte = Matte
+    fn setUpSphere() -> Sphere
     {
-        m_ambient_brdf: Arc::new(Lambertian::new(2.0, COLOR_RED)),
-        m_diffuse_brdf: Arc::new(Lambertian::new(1.0, COLOR_RED)),
-    };
-
-    const sphere: Sphere = Sphere{ m_radius: 5.0,
-        m_center: Vector3::new(0.0, 0.0, 0.0),
-        m_color: COLOR_RED,
-        m_material: Some(Arc::new(matte)),
-    };
+        let matte = Matte::new(
+                            Arc::new(Lambertian::new(2.0, COLOR_RED)),
+                            Arc::new(Lambertian::new(1.0, COLOR_RED)), );
+        let mut sphere = Sphere::new(5.0, Vector3::new(0.0, 0.0, 0.0), COLOR_RED);
+        sphere.set_material(Arc::new(matte));
+        sphere
+    }
 
     #[test]
     fn checkHitSingleSphere()
     {
         let mut world = set_up_dummy_world();
-        world.add_object(Arc::new(Mutex::new(sphere)));
+        world.add_object(Arc::new(Mutex::new(setUpSphere())));
 
         let mut ray = Ray::new( Vector3::new(10.0, 3.0, 0.0),
                                 Vector3::new(-1.0, 0.0, 0.0));
@@ -190,9 +185,10 @@ mod WorldSphereTest
     {
         let mut ray = Ray::new(Vector3::new(7.0, 0.5, 0.0), Vector3::new(-3.0, 3.0, 0.0));
         let mut world = set_up_dummy_world();
-        let mut shaderecord = ShadeRec::new(Arc::new(world));
+        let mut shaderecord = ShadeRec::new();
         let mut tmin = 100.0;
-        let res = sphere.hit(&ray, &mut tmin, &mut shaderecord);
-        assert!(!res);
+        let sphere = setUpSphere();
+        let res = sphere.hit(&ray, &mut tmin, &mut shaderecord).unwrap();
+        assert_eq!(res, false);
     }
 }

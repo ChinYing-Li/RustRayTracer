@@ -1,3 +1,4 @@
+pub mod arealight;
 pub mod ambientocc;
 
 use cgmath::Vector3;

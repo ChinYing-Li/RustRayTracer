@@ -1,14 +1,12 @@
 use crate::{camera::{CamStruct, Camera},
             ray::Ray,
-            world::world::World,
-            utils::color::Colorf};
+            world::world::World};
 
 use cgmath::{Vector3, Vector2, Zero, ElementWise, InnerSpace};
 use rand::Rng;
 use crate::utils::colorconstant::COLOR_BLACK;
 use crate::tracer::Tracer;
 use crate::output::OutputManager;
-use std::rc::Rc;
 use std::sync::Arc;
 
 pub struct Pinhole
@@ -38,7 +36,7 @@ impl Camera for Pinhole
              .normalize()
     }
 
-    fn render_scene<'a>(&mut self, worldptr: Arc<World>, tracer: &'a Tracer, outmgr: &'a mut OutputManager, zoom: f32)
+    fn render_scene<'a>(&mut self, worldptr: Arc<World>, tracer: &'a dyn Tracer, outmgr: &'a mut dyn OutputManager, zoom: f32)
     {
         let mut clr = COLOR_BLACK;
         let mut vp = (worldptr.m_viewplaneptr).clone();

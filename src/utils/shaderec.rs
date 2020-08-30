@@ -8,10 +8,8 @@ use std::sync::Arc;
 use crate::utils::color::Colorf;
 use std::f32::INFINITY;
 use crate::geometry::Geometry;
-use crate::light::Light;
 use crate::material::Material;
 use std::fmt::{Debug, Formatter};
-use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct ShadeRec
@@ -31,7 +29,7 @@ pub struct ShadeRec
 
 impl ShadeRec
 {
-    pub fn new(worldptr: Arc<World>) -> ShadeRec
+    pub fn new() -> ShadeRec
     {
         ShadeRec{
             m_material: None,
@@ -41,11 +39,16 @@ impl ShadeRec
             m_local_hitpoint: Vector3::zero(),
             m_ray: Ray::new(Vector3::zero(), Vector3::zero()),
             m_light_dir: Vector3::zero(),
-            m_worldptr: Some(worldptr),
+            m_worldptr: None,
             m_color: Colorf::new(0.0, 0.0, 0.0),
             m_time: INFINITY,
             m_depth: 0,
         }
+    }
+
+    pub fn set_world(&mut self, worldptr: Arc<World>)
+    {
+        self.m_worldptr = Some(worldptr);
     }
 }
 

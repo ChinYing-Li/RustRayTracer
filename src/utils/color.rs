@@ -1,8 +1,5 @@
-use cgmath::prelude::*;
-
 use std::{f32, convert::{From, Into}};
 use std::ops::{Add, Mul, Div, Sub, MulAssign, AddAssign, SubAssign, DivAssign};
-use approx::{RelativeEq, AbsDiffEq};
 
 const INV_255 : f32 = 1.0 / 255.0;
 

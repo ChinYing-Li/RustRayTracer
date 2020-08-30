@@ -123,8 +123,8 @@ impl Geometry for Cuboid
                     face_in = if INV_VEL.z >= 0.0 {Face::SMALL_Z} else { Face::BIG_Z};
         }
 
-        let mut t_max_min_component = if t_max.x <= t_max.y { t_max.x } else { t_min.y };
-        t_min_max_component = if t_min.z <= t_min_max_component { t_min.z } else { t_min_max_component };
+        let mut t_max_min_component = if t_max.x <= t_max.y { t_max.x } else { t_max.y };
+        t_max_min_component = if t_max.z <= t_max_min_component { t_max.z } else { t_max_min_component };
 
         if t_max_min_component == t_max.x
         {
@@ -142,20 +142,18 @@ impl Geometry for Cuboid
                     face_in = if INV_VEL.z >= 0.0 { Face::SMALL_Z } else { Face::BIG_Z };
         }
 
-        let mut tmin = 0.0;
-
         if max_tmin < min_tmax && min_tmax > KEPSILON
         {
             if max_tmin > KEPSILON
             {
-                tmin = max_tmin;
+                *time = max_tmin;
                 shaderecord.m_normal = self.get_normal(face_in);
             }
             else {
-                tmin = min_tmax;
+                *time = min_tmax;
                 shaderecord.m_normal = self.get_normal(face_out);
             }
-            shaderecord.m_hitpoint = incomeray.m_origin + tmin * incomeray.m_velocity;
+            shaderecord.m_hitpoint = incomeray.m_origin + *time * incomeray.m_velocity;
             return Ok(true)
         }
         Ok(false)
@@ -186,5 +184,34 @@ impl Shadable for Cuboid
 
     fn shadow_hit(&self, ray: &Ray, tmin: &mut f32) -> bool {
         true
+    }
+}
+
+#[cfg(test)]
+mod CuboidTest
+{
+    use cgmath::Vector3;
+    use std::f32::INFINITY;
+    use approx::{assert_relative_eq};
+
+    use super::*;
+    use crate::utils::colorconstant::COLOR_BLACK;
+
+    #[test]
+    fn check_hit_small_x()
+    {
+        let v0 = Vector3::new(0.0, -5.0, 6.0);
+        let v1 = Vector3::new(5.0, 0.0, 10.0);
+        let cuboid = Cuboid::new(v0, v1, COLOR_BLACK);
+
+        let mut sr = ShadeRec::new();
+        let ray = Ray::new(Vector3::new(-10.0, -2.0, 8.0),
+                           Vector3::new(1.0, 0.0, 0.0));
+        let mut t = INFINITY;
+        let res = cuboid.hit(&ray, &mut t,&mut sr);
+
+        assert_eq!(res.unwrap(), true);
+        assert_relative_eq!(sr.m_normal, -Vector3::unit_x());
+        assert_relative_eq!(t, 10.0);
     }
 }

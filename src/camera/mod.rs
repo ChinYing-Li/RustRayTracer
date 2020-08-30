@@ -1,10 +1,8 @@
 use cgmath::{Vector3, InnerSpace, dot, ElementWise, Zero, Vector2};
 use std::{f32};
 use crate::world::world::World;
-use crate::camera::pinhole::Pinhole;
 use crate::tracer::Tracer;
 use crate::output::OutputManager;
-use std::rc::Rc;
 use std::sync::Arc;
 
 type Point3<T> = Vector3<T>;
@@ -58,8 +56,8 @@ pub trait Camera
 {
     fn get_ray_direction(&self, vp_coords: Vector2<f32>) -> Vector3<f32>;
     fn render_scene<'a>(&mut self, worldptr: Arc<World>,
-                   tracer: &'a Tracer,
-                   outmgr: &'a mut OutputManager,
+                   tracer: &'a dyn Tracer,
+                   outmgr: &'a mut dyn OutputManager,
                    zoom: f32);
 }
 
@@ -69,7 +67,6 @@ pub mod pinhole;
 mod CamStructTest
 {
     use super::*;
-
     use approx::{assert_relative_eq};
 
     #[test]

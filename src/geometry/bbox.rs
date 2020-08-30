@@ -14,6 +14,18 @@ pub struct BBox
     pub m_vertex_1: Vector3<f32>,
 }
 
+impl BBox
+{
+    pub fn new(vertex_0: Vector3<f32>, vertex_1: Vector3<f32>) -> BBox
+    {
+        BBox
+        {
+            m_vertex_0: vertex_0,
+            m_vertex_1: vertex_1,
+        }
+    }
+}
+
 impl fmt::Debug for BBox
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
@@ -68,9 +80,36 @@ impl Geometry for BBox
 
         let mut t_min_max_component = if t_min.x >= t_min.y { t_min.x } else { t_min.y };
         t_min_max_component = if t_min.z >= t_min_max_component { t_min.z } else { t_min_max_component };
-        let mut t_max_min_component = if t_max.x <= t_max.y { t_max.x } else { t_min.y };
-        t_min_max_component = if t_min.z <= t_min_max_component { t_min.z } else { t_min_max_component };
+
+        let mut t_max_min_component = if t_max.x <= t_max.y { t_max.x } else { t_max.y };
+        t_max_min_component = if t_max.z <= t_max_min_component { t_max.z } else { t_max_min_component };
 
         Ok(t_min_max_component < t_max_min_component && t_max_min_component > KEPSILON)
+    }
+}
+
+#[cfg(test)]
+mod BBoxTest
+{
+    use cgmath::Vector3;
+    use std::f32::INFINITY;
+    use approx::{assert_relative_eq};
+
+    use super::*;
+
+    #[test]
+    fn check_hit_small_x()
+    {
+        let v0 = Vector3::new(0.0, -5.0, 6.0);
+        let v1 = Vector3::new(5.0, 0.0, 10.0);
+        let bbox = BBox::new(v0, v1);
+
+        let mut sr = ShadeRec::new();
+        let ray = Ray::new(Vector3::new(-10.0, -10.0, 0.0),
+                                Vector3::new(5.0, 3.5, 4.0));
+        let mut t = INFINITY;
+        let res = bbox.hit(&ray, &mut t,&mut sr);
+
+        assert_eq!(res.unwrap(), true);
     }
 }

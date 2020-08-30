@@ -1,8 +1,9 @@
+pub mod arealighting;
+
 use crate::ray::Ray;
 use crate::utils::color::Colorf;
 use crate::world::world::World;
 use std::sync::Arc;
-use std::rc::Rc;
 
 pub mod whitted;
 
