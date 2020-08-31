@@ -11,10 +11,33 @@ use crate::geometry::triangle::Triangle;
 
 pub struct TriMesh
 {
-    pub triangles: Vec<MeshTriangle>,
 }
 
-pub struct MeshTriangle
+impl TriMesh
 {
-    
+    pub fn new() -> TriMesh
+    {
+        TriMesh
+        {
+
+        }
+    }
+}
+
+impl fmt::Debug for TriMesh
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
+        f.debug_struct("TriMesh")
+            .finish()
+        // .field("number of vertices", &self.m_num_vertices)
+        //.field("number of triangles", &self.m_num_triangles)
+    }
+}
+
+impl Geometry for TriMesh
+{
+    fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError> {
+        unimplemented!()
+    }
 }

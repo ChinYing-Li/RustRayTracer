@@ -73,8 +73,8 @@ impl fmt::Debug for Triangle
 impl Geometry for Triangle
 {
     fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError> {
-        let v10 = self.m_vertex_1 - self.m_vertex_0;
-        let v20 = self.m_vertex_2 - self.m_vertex_0;
+        let v10 = self.m_vertex_0 - self.m_vertex_1;
+        let v20 = self.m_vertex_0 - self.m_vertex_2;
         let mat = Matrix3::new(v10.x, v10.y, v10.z,
                                         v20.x, v20.y, v20.z,
                                         incomeray.m_velocity.x, incomeray.m_velocity.y, incomeray.m_velocity.z);
@@ -86,8 +86,8 @@ impl Geometry for Triangle
             Some(inverted_mat) => solution = inverted_mat * rhs,
             _ => return Err(GeomError::NoSolutionError)
         }
-
-        if solution.y < 0.0 { return Ok(false) }
+        print!("{}, {}, {}", solution.x, solution.y, solution.z);;
+        if solution.y < 0.0 || solution.x < 0.0 { return Ok(false) }
         if solution.x + solution.y > 1.0 { return Ok(false) }
         if solution.z < KEPSILON { return Ok(false) }
 
@@ -146,13 +146,13 @@ mod TriangleTest
 
         let mut sr = ShadeRec::new();
         let ray = Ray::new(Vector3::new(0.3, 0.5, -1.0),
-                                Vector3::new(0.2, 0.5, 3.0));
-        let mut t = 2.0;
+                                Vector3::new(0.01, 0.1, 1.2));
+        let mut t = INFINITY;
         let res = triangle.hit(&ray, &mut t, &mut sr);
 
         assert_eq!(res.unwrap(), true);
         assert_relative_eq!(sr.m_normal, Vector3::new(0.8944271909999159, 0.0, -0.4472135954999579));
-        assert_relative_eq!(t, 1.0);
+        assert_relative_eq!(t, 1.3559322033898307);
     }
 
     #[test]

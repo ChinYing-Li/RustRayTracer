@@ -1,6 +1,6 @@
 use crate::geometry::{Geometry, GeomError};
 use std::sync::Arc;
-use cgmath::{Matrix3, SquareMatrix, Vector3};
+use cgmath::{Matrix3, SquareMatrix, Vector3, Matrix4};
 use crate::utils::shaderec::ShadeRec;
 use crate::ray::Ray;
 use std::fmt;
