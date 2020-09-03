@@ -1,12 +1,14 @@
 use cgmath::{Vector2, Vector3};
 use crate::sampler::{Sampler, SamplerCore};
 use rand::Rng;
+use rand::rngs::ThreadRng;
+use std::borrow::BorrowMut;
+use std::cell::RefCell;
 
 pub struct Jittered
 {
     m_core: SamplerCore,
-    m_indices_for_shuffling: Vec<u16>,
-    m_index_step: u16,
+    m_rng: RefCell<ThreadRng>,
 }
 
 impl Jittered
@@ -18,8 +20,7 @@ impl Jittered
         Jittered
         {
             m_core: core,
-            m_indices_for_shuffling: Vec::with_capacity(0),
-            m_index_step: 5, // TODO refactor Jittered
+            m_rng: RefCell::new(rand::thread_rng()),
         }
     }
 }
@@ -30,7 +31,7 @@ impl Sampler for Jittered
     {
         let sqrt_sample_per_pattern = (self.m_core.m_sample_per_pattern as f32).sqrt() as u16;
         let inv_sqrt = 1.0 / sqrt_sample_per_pattern as f32;
-        let mut rng = rand::thread_rng();
+        let mut rng_ref = self.m_rng.borrow_mut();
 
         for _ in 0..self.m_core.m_num_pattern
         {
@@ -38,11 +39,14 @@ impl Sampler for Jittered
             {
                 for j in 0..sqrt_sample_per_pattern
                 {
-                    self.m_core.m_samples.push(Vector2::new(i as f32 * inv_sqrt + rng.gen_range(0.0, inv_sqrt),
-                                                                  j as f32 * inv_sqrt + rng.gen_range(0.0, inv_sqrt)));
+                    self.m_core.m_samples.push(Vector2::new(i as f32 * inv_sqrt + rng_ref.gen_range(0.0, inv_sqrt),
+                                                                  j as f32 * inv_sqrt + rng_ref.gen_range(0.0, inv_sqrt)));
                 }
             }
         }
+
+        if self.m_core.m_map_to_disk { self.m_core.map_sample_to_disk(); }
+        if self.m_core.m_map_to_hemisphere { self.m_core.map_sample_to_hemisphere(1.0); }
     }
 
     fn set_map_to_disk(&mut self, flag: bool) {
@@ -53,16 +57,29 @@ impl Sampler for Jittered
         self.m_core.set_map_to_hemisphere(flag, e);
     }
 
-    fn get_unit_square_sample(&self) -> Vector2<f32> {
-        unimplemented!()
+    fn get_unit_square_sample(&mut self) -> Vector2<f32>
+    {
+        self.m_core.get_unit_square_sample()
     }
 
-    fn get_disk_sample(&self) -> Vector2<f32> {
-        unimplemented!()
+    fn get_disk_sample(&self) -> Vector2<f32>
+    {
+        let index = self.m_rng.borrow_mut().gen::<u16>() as usize;
+        match self.m_core.get_disk_sample(index)
+        {
+            Ok(sample) => sample,
+            _ => panic!("The Jittered Sampler isn't set to generate samples on disk")
+        }
     }
 
-    fn get_hemisphere_sample(&self) -> Vector3<f32> {
-        unimplemented!()
+    fn get_hemisphere_sample(&self) -> Vector3<f32>
+    {
+        let index = self.m_rng.borrow_mut().gen::<u16>() as usize;
+        match self.m_core.get_hemisphere_sample(index)
+        {
+            Ok(sample) => sample,
+            _ => panic!("The Jittered Sampler isn't set to generate samples on hemisphere")
+        }
     }
 }
 

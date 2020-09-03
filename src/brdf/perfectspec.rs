@@ -1,5 +1,5 @@
 use crate::brdf::BRDF;
-use cgmath::Vector3;
+use cgmath::{Vector3, InnerSpace, ElementWise};
 use crate::utils::color::Colorf;
 use crate::utils::shaderec::ShadeRec;
 use crate::utils::colorconstant::COLOR_BLACK;
@@ -7,14 +7,19 @@ use crate::utils::colorconstant::COLOR_BLACK;
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PerfectSpecular
 {
-    // TODO: Perfect Specular BRDF
+    pub m_kr: f32,
+    pub m_cr: Colorf,
 }
 
 impl PerfectSpecular
 {
-    pub fn new() -> PerfectSpecular
+    pub fn new(kr: f32, cr: Colorf) -> PerfectSpecular
     {
-        PerfectSpecular{ }
+        PerfectSpecular
+        {
+            m_kr: kr,
+            m_cr: cr,
+        }
     }
 }
 
@@ -27,7 +32,9 @@ impl BRDF for PerfectSpecular
 
     fn sampleFunc(&self, sr: &ShadeRec, w_i: Vector3<f32>, w_o: Vector3<f32>) -> Colorf
     {
-        COLOR_BLACK
+        let n_dot_w_o = sr.m_normal.dot(w_o);
+        let new_w_i = -w_o + sr.m_normal.mul_element_wise(n_dot_w_o * 2.0);
+        self.m_cr * (self.m_kr / sr.m_normal.dot(new_w_i))
     }
 
     fn rho(&self, sr: &ShadeRec, w_o: Vector3<f32>) -> Colorf

@@ -37,7 +37,7 @@ impl Sampler for NRooks
         unimplemented!()
     }
 
-    fn get_unit_square_sample(&self) -> Vector2<f32> {
+    fn get_unit_square_sample(&mut self) -> Vector2<f32> {
         unimplemented!()
     }
 

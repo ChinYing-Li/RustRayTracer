@@ -1,3 +1,4 @@
+pub mod reflective;
 pub mod emissive;
 pub mod matte;
 pub mod phong;

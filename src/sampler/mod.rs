@@ -6,7 +6,9 @@ use cgmath::{Vector2, Vector3, ElementWise};
 use std::{f32, f32::consts::PI};
 use approx::RelativeEq;
 use cgmath::num_traits::Inv;
-use rand::{Rng, seq::SliceRandom};
+use rand::{Rng, seq::SliceRandom, thread_rng};
+use std::error::Error;
+use std::cell::Cell;
 
 type Point2<T> = Vector2<T>;
 
@@ -15,11 +17,13 @@ struct SamplerCore
     pub m_sample_per_pattern: usize,
     pub m_num_pattern: usize,
     m_samples: Vec<Vector2<f32>>,
-    m_samples_on_disk: Option<Vec<Vector2<f32>>>,
-    m_samples_on_hemisphere: Option<Vec<Vector3<f32>>>,
-    pub m_shuffled_indices: Option<Vec<Vector3<f32>>>,
     m_map_to_disk: bool,
     m_map_to_hemisphere: bool,
+    m_samples_on_disk: Option<Vec<Vector2<f32>>>,
+    m_samples_on_hemisphere: Option<Vec<Vector3<f32>>>,
+
+    pub m_shuffled_indices: Vec<u32>,
+    m_current_index: usize,
 }
 
 impl SamplerCore
@@ -31,11 +35,13 @@ impl SamplerCore
             m_sample_per_pattern: sample_per_pattern,
             m_num_pattern: num_pattern,
             m_samples : Vec::with_capacity((sample_per_pattern as usize * num_pattern) as usize),
-            m_samples_on_disk: None,
-            m_samples_on_hemisphere: None,
-            m_shuffled_indices: None,
             m_map_to_disk: false,
             m_map_to_hemisphere: false,
+            m_samples_on_disk: None,
+            m_samples_on_hemisphere: None,
+
+            m_shuffled_indices: SamplerCore::setup_shuffled_indices(num_pattern, sample_per_pattern),
+            m_current_index: 0,
         }
     }
 
@@ -44,7 +50,7 @@ impl SamplerCore
         if flag != self.m_map_to_disk
         {
             self.m_map_to_disk = flag;
-            if flag
+            if flag && !self.m_samples.is_empty()
             {
                 self.map_sample_to_disk();
             }
@@ -56,39 +62,30 @@ impl SamplerCore
         if flag != self.m_map_to_hemisphere
         {
             self.m_map_to_hemisphere = flag;
-            if flag
+            if flag && !self.m_samples.is_empty()
             {
                 self.map_sample_to_hemisphere(e);
             }
         }
     }
 
-    fn get_unit_square_sample(&self, index: usize) -> Vector2<f32>
+    fn get_unit_square_sample(&mut self) -> Vector2<f32>
     {
-        if index >= self.m_sample_per_pattern * self.m_num_pattern
-        {
-            panic!("Index out of range when retrieving samples on unit square")
-        }
-        self.m_samples[index]
+        self.m_current_index += 1;
+        self.m_current_index %= self.m_sample_per_pattern * self.m_num_pattern;
+        self.m_samples[self.m_current_index]
     }
 
-    fn get_disk_sample(&self, index: usize) -> Vector2<f32>
+    fn get_disk_sample(&self, index: usize) -> Result<Vector2<f32>, &str>
     {
-        if index >= self.m_sample_per_pattern * self.m_num_pattern
-        {
-            panic!("Index out of range when retrieving samples on disk")
-        }
-        if !self.m_map_to_disk { panic!("") }
-        self.m_samples_on_disk.as_ref().unwrap()[index]
+        if !self.m_map_to_disk { return Err("") }
+        Ok(self.m_samples_on_disk.as_ref().unwrap()[index%(self.m_samples.len())])
     }
 
-    fn get_hemisphere_sample(&self, index: usize) -> Vector3<f32>
+    fn get_hemisphere_sample(&self, index: usize) -> Result<Vector3<f32>, &str>
     {
-        if index >= self.m_sample_per_pattern * self.m_num_pattern
-        {
-            panic!("Index out of range when retrieving samples on hemisphere")
-        }
-        self.m_samples_on_hemisphere.as_ref().unwrap()[index]
+        if !self.m_map_to_hemisphere { return Err("") }
+        Ok(self.m_samples_on_hemisphere.as_ref().unwrap()[index%(self.m_samples.len())])
     }
 
     fn shuffle_x_coordinates(&mut self)
@@ -127,17 +124,18 @@ impl SamplerCore
         }
     }
 
-    pub fn setup_shuffled_indices(&mut self)
+    fn setup_shuffled_indices(num_pattern: usize, sample_per_pattern: usize) -> Vec<u32>
     {
         let mut rng = rand::thread_rng();
-        let mut shuffled_indices: Vec<u32> = Vec::with_capacity(self.m_sample_per_pattern * self.m_num_pattern);
-        let mut orig_indices: Vec<_> = (0..self.m_sample_per_pattern as u32).collect();
+        let mut shuffled_indices: Vec<u32> = Vec::with_capacity(sample_per_pattern * num_pattern);
+        let mut orig_indices: Vec<_> = (0..sample_per_pattern as u32).collect();
 
-        for _ in 0..self.m_num_pattern
+        for _ in 0..num_pattern
         {
             orig_indices.shuffle(&mut rng);
             shuffled_indices.extend(&orig_indices);
         }
+        shuffled_indices
     }
 
     fn map_sample_to_disk(&mut self)
@@ -152,12 +150,12 @@ impl SamplerCore
         let mut diskpattern = Vec::with_capacity(n);
         let identityvec = Vector2::new(1.0, 1.0);
 
-        for i in 0..n
+        for square_sample in self.m_samples.iter()
         {
-            samp = self.m_samples[i as usize].mul_element_wise(2.0) - identityvec;
-            if(samp.x > -samp.y)
+            samp = square_sample.mul_element_wise(2.0) - identityvec;
+            if samp.x > -samp.y
             {
-                if(samp.x > samp.y)
+                if samp.x > samp.y
                 {
                     radius = samp.x;
                     phi = samp.y / samp.x;
@@ -172,7 +170,7 @@ impl SamplerCore
             {
                 if samp.x < samp.y
                 {
-                    radius = - samp.y;
+                    radius = - samp.x;
                     phi = 4.0 + samp.y / samp.x;
                 }
                 else {
@@ -186,7 +184,7 @@ impl SamplerCore
             }
 
             phi *= PI / 4.0;
-            diskpattern.push(Vector2::new(radius*phi.cos(), radius*phi.sin()));
+            diskpattern.push(Vector2::new(radius * phi.cos(), radius * phi.sin()));
         }
         self.m_samples_on_disk = Some(diskpattern);
     }
@@ -215,7 +213,7 @@ pub trait Sampler
     fn generate_sample_pattern(&mut self);
     fn set_map_to_disk(&mut self, flag: bool);
     fn set_map_to_hemisphere(&mut self, flag: bool, e: f32);
-    fn get_unit_square_sample(&self) -> Vector2<f32>;
+    fn get_unit_square_sample(&mut self) -> Vector2<f32>;
     fn get_disk_sample(&self) -> Vector2<f32>;
     fn get_hemisphere_sample(&self) -> Vector3<f32>;
 }

@@ -1,37 +1,49 @@
-// TODO: Ambient Occluder
-
 use crate::light::Light;
 use crate::utils::color::Colorf;
 use crate::utils::shaderec::ShadeRec;
-use cgmath::Vector3;
+use cgmath::{Vector3, InnerSpace, Zero, ElementWise};
 use crate::ray::Ray;
 use crate::sampler::Sampler;
 use std::sync::Arc;
 use std::f32::INFINITY;
+use crate::utils::colorconstant::COLOR_BLACK;
+use std::borrow::BorrowMut;
+use std::cell::RefCell;
 
 pub struct AmbientOccluder
 {
-    pub m_u: Vector3<f32>,
-    pub m_v: Vector3<f32>,
-    pub m_w: Vector3<f32>,
-    pub m_min_amount: Colorf,
-    m_samplerptr: Option<Arc<dyn Sampler>>,
+    pub m_u: RefCell<Vector3<f32>>,
+    pub m_v: RefCell<Vector3<f32>>,
+    pub m_w: RefCell<Vector3<f32>>,
+    m_color: Colorf,
+    m_ls: f32,
+    pub m_min_amount: f32,
+    m_samplerptr: Arc<dyn Sampler>,
 }
 
 impl AmbientOccluder
 {
-    pub fn new(u: Vector3<f32>, v: Vector3<f32>, w: Vector3<f32>, min_amount: Colorf) -> AmbientOccluder
+    pub fn new(min_amount: f32, ls: f32, samplerptr: Arc<dyn Sampler>) -> AmbientOccluder
     {
         AmbientOccluder
         {
-            m_u: u, m_v: v, m_w: w,
+            m_u: RefCell::new(Vector3::zero()),
+            m_v: RefCell::new(Vector3::zero()),
+            m_w: RefCell::new(Vector3::zero()),
+            m_color: COLOR_BLACK,
+            m_ls: ls,
             m_min_amount: min_amount,
-            m_samplerptr: None,
+            m_samplerptr: samplerptr,
         }
     }
     pub fn set_sampler(&mut self, sampler: Arc<dyn Sampler>)
     {
-        self.m_samplerptr = Some(sampler);
+        self.m_samplerptr = sampler;
+    }
+
+    pub fn set_color(&mut self, color: Colorf)
+    {
+        self.m_color = color;
     }
 }
 
@@ -39,11 +51,25 @@ impl Light for AmbientOccluder
 {
     fn get_direction(&self, sr: &mut ShadeRec) -> Vector3<f32>
     {
-        unimplemented!()
+        let sample = self.m_samplerptr.get_hemisphere_sample();
+        return self.m_u.borrow().mul_element_wise(sample.x)
+            + self.m_v.borrow().mul_element_wise(sample.y )
+            + self.m_w.borrow().mul_element_wise(sample.z );
     }
 
-    fn L(&self, sr: &mut ShadeRec) -> Colorf {
-        unimplemented!()
+    fn L(&self, sr: &mut ShadeRec) -> Colorf
+    {
+        *self.m_w.borrow_mut() = sr.m_normal;
+        let jittered_up = Vector3::new(0.00031, 1.0, -0.00021).normalize();
+        *self.m_v.borrow_mut() = self.m_w.borrow().cross(jittered_up);
+        *self.m_u.borrow_mut() = self.m_v.borrow().cross(*self.m_w.borrow());
+
+        let shadow_ray = Ray::new(sr.m_hitpoint, self.get_direction(sr));
+        if self.is_in_shadow(sr, &shadow_ray)
+        {
+            return self.m_color * self.m_ls * self.m_min_amount;
+        }
+        self.m_color * self.m_ls
     }
 
     fn does_cast_shadow(&self) -> bool {
