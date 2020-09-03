@@ -10,8 +10,7 @@ use std::cmp::{max, min};
 use crate::geometry::triangle::Triangle;
 
 pub struct TriMesh
-{
-}
+{}
 
 impl TriMesh
 {

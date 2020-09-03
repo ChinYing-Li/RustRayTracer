@@ -8,6 +8,7 @@ use cgmath::InnerSpace;
 use crate::light::Light;
 use crate::utils::colorconstant::COLOR_BLACK;
 use crate::ray::Ray;
+use std::any::type_name;
 
 #[derive(Clone, Debug)]
 pub struct Matte
@@ -45,8 +46,10 @@ impl Material for Matte
                     let shadow_ray = Ray::new(sr.m_hitpoint, w_i);
                     in_shadow = worldptr.m_lights[i].is_in_shadow(sr, &shadow_ray);
                 }
-                if in_shadow { return COLOR_BLACK }
-                res_color += worldptr.m_lights[i].L(sr) * n_dot_w_i * self.m_diffuse_brdf.func(sr, w_i, direction);
+                if !in_shadow
+                {
+                    res_color += worldptr.m_lights[i].L(sr) * n_dot_w_i * self.m_diffuse_brdf.func(sr, w_i, direction);
+                }
             }
         }
         res_color
@@ -59,6 +62,7 @@ impl Material for Matte
 
         for light in sr.m_worldptr.clone().unwrap().m_lights.iter()
         {
+            if light.get_type() != String::from("AreaLight") { return COLOR_BLACK }
             let w_i = light.get_direction(sr);
             let n_dot_w_i = sr.m_normal.dot(w_i);
 
@@ -72,7 +76,8 @@ impl Material for Matte
 
                 if !in_shadow
                 {
-                    L += self.m_diffuse_brdf.func(sr, w_i, w_o);
+                    L += self.m_diffuse_brdf.func(sr, w_i, w_o)
+                        * light.L(sr) ;
                 }
             }
         }

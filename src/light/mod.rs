@@ -18,6 +18,7 @@ pub trait Light
     fn L(&self, sr: &mut ShadeRec) -> Colorf;
     fn does_cast_shadow(&self) -> bool;
     fn is_in_shadow(&self, sr: &ShadeRec, ray: &Ray) -> bool;
+    fn get_type(&self) -> String {  String::from("") }
 }
 
 impl Debug for dyn Light

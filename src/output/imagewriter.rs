@@ -15,7 +15,7 @@ pub struct ImageWriter<'a>
 
 impl ImageWriter<'_>
 {
-    pub fn new<'a>(imgdst: &'a str, width: u16, height: u16) -> ImageWriter
+    pub fn new(imgdst: &str, width: u16, height: u16) -> ImageWriter
     {
         ImageWriter{ m_imgdst: imgdst,
                     m_imgresolution: Vector2::new(width, height),

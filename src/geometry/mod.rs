@@ -41,6 +41,7 @@ impl fmt::Display for GeomError
 pub trait Geometry: fmt::Debug
 {
     fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>;
+
 }
 
 pub trait Shadable

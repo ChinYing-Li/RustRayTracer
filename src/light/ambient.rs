@@ -47,4 +47,6 @@ impl Light for Ambient
     fn is_in_shadow(&self, sr: &ShadeRec, ray: &Ray) -> bool {
         false
     }
+
+    fn get_type(&self) -> String { String::from("Ambient")}
 }

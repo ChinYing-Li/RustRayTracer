@@ -7,6 +7,7 @@ use cgmath::Vector3;
 use crate::ray::Ray;
 use crate::sampler::Sampler;
 use std::sync::Arc;
+use std::f32::INFINITY;
 
 pub struct AmbientOccluder
 {
@@ -28,7 +29,6 @@ impl AmbientOccluder
             m_samplerptr: None,
         }
     }
-
     pub fn set_sampler(&mut self, sampler: Arc<dyn Sampler>)
     {
         self.m_samplerptr = Some(sampler);
@@ -47,10 +47,19 @@ impl Light for AmbientOccluder
     }
 
     fn does_cast_shadow(&self) -> bool {
-        unimplemented!()
+        true
     }
 
-    fn is_in_shadow(&self, sr: &ShadeRec, ray: &Ray) -> bool {
-        unimplemented!()
+    fn is_in_shadow(&self, sr: &ShadeRec, ray: &Ray) -> bool
+    {
+        let mut time = INFINITY;
+        for object in &sr.m_worldptr.clone().unwrap().m_objects
+        {
+            if object.lock().unwrap().shadow_hit(ray, &mut time)
+            {
+                return true
+            }
+        }
+        false
     }
 }

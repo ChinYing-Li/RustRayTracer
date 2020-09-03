@@ -6,9 +6,7 @@ use crate::world::world::World;
 use std::f32::INFINITY;
 
 pub struct AreaLighting
-{
-
-}
+{}
 
 impl AreaLighting
 {
