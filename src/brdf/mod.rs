@@ -14,7 +14,7 @@ pub trait BRDF
 
     /// For computing the direction of the reflected ray
     ///
-    fn sampleFunc(&self, sr: &ShadeRec, w_i: Vector3<f32>, w_o: Vector3<f32>) -> Colorf { COLOR_BLACK }
+    fn sampleFunc(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>) -> Colorf { COLOR_BLACK }
 
     /// Reflectance of the material
     fn rho(&self, sr: &ShadeRec, w_o: Vector3<f32>) -> Colorf { COLOR_BLACK }

@@ -12,6 +12,7 @@ use crate::{ray::Ray,
 use crate::material::Material;
 use std::sync::Arc;
 use std::ops::{Deref, DerefMut};
+use crate::utils::colorconstant::COLOR_BLACK;
 
 pub mod sphere;
 pub const KEPSILON: f32 = 0.0001;
@@ -46,10 +47,10 @@ pub trait Geometry: fmt::Debug
 
 pub trait Shadable
 {
-    fn get_color(&self) -> Colorf;
-    fn set_color(&mut self, newcolor: Colorf);
+    fn get_color(&self) -> Colorf { COLOR_BLACK }
+    fn set_color(&mut self, newcolor: Colorf) {}
     fn get_material(&self) -> Arc<dyn Material>;
-    fn set_material(&mut self, material: Arc<dyn Material>);
+    fn set_material(&mut self, material: Arc<dyn Material>) {}
     fn shadow_hit(&self, ray: &Ray, tmin: &mut f32) -> bool;
 }
 

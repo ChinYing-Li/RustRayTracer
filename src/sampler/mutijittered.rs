@@ -4,6 +4,7 @@ use rand::Rng;
 use rand::rngs::ThreadRng;
 use std::cell::RefCell;
 
+#[derive(Clone, Debug)]
 pub struct MultiJittered
 {
     m_core: SamplerCore,

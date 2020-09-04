@@ -2,6 +2,7 @@ use crate::sampler::{SamplerCore, Sampler};
 use cgmath::{Vector2, ElementWise, Vector3};
 use rand::Rng;
 
+#[derive(Clone, Debug)]
 pub struct NRooks
 {
     m_core: SamplerCore,

@@ -84,7 +84,7 @@ impl World
         {
             if let x = worldptr.clone().m_objects[i].lock().unwrap()
             {
-                if  x.hit(ray, &mut tglobal, srref).unwrap() && tglobal < tminglobal
+                if x.hit(ray, &mut tglobal, srref).unwrap_or(false) && tglobal < tminglobal
                 {
                     println!("does hit!");
                     tminglobal = tglobal;

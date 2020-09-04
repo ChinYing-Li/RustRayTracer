@@ -1,4 +1,5 @@
-pub mod reflective;
+mod glossyreflector;
+pub mod reflector;
 pub mod emissive;
 pub mod matte;
 pub mod phong;

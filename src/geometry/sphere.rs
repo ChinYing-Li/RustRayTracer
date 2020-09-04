@@ -74,7 +74,7 @@ impl Geometry for Sphere
                 if *time > KEPSILON
                 {
                     //c_updateShadeRecNormal(time);
-                    shaderecord.m_normal = temp + *time * incomeray.m_velocity;
+                    shaderecord.m_normal = (temp + *time * incomeray.m_velocity).normalize();
                     *tmin = *time;
                     res = true;
                     break;

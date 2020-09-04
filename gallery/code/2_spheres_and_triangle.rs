@@ -43,14 +43,14 @@ fn main()
 
 
     let mut sphereA = Arc::new(Mutex::new(Sphere::new(10.0,
-                                           Vector3::new(12.0, 20.0, 15.0),
-                                           Colorf::new(0.0, 1.0, 0.0))));
+                                                      Vector3::new(12.0, 20.0, 15.0),
+                                                      Colorf::new(0.0, 1.0, 0.0))));
     let mut sphereB = Arc::new(Mutex::new(Sphere::new(15.0,
-                                                                                Vector3::new(30.0, 10.0, 20.),
-                                           Colorf::new(1.0, 0.0, 0.0))));
-    let mut triangle = Arc::new(Mutex::new(Triangle::new(Vector3::new(-10.0, 50.0, 10.0),
-                                                                                    Vector3::new(30.0, 50.0, 0.0),
-                                                                                    Vector3::new(60.0, 50.0, 30.0))));
+                                                      Vector3::new(30.0, 10.0, 20.),
+                                                      Colorf::new(1.0, 0.0, 0.0))));
+    let mut triangle = Arc::new(Mutex::new(Triangle::new(Vector3::new(-10.0, 10.0, 10.0),
+                                                         Vector3::new(30.0, 50.0, 0.0),
+                                                         Vector3::new(60.0, 50.0, 30.0))));
     world.add_object(sphereA);
     world.add_object(sphereB);
     world.add_object(triangle);
@@ -58,10 +58,10 @@ fn main()
     let c = vec![COLOR_BLUE, COLOR_RED, Colorf::new(0.0, 1.0, 1.0)];
     let objlen= world.m_objects.len();
     let materials: Vec<Phong> = (0..objlen)
-                                            .collect::<Vec<_>>()
-                                            .iter()
-                                            .map(|x| setUpMaterial(1.0/(*x) as f32, 0.3 * (*x) as f32, 0.5))
-                                            .collect::<Vec<Phong>>();
+        .collect::<Vec<_>>()
+        .iter()
+        .map(|x| setUpMaterial(1.0/(*x) as f32, 0.3 * (*x) as f32, 0.5))
+        .collect::<Vec<Phong>>();
 
     for i in 0..objlen
     {
@@ -87,8 +87,8 @@ fn setUpObjects(world: &mut World)
 fn setUpMaterial(r: f32, g: f32, b: f32) -> Phong
 {
     Phong::new(Arc::new(Lambertian::new(0.5*g, Colorf::new(r, g, b))),
-                                                                Arc::new(Lambertian::new(0.3, Colorf::new(0.5*r, g, 0.5*b))),
-                                                                    Arc::new(GlossySpecular::new(0.4*r, Colorf::new(0.3*r, g, b))))
+               Arc::new(Lambertian::new(0.3, Colorf::new(0.5*r, g, 0.5*b))),
+               Arc::new(GlossySpecular::new(0.4*r, Colorf::new(0.3*r, g, b))))
 }
 
 fn setUpLights(world: &mut World)

@@ -5,6 +5,7 @@ use crate::utils::shaderec::ShadeRec;
 use crate::cgmath::InnerSpace;
 use crate::ray::Ray;
 use crate::geometry::Shadable;
+use std::f32::INFINITY;
 
 #[derive(Debug)]
 pub struct PointLight
@@ -50,7 +51,7 @@ impl Light for PointLight
     {
         let disance_to_shadowed = self.m_location.distance(ray.m_origin);
         let world_ptr = sr.m_worldptr.clone().unwrap();
-        let mut t = 0.0;
+        let mut t = INFINITY;
 
         for i in 0..world_ptr.m_objects.len()
         {

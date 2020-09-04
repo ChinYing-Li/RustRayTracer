@@ -3,10 +3,13 @@ use crate::utils::shaderec::ShadeRec;
 use cgmath::Vector3;
 use crate::ray::Ray;
 use crate::material::Material;
+use crate::utils::colorconstant::COLOR_BLACK;
+use crate::material::phong::Phong;
 
 pub struct Reflective
 {
-
+    m_phong: Phong,
+    
 }
 
 impl Reflective
@@ -18,10 +21,14 @@ impl Material for Reflective
 {
     fn shade(&self, sr: &mut ShadeRec) -> Colorf
     {
-        unimplemented!()
+        /*let mut clr = COLOR_BLACK;
+        let w_o = -sr.m_ray.m_velocity;
+        */
+        COLOR_BLACK
     }
 
-    fn area_light_shade<'a>(&self, sr: &'a mut ShadeRec) -> Colorf {
+    fn area_light_shade(&self, sr: &mut ShadeRec) -> Colorf
+    {
         unimplemented!()
     }
 }

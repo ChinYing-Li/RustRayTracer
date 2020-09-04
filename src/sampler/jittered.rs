@@ -5,6 +5,7 @@ use rand::rngs::ThreadRng;
 use std::borrow::BorrowMut;
 use std::cell::RefCell;
 
+#[derive(Clone, Debug)]
 pub struct Jittered
 {
     m_core: SamplerCore,

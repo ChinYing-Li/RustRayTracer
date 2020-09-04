@@ -38,8 +38,7 @@ impl CamStruct
 
     pub fn ComputeUVW(&mut self)
     {
-        self.m_w = (self.m_eye - self.m_lookat)
-            .normalize();
+        self.m_w = (self.m_eye - self.m_lookat).normalize();
 
         // rotate "up" a bit when the looking direction
         // is parallel to the "up" vector
@@ -48,7 +47,7 @@ impl CamStruct
             self.m_up.mul_assign_element_wise(Vector3::new(0.99999, 1.0, 1.0));
         }
         self.m_u = self.m_up.cross(self.m_w).normalize();
-        self.m_v = self.m_w.cross(self.m_u);
+        self.m_v = self.m_w.cross(self.m_u).normalize();
     }
 }
 

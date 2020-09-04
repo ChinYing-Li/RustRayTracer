@@ -12,6 +12,7 @@ use std::cell::Cell;
 
 type Point2<T> = Vector2<T>;
 
+#[derive(Clone, Debug)]
 struct SamplerCore
 {
     pub m_sample_per_pattern: usize,

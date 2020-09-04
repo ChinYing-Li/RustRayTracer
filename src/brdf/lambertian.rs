@@ -6,7 +6,7 @@ use crate::utils::shaderec::ShadeRec;
 
 const INV_PI: f32 = 1.0 / PI;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug)]
 pub struct Lambertian
 {
     m_kd: f32,
@@ -28,7 +28,7 @@ impl BRDF for Lambertian
         self.m_colord * INV_PI * self.m_kd
     }
 
-    fn sampleFunc(&self, sr: &ShadeRec, w_i: Vector3<f32>, w_o: Vector3<f32>) -> Colorf
+    fn sampleFunc(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>) -> Colorf
     {
         Colorf::new(0.0, 0.0, 0.0)
     }

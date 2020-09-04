@@ -115,12 +115,12 @@ impl Geometry for Cuboid
         else if t_min_max_component == t_min.y
         {
                     max_tmin = t_min.y;
-                    face_in = if INV_VEL.y >= 0.0 {Face::SMALL_Y} else { Face::BIG_Y };
+                    face_in = if INV_VEL.y >= 0.0 { Face::SMALL_Y } else { Face::BIG_Y };
         }
         else
         {
                     max_tmin = t_min.z;
-                    face_in = if INV_VEL.z >= 0.0 {Face::SMALL_Z} else { Face::BIG_Z};
+                    face_in = if INV_VEL.z >= 0.0 { Face::SMALL_Z } else { Face::BIG_Z };
         }
 
         let mut t_max_min_component = if t_max.x <= t_max.y { t_max.x } else { t_max.y };

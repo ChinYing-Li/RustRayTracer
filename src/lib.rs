@@ -2,6 +2,7 @@
 
 pub mod brdf;
 pub mod camera;
+//pub mod gallery;
 pub mod geometry;
 pub mod light;
 pub mod material;
@@ -15,7 +16,7 @@ pub mod world;
 
 extern crate enum_set as enum_set;
 extern crate rand;
-extern crate wavefront_obj;
+extern crate obj;
 #[macro_use]
 extern crate image;
 extern crate cgmath;

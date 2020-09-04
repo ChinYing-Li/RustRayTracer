@@ -86,7 +86,7 @@ impl Geometry for Triangle
             Some(inverted_mat) => solution = inverted_mat * rhs,
             _ => return Err(GeomError::NoSolutionError)
         }
-        print!("{}, {}, {}", solution.x, solution.y, solution.z);;
+        //print!("{}, {}, {}", solution.x, solution.y, solution.z);;
         if solution.y < 0.0 || solution.x < 0.0 { return Ok(false) }
         if solution.x + solution.y > 1.0 { return Ok(false) }
         if solution.z < KEPSILON { return Ok(false) }
@@ -94,7 +94,7 @@ impl Geometry for Triangle
         match self.m_normals.len()
         {
             1 => shaderecord.m_normal = self.m_normals[0],
-            3 => shaderecord.m_normal = self.interpolate_normal(0.5, 0.5),
+            3 => shaderecord.m_normal = self.interpolate_normal(solution.x, solution.y),
             _ => return Err(GeomError::WrongSizeError)
         }
         *time = solution.z;
@@ -122,8 +122,27 @@ impl Shadable for Triangle
         self.m_material = Some(material.clone());
     }
 
-    fn shadow_hit(&self, ray: &Ray, tmin: &mut f32) -> bool {
-        unimplemented!()
+    fn shadow_hit(&self, shadow_ray: &Ray, tmin: &mut f32) -> bool
+    {
+        let v10 = self.m_vertex_0 - self.m_vertex_1;
+        let v20 = self.m_vertex_0 - self.m_vertex_2;
+        let mat = Matrix3::new(v10.x, v10.y, v10.z,
+                               v20.x, v20.y, v20.z,
+                               shadow_ray.m_velocity.x, shadow_ray.m_velocity.y, shadow_ray.m_velocity.z);
+        let rhs = self.m_vertex_0 - shadow_ray.m_origin;
+        let mut solution = Vector3::zero();
+
+        match mat.invert()
+        {
+            Some(inverted_mat) => solution = inverted_mat * rhs,
+            _ => return false
+        }
+        //print!("{}, {}, {}", solution.x, solution.y, solution.z);;
+        if solution.y < 0.0 || solution.x < 0.0 { return false }
+        if solution.x + solution.y > 1.0 { return false }
+        if solution.z < KEPSILON { return false }
+        *tmin = solution.z;
+        true
     }
 }
 
