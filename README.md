@@ -1,7 +1,7 @@
 # RustRayTracer
 A ray tracer written in Rust, based on "Ray-tracing From the Ground Up" by Kevin Sufferin.
 
-![Rendered output](https://github.com/ChinYing-Li/RustRayTracer/blob/master/test.jpg)
+![Rendered output](https://github.com/ChinYing-Li/RustRayTracer/blob/master/gallery/images/2_sphere_and_triangle.jpg)
 
 
 [create-an-anchor](##Dependencies)
