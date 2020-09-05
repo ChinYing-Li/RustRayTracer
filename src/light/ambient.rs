@@ -16,7 +16,7 @@ impl Ambient
 {
     pub fn new(color: Colorf) -> Ambient
     {
-        Ambient{ m_ls: 1.0, m_color: color}
+        Ambient{ m_ls: 0.1, m_color: color}
     }
 
     pub fn set_radiance_scaling_factor(&mut self, new_ls: f32)
@@ -32,12 +32,12 @@ impl Ambient
 
 impl Light for Ambient
 {
-    fn get_direction(&self, sr: &mut ShadeRec) -> Vector3<f32>
+    fn get_direction(&self, sr: &ShadeRec) -> Vector3<f32>
     {
         Vector3::zero()
     }
 
-    fn L(&self, sr: & mut ShadeRec) -> Colorf
+    fn L(&self, sr: &ShadeRec) -> Colorf
     {
         (self.m_color * self.m_ls).clamp()
     }

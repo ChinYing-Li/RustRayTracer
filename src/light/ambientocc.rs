@@ -27,9 +27,9 @@ impl AmbientOccluder
     {
         AmbientOccluder
         {
-            m_u: RefCell::new(Vector3::zero()),
-            m_v: RefCell::new(Vector3::zero()),
-            m_w: RefCell::new(Vector3::zero()),
+            m_u: RefCell::new(Vector3::unit_x()),
+            m_v: RefCell::new(Vector3::unit_y()),
+            m_w: RefCell::new(Vector3::unit_z()),
             m_color: COLOR_BLACK,
             m_ls: ls,
             m_min_amount: min_amount,
@@ -49,20 +49,27 @@ impl AmbientOccluder
 
 impl Light for AmbientOccluder
 {
-    fn get_direction(&self, sr: &mut ShadeRec) -> Vector3<f32>
+    fn get_direction(&self, sr: &ShadeRec) -> Vector3<f32>
     {
         let sample = self.m_samplerptr.get_hemisphere_sample();
-        return self.m_u.borrow().mul_element_wise(sample.x)
-            + self.m_v.borrow().mul_element_wise(sample.y )
-            + self.m_w.borrow().mul_element_wise(sample.z );
+        let result = (self.m_u.borrow().mul_element_wise(sample.x)
+        + self.m_v.borrow().mul_element_wise(sample.y )
+        + self.m_w.borrow().mul_element_wise(sample.z )).normalize();
+        //println!("{}, {}, {}", result.x, result.y, result.z);
+        result
     }
 
-    fn L(&self, sr: &mut ShadeRec) -> Colorf
+    fn L(&self, sr: &ShadeRec) -> Colorf
     {
+        println!("before w {}", self.m_w.borrow().y);
         *self.m_w.borrow_mut() = sr.m_normal;
-        let jittered_up = Vector3::new(0.00031, 1.0, -0.00021).normalize();
-        *self.m_v.borrow_mut() = self.m_w.borrow().cross(jittered_up);
-        *self.m_u.borrow_mut() = self.m_v.borrow().cross(*self.m_w.borrow());
+        println!("after w {}", self.m_w.borrow().y);
+        let jittered_up = Vector3::new(0.00031, 0.0, 1.00021).normalize();
+
+        println!("before w {}", self.m_v.borrow().y);
+        *self.m_v.borrow_mut() = self.m_w.borrow().cross(jittered_up).normalize();
+        println!("after w {}", self.m_v.borrow().y);
+        *self.m_u.borrow_mut() = self.m_v.borrow().cross(*self.m_w.borrow()).normalize();
 
         let shadow_ray = Ray::new(sr.m_hitpoint, self.get_direction(sr));
         if self.is_in_shadow(sr, &shadow_ray)
@@ -87,5 +94,10 @@ impl Light for AmbientOccluder
             }
         }
         false
+    }
+
+    fn get_type(&self) -> String
+    {
+        String::from("AmbientOccluder")
     }
 }

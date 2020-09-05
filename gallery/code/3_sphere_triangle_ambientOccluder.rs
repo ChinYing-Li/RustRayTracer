@@ -51,9 +51,9 @@ fn main()
     let mut sphereB = Arc::new(Mutex::new(Sphere::new(15.0,
                                                       Vector3::new(30.0, 10.0, 20.),
                                                       Colorf::new(1.0, 0.0, 0.0))));
-    let mut triangle = Arc::new(Mutex::new(Triangle::new(Vector3::new(-10.0, 40.0, 10.0),
-                                                         Vector3::new(30.0, 40.0, 0.0),
-                                                         Vector3::new(60.0, 40.0, 30.0))));
+    let mut triangle = Arc::new(Mutex::new(Triangle::new(Vector3::new(-10.0, 30.0, 10.0),
+                                                         Vector3::new(30.0, 30.0, 0.0),
+                                                         Vector3::new(60.0, 30.0, 30.0))));
     world.add_object(sphereA);
     world.add_object(sphereB);
     world.add_object(triangle);
@@ -72,11 +72,11 @@ fn main()
         obj.set_material(Arc::new(materials[i].clone()));
     }
 
-    setUpLights(&mut world);
+    setUpAmbientOccluder(&mut world);
     let mut ph = setUpCamera();
     ph.m_distance_from_vp = 100.0;
     ph.m_zoom = 1.0;
-    ph.m_core.m_exposure_time = 0.05;
+    ph.m_core.m_exposure_time = 0.005;
     let worldptr = Arc::new(world);
     ph.render_scene(worldptr, &tracer, &mut imgwriter,1.0);
     imgwriter.output();
@@ -105,13 +105,9 @@ fn setUpAmbientOccluder(world: &mut World)
     mj.set_map_to_hemisphere(true, 1.0);
     mj.generate_sample_pattern();
 
-    let mut ambocc = AmbientOccluder::new(0.0, 0.3, Arc::new(mj));
-    ambocc.set_color(COLOR_WHITE);
+    let mut ambocc = AmbientOccluder::new(0.0, 0.001, Arc::new(mj));
+    ambocc.set_color(COLOR_RED);
     world.add_light(Arc::new(ambocc));
-
-    let mut ambient = Ambient::new(COLOR_WHITE);
-    ambient.set_radiance_scaling_factor(0.1);
-    world.set_ambient(Arc::new(ambient));
 }
 
 fn setUpCamera() -> Pinhole

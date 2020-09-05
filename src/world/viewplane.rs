@@ -1,7 +1,9 @@
 use std::{f32};
 use cgmath::Vector2;
+use crate::sampler::Sampler;
+use std::sync::Arc;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct ViewPlane
 {
     pub m_hres: u16,
@@ -11,21 +13,35 @@ pub struct ViewPlane
     m_invgamma: f32,
 
     pub m_maxdepth: u16,
-    pub m_numsample: u16,
+    pub m_sampler: Arc<dyn Sampler>,
 }
 
 impl ViewPlane
 {
     /// Default constructor for ViewPlane
-    pub fn new() -> ViewPlane
+    pub fn new(sampler: Arc<dyn Sampler>) -> ViewPlane
     {
-        ViewPlane{ m_hres: 200, m_vres: 200, m_pixsize: 0.2, m_gamma: 1.0, m_invgamma: 1.0, m_maxdepth: 5, m_numsample: 0 }
+        ViewPlane
+        {
+            m_hres: 200,
+            m_vres: 200,
+            m_pixsize: 0.2,
+            m_gamma: 1.0,
+            m_invgamma: 1.0,
+            m_maxdepth: 5,
+            m_sampler: sampler
+        }
     }
 
     pub fn set_gamma(&mut self, newgamma: f32)
     {
         self.m_gamma = newgamma;
         self.m_invgamma = 1.0 / newgamma;
+    }
+
+    pub fn get_inv_gamma(&self) -> f32
+    {
+        self.m_invgamma
     }
 
     //
@@ -56,11 +72,13 @@ impl ViewPlane
 mod ViewPlaneTest
 {
     use super::*;
+    use crate::sampler::mutijittered::MultiJittered;
 
     #[test]
     fn testCoordinateIsValid()
     {
-        let mut vp = ViewPlane::new();
+        let sampler = MultiJittered::new(16, 3);
+        let mut vp = ViewPlane::new(Arc::new(sampler));
         vp.m_hres = 500;
         vp.m_vres = 300;
         assert!(!vp.is_coordinates_valid(501, 14));
@@ -69,7 +87,8 @@ mod ViewPlaneTest
     #[test]
     fn testGetCoordinate()
     {
-        let mut vp = ViewPlane::new();
+        let sampler = MultiJittered::new(16, 3);
+        let mut vp = ViewPlane::new(Arc::new(sampler));
         vp.m_hres = 500;
         vp.m_vres = 300;
         vp.m_pixsize = 0.5;

@@ -33,12 +33,12 @@ impl Directional
 
 impl Light for Directional
 {
-    fn get_direction(&self, sr: &mut ShadeRec) -> Vector3<f32>
+    fn get_direction(&self, sr: &ShadeRec) -> Vector3<f32>
     {
         self.m_direction
     }
 
-    fn L(&self, sr: &mut ShadeRec) -> Colorf
+    fn L(&self, sr: &ShadeRec) -> Colorf
     {
         self.m_color * self.m_ls
     }

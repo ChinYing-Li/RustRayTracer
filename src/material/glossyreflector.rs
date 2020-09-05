@@ -17,7 +17,7 @@ impl GlossyReflector
     {
         GlossyReflector
         {
-            m_phong: *Phong,
+            m_phong: (*phong).clone(),
             m_glossyspec_brdf: glossyspec_brdf
         }
     }

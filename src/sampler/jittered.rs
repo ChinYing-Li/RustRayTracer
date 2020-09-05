@@ -50,6 +50,11 @@ impl Sampler for Jittered
         if self.m_core.m_map_to_hemisphere { self.m_core.map_sample_to_hemisphere(1.0); }
     }
 
+    fn get_sample_per_pattern(&self) -> usize
+    {
+        self.m_core.m_sample_per_pattern
+    }
+
     fn set_map_to_disk(&mut self, flag: bool) {
         self.m_core.set_map_to_disk(flag);
     }
@@ -91,6 +96,10 @@ mod JitteredTest
     use crate::output::OutputManager;
     use crate::output::imagewriter::ImageWriter;
     use crate::utils::colorconstant::COLOR_WHITE;
+    use std::f32::consts::PI;
+
+    const INV_PI: f32 = 1.0 / PI ;
+    const INV_GAMMA: f32 = 1.0 / 1.8;
 
     // This is not proper unit testing. We just write the result to
     // image to inspect whether the sampler is implemented correctly.
@@ -109,7 +118,7 @@ mod JitteredTest
         {
             let x = sample.x * (width as f32);
             let y = sample.y * (height as f32);
-            imgwriter.write_pixel(x as u16, y as u16, COLOR_WHITE);
+            imgwriter.write_pixel(x as u16, y as u16, COLOR_WHITE, INV_GAMMA);
         }
 
         imgwriter.output();

@@ -30,6 +30,11 @@ impl Sampler for NRooks
         self.m_core.shuffle_y_coordinates();
     }
 
+    fn get_sample_per_pattern(&self) -> usize
+    {
+        self.m_core.m_sample_per_pattern
+    }
+
     fn set_map_to_disk(&mut self, flag: bool) {
         unimplemented!()
     }

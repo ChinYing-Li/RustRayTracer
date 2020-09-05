@@ -100,6 +100,17 @@ impl Geometry for TriMesh
     }
 }
 
+/*
+ for polys in self.m_objects.iter().map(|obj| obj.groups.iter())
+            .map(|g| g.polys)
+        {
+            for poly in polys
+            {
+                self.triangle_hit();
+            }
+        }
+*/
+
 impl Shadable for TriMesh
 {
     fn get_material(&self) -> Arc<dyn Material>

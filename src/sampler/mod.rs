@@ -9,6 +9,7 @@ use cgmath::num_traits::Inv;
 use rand::{Rng, seq::SliceRandom, thread_rng};
 use std::error::Error;
 use std::cell::Cell;
+use std::fmt;
 
 type Point2<T> = Vector2<T>;
 
@@ -212,11 +213,20 @@ impl SamplerCore
 pub trait Sampler
 {
     fn generate_sample_pattern(&mut self);
+    fn get_sample_per_pattern(&self) -> usize { 1 }
     fn set_map_to_disk(&mut self, flag: bool);
     fn set_map_to_hemisphere(&mut self, flag: bool, e: f32);
     fn get_unit_square_sample(&mut self) -> Vector2<f32>;
     fn get_disk_sample(&self) -> Vector2<f32>;
     fn get_hemisphere_sample(&self) -> Vector3<f32>;
+}
+
+impl fmt::Debug for dyn Sampler
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Sampler")
+            .finish()
+    }
 }
 
 #[cfg(test)]

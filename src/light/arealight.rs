@@ -43,13 +43,13 @@ impl AreaLight
 
 impl Light for AreaLight
 {
-    fn get_direction(&self, sr: &mut ShadeRec) -> Vector3<f32>
+    fn get_direction(&self, sr: &ShadeRec) -> Vector3<f32>
     {
         unimplemented!()
         //self.m_sample_point = self.m_geomobject.sample();
     }
 
-    fn L(&self, sr: &mut ShadeRec) -> Colorf
+    fn L(&self, sr: &ShadeRec) -> Colorf
     {
         let n_dot_w_i = -self.m_light_normal.dot(self.m_w_i);
         if n_dot_w_i > 0.0 { return self.m_materialptr.get_Le(sr); }

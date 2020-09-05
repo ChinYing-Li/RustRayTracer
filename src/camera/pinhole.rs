@@ -53,8 +53,9 @@ impl Camera for Pinhole
             {
                 clr = COLOR_BLACK;
 
-                for i in 0..vp.m_numsample
+                for i in 0..vp.m_sampler.get_sample_per_pattern()
                 {
+                    // TODO use Sampler !!!
                     sq_sample_point = rng.gen_range(0.0, 1.0);
                     actual_sample_point = vp.get_coordinate_from_index(x, y)
                                             .unwrap_or(Vector2::zero())
@@ -63,9 +64,9 @@ impl Camera for Pinhole
                     ray.m_velocity = self.get_ray_direction(actual_sample_point);
                     clr += tracer.trace_ray(worldptr.clone(), &ray, 0);
                 }
-                clr /= vp.m_numsample as f32;
+                clr /= vp.m_sampler.get_sample_per_pattern() as f32;
                 clr *= self.m_core.m_exposure_time;
-                outmgr.write_pixel(x.into(), y.into(), clr);
+                outmgr.write_pixel(x.into(), y.into(), clr, vp.get_inv_gamma());
             }
         }
     }

@@ -145,11 +145,13 @@ mod WorldSphereTest
     use crate::output::imagewriter::ImageWriter;
     use crate::material::matte::Matte;
     use crate::brdf::lambertian::Lambertian;
+    use crate::sampler::mutijittered::MultiJittered;
 
     fn set_up_dummy_world() -> World
     {
         let tracer = Box::new(Whitted::new());
-        let mut boxed_vp = Box::new(ViewPlane::new());
+        let mut sampler = MultiJittered::new(256, 1);
+        let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(sampler)));
         let mut imgwriter = Box::new(ImageWriter::new("filedest", 100, 100));
 
         World::new(boxed_vp)

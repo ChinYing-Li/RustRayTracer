@@ -32,7 +32,7 @@ impl CamStruct
             m_v: Vector3::zero(),
             m_w: Vector3::zero(),
             m_computed_uvw: false,
-            m_exposure_time: 5.0
+            m_exposure_time: 0.001
         }
     }
 

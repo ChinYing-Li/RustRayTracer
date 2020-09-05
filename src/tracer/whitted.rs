@@ -54,10 +54,12 @@ mod WhittedTest
     use crate::utils::colorconstant::{COLOR_RED, COLOR_BLACK};
     use std::sync::Mutex;
     use crate::geometry::Shadable;
+    use crate::sampler::mutijittered::MultiJittered;
 
     fn setUpDummyWorld() -> World
     {
-        let mut boxed_vp = Box::new(ViewPlane::new());
+        let sampler = MultiJittered::new(16, 3);
+        let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(sampler)));
         World::new(boxed_vp)
     }
 

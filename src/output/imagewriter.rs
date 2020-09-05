@@ -36,9 +36,12 @@ impl fmt::Debug for ImageWriter<'_>
 
 impl OutputManager for ImageWriter<'_>
 {
-    fn write_pixel(&mut self, x: u16, y: u16, color: Colorf)
+    fn write_pixel(&mut self, x: u16, y: u16, color: Colorf, inv_gamma: f32)
     {
-        let convcolor = Color8bit::from(color);
+        let mut convcolor = Color8bit::from(color);
+        convcolor.m_r = ((convcolor.m_r as f32) * inv_gamma.exp()) as u8;
+        convcolor.m_g = ((convcolor.m_g as f32) * inv_gamma.exp()) as u8;
+        convcolor.m_b = ((convcolor.m_b as f32) * inv_gamma.exp()) as u8;
         self.m_imgbuffer.put_pixel(x.into(), y.into(), Rgba([convcolor.m_r, convcolor.m_g, convcolor.m_b, 255]));
     }
 

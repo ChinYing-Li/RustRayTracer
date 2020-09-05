@@ -108,7 +108,6 @@ impl Shadable for Sphere
         let c = dot(temp, temp) - self.m_radius.powf(2.0);
         let roots = get_quadratic_poly_root(a, b, c);
 
-        let mut res = false;
         for it in roots.iter()
         {
             if let Some(time) = it

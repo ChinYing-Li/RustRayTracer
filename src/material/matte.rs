@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::material::Material;
 use crate::utils::color::Colorf;
 use crate::brdf::BRDF;
-use cgmath::InnerSpace;
+use cgmath::{InnerSpace, Vector3, Zero};
 use crate::light::Light;
 use crate::utils::colorconstant::COLOR_BLACK;
 use crate::ray::Ray;
@@ -57,31 +57,34 @@ impl Material for Matte
 
     fn area_light_shade(&self, sr: &mut ShadeRec) -> Colorf
     {
-        let w_o = -sr.m_ray.m_velocity;
-        let mut L = self.m_ambient_brdf.rho(sr, w_o) * sr.m_worldptr.clone().unwrap().m_ambientlight.L(sr);
+        let w_o = -sr.m_ray.m_velocity.normalize();
+        let mut clr = sr.m_worldptr.clone().unwrap().m_ambientlight.L(sr)
+            * self.m_ambient_brdf.rho(sr, w_o);
 
         for light in sr.m_worldptr.clone().unwrap().m_lights.iter()
         {
-            if light.get_type() != String::from("AreaLight") { return COLOR_BLACK }
-            let w_i = light.get_direction(sr);
-            let n_dot_w_i = sr.m_normal.dot(w_i);
+            let mut w_i = Vector3::zero();
+            let mut n_dot_w_i = 0.0_f32;
+            let mut temp_L = light.L(sr);
 
-            if n_dot_w_i > 0.0
+            w_i = light.get_direction(sr);
+            n_dot_w_i = sr.m_normal.normalize().dot(w_i);
+            println!("n_dot_w_i{}", n_dot_w_i);
+            if n_dot_w_i < 0.0 { continue; }
+
+            let mut in_shadow = true;
+            if light.does_cast_shadow()
             {
-                let mut in_shadow = false;
-                if light.does_cast_shadow()
-                {
-                    let shadow_ray= Ray::new(sr.m_hitpoint, w_i);
-                    in_shadow = light.is_in_shadow(sr, &shadow_ray);               }
+                let shadow_ray= Ray::new(sr.m_hitpoint, w_i);
+                in_shadow = light.is_in_shadow(sr, &shadow_ray);
+            }
 
-                if !in_shadow
-                {
-                    L += self.m_diffuse_brdf.func(sr, w_i, w_o)
-                        * light.L(sr) ;
-                }
+            if !in_shadow
+            {
+                clr += self.m_diffuse_brdf.func(sr, w_i, w_o) * temp_L ;
             }
         }
-        L
+        clr
     }
     /* TODO: shading functions for different lights
         fn pathShade<'a>(&self, sr: &'a mut ShadeRec);
