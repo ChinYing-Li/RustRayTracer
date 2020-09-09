@@ -18,17 +18,17 @@ A ray tracer written in Rust, based on "Ray-tracing From the Ground Up" by Kevin
 
 ## Progress
 - [x] Chapter 3 - Bare-bones ray tracing
-- [] Chapter 4 - Antialiasing
+- [x] Chapter 4 - Antialiasing
 - [x] Chapter 5 - Sampling
 - [x] Chapter 6 - Mapping Samples to a Disk
-- [ ] Chapter 7 - Mapping Samples to a Hemisphere
+- [x] Chapter 7 - Mapping Samples to a Hemisphere
 - [x] Chapter 9 - A Practical Viewing System
 - [x] Chapter 14 - Lights and Materials
 - [x] Chapter 15 - Specular Reflection
-- [] Chapter 16 - Shadows
+- [x] Chapter 16 - Shadows
 - [] Chapter 17 - Ambient Occlusion
 - [] Chapter 18 - Area Llights
-- [] Chapter 19 - Ray-Object Intersections
+- [x] Chapter 19 - Ray-Object Intersections
 - [] Chapter 20 - Affine transformations
 - [] Chapter 22 - Regular Grids
 - [] Chapter 23 - Triangle Mesh

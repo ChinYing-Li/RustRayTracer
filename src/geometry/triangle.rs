@@ -1,5 +1,5 @@
 use cgmath::{Vector3, Zero, ElementWise, Matrix3, Transform, InnerSpace, SquareMatrix};
-use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError};
+use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError, Boundable};
 use crate::utils::color::Colorf;
 use std::sync::Arc;
 use crate::utils::shaderec::ShadeRec;
@@ -8,6 +8,7 @@ use crate::ray::Ray;
 use std::fmt;
 use std::cmp::{max, min};
 use crate::utils::colorconstant::COLOR_BLACK;
+use crate::geometry::bbox::BBox;
 
 pub struct Triangle
 {
@@ -77,7 +78,7 @@ impl Geometry for Triangle
         let v20 = self.m_vertex_0 - self.m_vertex_2;
         let mat = Matrix3::new(v10.x, v10.y, v10.z,
                                         v20.x, v20.y, v20.z,
-                                        incomeray.m_velocity.x, incomeray.m_velocity.y, incomeray.m_velocity.z);
+                                        incomeray.m_direction.x, incomeray.m_direction.y, incomeray.m_direction.z);
         let rhs = self.m_vertex_0 - incomeray.m_origin;
         let mut solution = Vector3::zero();
 
@@ -98,8 +99,16 @@ impl Geometry for Triangle
             _ => return Err(GeomError::WrongSizeError)
         }
         *time = solution.z;
-        shaderecord.m_hitpoint = incomeray.m_origin + solution.z * incomeray.m_velocity;
+        shaderecord.m_hitpoint = incomeray.m_origin + solution.z * incomeray.m_direction;
         Ok(true)
+    }
+}
+
+impl Boundable for Triangle
+{
+    fn get_bbox(&self) -> BBox
+    {
+        unimplemented!()
     }
 }
 
@@ -128,7 +137,7 @@ impl Shadable for Triangle
         let v20 = self.m_vertex_0 - self.m_vertex_2;
         let mat = Matrix3::new(v10.x, v10.y, v10.z,
                                v20.x, v20.y, v20.z,
-                               shadow_ray.m_velocity.x, shadow_ray.m_velocity.y, shadow_ray.m_velocity.z);
+                               shadow_ray.m_direction.x, shadow_ray.m_direction.y, shadow_ray.m_direction.z);
         let rhs = self.m_vertex_0 - shadow_ray.m_origin;
         let mut solution = Vector3::zero();
 

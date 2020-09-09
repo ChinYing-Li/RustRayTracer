@@ -9,6 +9,7 @@ use crate::light::Light;
 use crate::utils::colorconstant::COLOR_BLACK;
 use crate::ray::Ray;
 use std::any::type_name;
+use crate::tracer::Tracer;
 
 #[derive(Clone, Debug)]
 pub struct Matte
@@ -29,7 +30,7 @@ impl Material for Matte
 {
     fn shade(&self, sr: &mut ShadeRec) -> Colorf
     {
-        let direction = -sr.m_ray.m_velocity.normalize();
+        let direction = -sr.m_ray.m_direction.normalize();
         let worldptr = sr.m_worldptr.clone().unwrap();
         let mut res_color = worldptr.m_ambientlight.L(sr) * self.m_ambient_brdf.rho(sr, direction);
 
@@ -57,7 +58,7 @@ impl Material for Matte
 
     fn area_light_shade(&self, sr: &mut ShadeRec) -> Colorf
     {
-        let w_o = -sr.m_ray.m_velocity.normalize();
+        let w_o = -sr.m_ray.m_direction.normalize();
         let mut clr = sr.m_worldptr.clone().unwrap().m_ambientlight.L(sr)
             * self.m_ambient_brdf.rho(sr, w_o);
 

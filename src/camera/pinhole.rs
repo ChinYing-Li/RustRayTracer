@@ -61,7 +61,7 @@ impl Camera for Pinhole
                                             .unwrap_or(Vector2::zero())
                                             .add_element_wise(sq_sample_point);
 
-                    ray.m_velocity = self.get_ray_direction(actual_sample_point);
+                    ray.m_direction = self.get_ray_direction(actual_sample_point);
                     clr += tracer.trace_ray(worldptr.clone(), &ray, 0);
                 }
                 clr /= vp.m_sampler.get_sample_per_pattern() as f32;

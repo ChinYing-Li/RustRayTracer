@@ -1,3 +1,4 @@
+pub mod kdtree;
 pub mod instance;
 pub mod trimesh;
 pub mod triangle;
@@ -13,6 +14,7 @@ use crate::material::Material;
 use std::sync::Arc;
 use std::ops::{Deref, DerefMut};
 use crate::utils::colorconstant::COLOR_BLACK;
+use crate::geometry::bbox::BBox;
 
 pub mod sphere;
 pub const KEPSILON: f32 = 0.0001;
@@ -42,7 +44,12 @@ impl fmt::Display for GeomError
 pub trait Geometry: fmt::Debug
 {
     fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>;
+}
 
+pub trait Boundable
+{
+    fn compute_bbox(&mut self){}
+    fn get_bbox(&self) -> BBox;
 }
 
 pub trait Shadable
@@ -56,3 +63,6 @@ pub trait Shadable
 
 pub trait Concrete: Geometry + Shadable {}
 impl<T> Concrete for T where T: Geometry + Shadable {}
+
+pub trait BoundedConcrete: Boundable + Concrete {}
+impl<T> BoundedConcrete for T where T: Boundable + Concrete {}

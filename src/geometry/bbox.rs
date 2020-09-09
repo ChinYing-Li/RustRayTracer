@@ -8,6 +8,7 @@ use crate::ray::Ray;
 use std::fmt;
 use std::cmp::{max, min};
 
+#[derive(Clone)]
 pub struct BBox
 {
     pub m_vertex_0: Vector3<f32>,
@@ -23,6 +24,19 @@ impl BBox
             m_vertex_0: vertex_0,
             m_vertex_1: vertex_1,
         }
+    }
+
+    pub fn union(&self, rhs: &BBox) -> BBox
+    {
+        let min_x = if self.m_vertex_0.x < rhs.m_vertex_0.x { self.m_vertex_0.x } else { self.m_vertex_1.x };
+        let min_y = if self.m_vertex_0.y < rhs.m_vertex_0.y { self.m_vertex_0.y } else { self.m_vertex_1.y };
+        let min_z = if self.m_vertex_0.z < rhs.m_vertex_0.x{ self.m_vertex_0.x } else { self.m_vertex_1.x};
+
+        let max_x = if self.m_vertex_0.x > rhs.m_vertex_0.x{ self.m_vertex_0.x } else { self.m_vertex_1.x};
+        let max_y = if self.m_vertex_0.y > rhs.m_vertex_0.y { self.m_vertex_0.y } else { self.m_vertex_1.y };
+        let max_z = if self.m_vertex_0.z > rhs.m_vertex_0.x{ self.m_vertex_0.x } else { self.m_vertex_1.x};
+
+        BBox::new(Vector3::new(min_x, min_y, min_z), Vector3::new(max_x, max_y, max_z))
     }
 }
 
@@ -43,7 +57,7 @@ impl Geometry for BBox
     {
         let mut t_min = Vector3::zero();
         let mut t_max =  Vector3::zero();
-        let INV_VEL = Vector3::new(1.0, 1.0, 1.0).div_element_wise(incomeray.m_velocity);
+        let INV_VEL = Vector3::new(1.0, 1.0, 1.0).div_element_wise(incomeray.m_direction);
 
         if INV_VEL.x >= 0.0
         {

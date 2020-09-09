@@ -5,6 +5,7 @@ use crate::ray::Ray;
 use crate::material::Material;
 use crate::utils::colorconstant::COLOR_BLACK;
 use crate::material::phong::Phong;
+use crate::tracer::Tracer;
 
 pub struct Reflective
 {
@@ -22,7 +23,7 @@ impl Material for Reflective
     fn shade(&self, sr: &mut ShadeRec) -> Colorf
     {
         /*let mut clr = COLOR_BLACK;
-        let w_o = -sr.m_ray.m_velocity;
+        let w_o = -sr.m_ray.m_direction;
         */
         COLOR_BLACK
     }

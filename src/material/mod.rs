@@ -9,12 +9,12 @@ use crate::utils::color::Colorf;
 use std::fmt::{Debug, Formatter};
 use std::fmt;
 use std::error::Error;
-
+use crate::tracer::Tracer;
 
 pub trait Material
 {
     fn shade(&self, sr: &mut ShadeRec) -> Colorf;
-    fn area_light_shade<'a>(&self, sr: &'a mut ShadeRec) -> Colorf;
+    fn area_light_shade(&self, sr: &mut ShadeRec) -> Colorf;
    // fn pathShade<'a>(&self, sr: &'a mut ShadeRec);
 }
 

@@ -1,5 +1,5 @@
 use cgmath::{Vector3, Zero, ElementWise};
-use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError};
+use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError, Boundable};
 use crate::utils::color::Colorf;
 use std::sync::Arc;
 use crate::utils::shaderec::ShadeRec;
@@ -7,6 +7,7 @@ use crate::material::Material;
 use crate::ray::Ray;
 use std::fmt;
 use std::cmp::{max, min};
+use crate::geometry::bbox::BBox;
 
 pub struct Cuboid
 {
@@ -70,7 +71,7 @@ impl Geometry for Cuboid
     {
         let mut t_min = Vector3::zero();
         let mut t_max = Vector3::zero();
-        let INV_VEL = Vector3::new(1.0, 1.0, 1.0).div_element_wise(incomeray.m_velocity);
+        let INV_VEL = Vector3::new(1.0, 1.0, 1.0).div_element_wise(incomeray.m_direction);
 
         if INV_VEL.x >= 0.0
         {
@@ -153,10 +154,17 @@ impl Geometry for Cuboid
                 *time = min_tmax;
                 shaderecord.m_normal = self.get_normal(face_out);
             }
-            shaderecord.m_hitpoint = incomeray.m_origin + *time * incomeray.m_velocity;
+            shaderecord.m_hitpoint = incomeray.m_origin + *time * incomeray.m_direction;
             return Ok(true)
         }
         Ok(false)
+    }
+}
+
+impl Boundable for Cuboid
+{
+    fn get_bbox(&self) -> BBox {
+        BBox::new(self.m_vec0, self.m_vec1 )
     }
 }
 

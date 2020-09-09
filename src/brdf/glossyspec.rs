@@ -14,11 +14,11 @@ const INV_PI: f32 = 1.0 / PI;
 #[derive(Clone, Debug)]
 pub struct GlossySpecular
 {
-    pub m_kd: f32,
+    m_kd: f32,
     pub m_colord: Colorf,
-    pub m_ks: f32,
+    m_ks: f32,
     pub m_colors: Colorf,
-    pub m_exp: f32,
+    m_exp: f32,
     m_samplerptr: Option<MultiJittered>
 }
 
@@ -42,6 +42,21 @@ impl GlossySpecular
         sampler.set_map_to_hemisphere(true, e);
         sampler
     }
+
+    pub fn set_kd(&mut self, kd: f32)
+    {
+        self.m_kd = kd;
+    }
+
+    pub fn set_ks(&mut self, ks: f32)
+    {
+        self.m_ks = ks;
+    }
+
+    pub fn set_exponent(&mut self, e: f32)
+    {
+        self.m_exp = e;
+    }
 }
 
 impl BRDF for GlossySpecular
@@ -60,7 +75,7 @@ impl BRDF for GlossySpecular
         res
     }
 
-    fn sampleFunc(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>) -> Colorf
+    fn sampleFunc(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>, pdf: &mut f32) -> Colorf
     {
         let n_dot_w_o = sr.m_normal.dot(*w_o);
         let reflection_direction = sr.m_normal.mul_element_wise(2.0 * n_dot_w_o) - *w_o;

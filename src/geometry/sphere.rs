@@ -2,7 +2,7 @@ use std::{f32};
 use cgmath::prelude::*;
 use cgmath::{Vector3, dot};
 
-use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError};
+use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError, Boundable};
 use crate::ray::Ray;
 use crate::utils::shaderec::ShadeRec;
 use crate::math::polynomial::*;
@@ -11,6 +11,8 @@ use crate::utils::color::Colorf;
 use crate::material::Material;
 use std::sync::Arc;
 use std::ops::Deref;
+use crate::geometry::bbox::BBox;
+use std::f32::consts::SQRT_2;
 
 #[derive(Clone)]
 pub struct Sphere
@@ -61,8 +63,8 @@ impl Geometry for Sphere
     fn hit(&self, incomeray: &Ray, tmin: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
     {
         let temp = incomeray.m_origin - self.m_center;
-        let a = dot(incomeray.m_velocity, incomeray.m_velocity);
-        let b = 2.0 * dot(temp, incomeray.m_velocity);
+        let a = dot(incomeray.m_direction, incomeray.m_direction);
+        let b = 2.0 * dot(temp, incomeray.m_direction);
         let c = dot(temp, temp) - self.m_radius.powf(2.0);
         let roots = get_quadratic_poly_root(a, b, c);
 
@@ -74,7 +76,7 @@ impl Geometry for Sphere
                 if *time > KEPSILON
                 {
                     //c_updateShadeRecNormal(time);
-                    shaderecord.m_normal = (temp + *time * incomeray.m_velocity).normalize();
+                    shaderecord.m_normal = (temp + *time * incomeray.m_direction).normalize();
                     *tmin = *time;
                     res = true;
                     break;
@@ -82,6 +84,15 @@ impl Geometry for Sphere
             }
         }
         Ok(res)
+    }
+}
+
+impl Boundable for Sphere
+{
+    fn get_bbox(&self) -> BBox {
+        let diag = self.m_radius * SQRT_2;
+        let offset = Vector3::new(diag, diag, diag);
+        BBox::new(self.m_center - offset, self.m_center + offset)
     }
 }
 
@@ -103,8 +114,8 @@ impl Shadable for Sphere
 
     fn shadow_hit(&self, shadowray: &Ray, tmin: &mut f32) -> bool {
         let temp = shadowray.m_origin - self.m_center;
-        let a = dot(shadowray.m_velocity, shadowray.m_velocity);
-        let b = 2.0 * dot(temp, shadowray.m_velocity);
+        let a = dot(shadowray.m_direction, shadowray.m_direction);
+        let b = 2.0 * dot(temp, shadowray.m_direction);
         let c = dot(temp, temp) - self.m_radius.powf(2.0);
         let roots = get_quadratic_poly_root(a, b, c);
 

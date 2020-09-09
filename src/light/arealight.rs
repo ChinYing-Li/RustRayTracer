@@ -63,10 +63,11 @@ impl Light for AreaLight
     fn is_in_shadow(&self, sr: &ShadeRec, ray: &Ray) -> bool
     {
         let mut time = INFINITY;
-        let time_to_sample_point = (self.m_sample_point - ray.m_origin).dot(ray.m_velocity);
+        let time_to_sample_point = (self.m_sample_point - ray.m_origin).dot(ray.m_direction);
         for object in sr.m_worldptr.clone().unwrap().m_objects.iter()
         {
-            if object.lock().unwrap().shadow_hit(ray, &mut time) && time < time_to_sample_point
+            if object.lock().unwrap().shadow_hit(ray, &mut time)
+                && time < time_to_sample_point
             {
                 return true;
             }

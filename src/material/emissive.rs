@@ -3,6 +3,7 @@ use crate::utils::shaderec::ShadeRec;
 use crate::utils::color::Colorf;
 use cgmath::InnerSpace;
 use crate::utils::colorconstant::COLOR_BLACK;
+use crate::tracer::Tracer;
 
 pub struct Emissive
 {
@@ -40,15 +41,14 @@ impl Emissive
 impl Material for Emissive
 {
     fn shade(&self, sr: &mut ShadeRec) -> Colorf {
-        if -sr.m_normal.dot(sr.m_ray.m_velocity) > 0.0
+        return if -sr.m_normal.dot(sr.m_ray.m_direction) > 0.0
         {
-            return self.m_color * self.m_ls;
-        }
-        else { return COLOR_BLACK }
+            self.m_color * self.m_ls
+        } else { COLOR_BLACK }
     }
 
     fn area_light_shade(&self, sr: &mut ShadeRec) -> Colorf {
-        if -sr.m_normal.dot(sr.m_ray.m_velocity) > 0.0
+        if -sr.m_normal.dot(sr.m_ray.m_direction) > 0.0
         {
             return self.m_color * self.m_ls;
         }

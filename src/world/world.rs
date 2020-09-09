@@ -91,7 +91,7 @@ impl World
                     srref.m_color = x.get_color();
                     srref.m_material = Some(x.get_material());
                     srref.m_ishitting = true;
-                    srref.m_hitpoint = ray.m_origin + tminglobal * ray.m_velocity;
+                    srref.m_hitpoint = ray.m_origin + tminglobal * ray.m_direction;
                     normal = srref.m_normal;
                     hitpoint = srref.m_hitpoint;
                     local_hitpoint = srref.m_local_hitpoint;

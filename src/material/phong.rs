@@ -9,6 +9,7 @@ use crate::light::Light;
 use cgmath::{InnerSpace, Vector3, Zero};
 use crate::ray::Ray;
 use crate::utils::colorconstant::COLOR_BLACK;
+use crate::tracer::Tracer;
 
 #[derive(Clone, Debug)]
 pub struct Phong
@@ -34,7 +35,7 @@ impl Phong
 impl Material for Phong
 {
     fn shade(&self, sr: &mut ShadeRec) -> Colorf {
-        let mut w_o = -sr.m_ray.m_velocity.normalize();
+        let mut w_o = -sr.m_ray.m_direction.normalize();
         let worldptr = sr.m_worldptr.clone().unwrap();
         let mut clr = sr.m_worldptr.clone().unwrap().m_ambientlight.L(sr)
                             * self.m_ambient_brdf.rho(sr, w_o);

@@ -46,7 +46,7 @@ impl TriMesh
         let v20 = *vertex0 - *vertex2;
         let mat = Matrix3::new(v10.x, v10.y, v10.z,
                                v20.x, v20.y, v20.z,
-                               incomeray.m_velocity.x, incomeray.m_velocity.y, incomeray.m_velocity.z);
+                               incomeray.m_direction.x, incomeray.m_direction.y, incomeray.m_direction.z);
         let rhs = vertex0 - incomeray.m_origin;
         let mut solution = Vector3::zero();
 
@@ -62,7 +62,7 @@ impl TriMesh
 
         shaderecord.m_normal = self.interpolate_normal(solution.x, solution.y, normal0, normal1, normal2);
         *time = solution.z;
-        shaderecord.m_hitpoint = incomeray.m_origin + solution.z * incomeray.m_velocity;
+        shaderecord.m_hitpoint = incomeray.m_origin + solution.z * incomeray.m_direction;
         Ok(true)
     }
 
