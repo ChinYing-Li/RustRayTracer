@@ -1,10 +1,17 @@
-use crate::geometry::Boundable;
+/*use crate::geometry::{Boundable, Geometry, GeomError};
 use crate::geometry::bbox::BBox;
 use std::sync::Arc;
 use cgmath::{Vector3, Zero};
 use std::cmp::max;
-//use crate::geometry::kdtree::EdgeType::{ET_start, ET_end};
-/*
+use crate::geometry::kdtree::EdgeType::{ET_start, ET_end};
+use arrayvec::ArrayVec;
+use std::f32::INFINITY;
+use crate::utils::shaderec::ShadeRec;
+use crate::ray::Ray;
+use std::fmt::{Debug, Formatter};
+use std::fmt;
+use cgmath::num_traits::Inv;
+
 pub struct KDTree<T> where T: Boundable
 {
     pub m_primitives: Vec<Arc<dyn T>>,
@@ -65,13 +72,78 @@ impl<T> KDTree<T> where T: Boundable
         }
 
         // Allocate memory for kd-tree construction
-        let mut prim_nums = Box::<[BoundEdge]>::new();
+        let mut edges = vec![vec![ BoundEdge::default(); 2 * self.m_primitives.len()]; 3].into_boxed_slice();
+        let mut prims0 = vec![0_i16; self.m_primitives.len()].into_boxed_slice();
+        let mut prims1 = vec![0; (self.m_max_depth + 1) * self.m_primitives.len()].into_boxed_slice();
 
+        // Boxing prim_nums
+        let arr_prim_nums: Vec<usize> = (0..primitive_size).collect();
+        let mut prim_nums = arr_prim_nums.into_boxed_slice();
+
+        self.built_tree(0, &self.m_bounds, &vec_bbox,
+                        prim_nums, &primitive_size, self.m_max_depth,
+                        edges, prims0, prims1);
     }
 
-    fn built_tree()
+    fn built_tree(&mut self, node_num: i16, node_bbox: &BBox, all_prim_bbox: &Vec<BBox>,
+                prim_nums: Box<[usize]>, n_primitives: &usize, depth: u16,
+                edges: Box<[Vec<BoundEdge>]>, prims0: Box<[i16]>, prims1: Box<[i16]>)
     {
+        assert_eq!(node_num as usize, self.m_next_free_node_slot);
 
+        // Allocate more memory in case we ran out of node slots.
+        if self.m_next_free_node_slot == self.m_number_of_allocated_nodes
+        {
+            let new_number_of_allocated_nodes = max(2 * self.m_number_of_allocated_nodes, 512);
+            self.m_nodes.extend([KDTreeNode::default(); new_number_of_allocated_nodes].iter());
+            self.m_number_of_allocated_nodes = new_number_of_allocated_nodes;
+        }
+        self.m_next_free_node_slot += 1;
+
+        // Initialize leaf node if termination criteria met
+        if n_primitives <= *self.m_max_prim_per_node || depth == 0
+        {
+            self.m_nodes[node_num];
+            return;
+        }
+
+        // Else, initialize interior node and continue
+        let best_axis = -1;
+        let best_offset = -1;
+        let best_cost = INFINITY;
+        let old_cost = self.m_intersect_cost * n_primitives as f32;
+        let total_SA = node_bbox.get_surface_area();
+        let diff = node_bbox.get_diagonal();
+
+        // Choose the axis to split
+        let axis = node_bbox.maximum_extent();
+        let retries = 0;
+    }
+
+
+}
+
+impl<T> Geometry for KDTree<T> where T: Boundable
+{
+    fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
+    {
+        if !self.m_bounds.hit(incomeray, time, shaderecord).unwrap()
+        {
+            return Ok(false);
+        }
+
+        let inv_dir = Vector3::new(incomeray.m_direction.x.inv(),
+                                                incomeray.m_direction.y.inv(),
+                                                incomeray.m_direction.z.inv());
+
+    }
+}
+
+impl<T> Debug for KDTree<T> where T: Boundable
+{
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        f.debug_struct("KDTree")
+            .finish()
     }
 }
 
@@ -79,8 +151,15 @@ enum EdgeType
 {
     ET_start,
     ET_end,
+    ET_undefined,
 }
 
+impl Default for EdgeType
+{
+    fn default() -> Self { EdgeType::ET_undefined }
+}
+
+#[derive(Debug, Default)]
 struct BoundEdge
 {
     m_t: f32,
@@ -109,7 +188,7 @@ struct KDTreeNode
 
 impl KDTreeNode
 {
-    pub fn create_leaf(&mut self, np: u16, primitive_indices: &Vec<u16>)
+    fn create_leaf(&mut self, np: u16, primitive_indices: &Vec<u16>)
     {
         self.m_priv_union.m_flags = 3;
         self.m_priv_union.m_n_prims |= np << 2;
@@ -124,7 +203,12 @@ impl KDTreeNode
         }
     }
 
-    pub fn create_interior(&self);
+    fn create_interior(&mut self, axis: u8, ac: u8, s: f32)
+    {
+        self.m_pub_union.m_split = s;
+        self.m_priv_union.m_flags = axis;
+        self.m_priv_union.m_above_child |= ac << 2;
+    }
 
     pub fn get_split_position(&self) -> f32 { self.m_pub_union.m_split }
     pub fn get_n_primitives(&self) -> u16 { self.m_priv_union.m_n_prims >> 2 }
@@ -136,9 +220,9 @@ impl KDTreeNode
 
 union KDTreeNode_pub_union
 {
-    m_split: f32,                // Interior
-m_one_primitive: u8,         // Leaf
-m_prim_indices_offset: usize,   // Leaf
+    m_split: f32,                 // Interior
+    m_one_primitive: u8,          // Leaf
+    m_prim_indices_offset: usize, // Leaf
 }
 
 union KDTreeNode_priv_union
@@ -147,4 +231,11 @@ union KDTreeNode_priv_union
     m_n_prims: u16,
     m_above_child: u16,
 }
-*/
+
+struct KDTasks
+{
+    m_tmin: f32,
+    m_tmax: f32,
+}
+
+ */

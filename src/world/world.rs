@@ -9,6 +9,8 @@ use crate::ray::Ray;
 use crate::geometry::{Geometry, Shadable, Concrete};
 use crate::light::ambient::Ambient;
 use crate::light::Light;
+use crate::tracer::Tracer;
+use crate::tracer::whitted::Whitted;
 
 #[derive(Debug)]
 pub struct World
@@ -18,6 +20,7 @@ pub struct World
     pub m_objects: Vec<Arc<Mutex<dyn Concrete>>>,
     pub m_ambientlight: Arc<Ambient>,
     pub m_lights: Vec<Arc<dyn Light>>,
+    pub m_tracer: Arc<dyn Tracer>,
 }
 
 impl World
@@ -31,6 +34,7 @@ impl World
             m_objects: Vec::new(),
             m_ambientlight: Arc::new(Ambient::new(Colorf::new(1.0 , 1.0, 1.0))),
             m_lights: Vec::with_capacity(30),
+            m_tracer: Arc::new(Whitted::new()),
         }
     }
 
@@ -107,6 +111,11 @@ impl World
         }
         sr
     }
+
+    /*pub fn trace_ray_with_internal_tracer(&self) -> Colorf
+    {
+        self.m_tracer.trace_ray()
+    }*/
 }
 
 #[cfg(test)]

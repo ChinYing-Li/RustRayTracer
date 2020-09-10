@@ -21,7 +21,7 @@ pub struct ShadeRec
     pub m_local_hitpoint: Vector3<f32>, // For attaching texture
     pub m_ray: Ray, // For specular lights
     pub m_light_dir: Vector3<f32>, // For directional lights
-    pub m_worldptr: Option<Arc<World>>,
+    pub m_worldptr: Arc<World>,
     pub m_color: Colorf, // TODO: to be deprecated
     pub m_time: f32,
     pub m_depth: u16 // Recursion depth
@@ -29,7 +29,7 @@ pub struct ShadeRec
 
 impl ShadeRec
 {
-    pub fn new() -> ShadeRec
+    pub fn new(world: Arc<World>) -> ShadeRec
     {
         ShadeRec{
             m_material: None,
@@ -39,7 +39,7 @@ impl ShadeRec
             m_local_hitpoint: Vector3::zero(),
             m_ray: Ray::new(Vector3::zero(), Vector3::zero()),
             m_light_dir: Vector3::zero(),
-            m_worldptr: None,
+            m_worldptr: world.clone(),
             m_color: Colorf::new(0.0, 0.0, 0.0),
             m_time: INFINITY,
             m_depth: 0,
@@ -48,7 +48,7 @@ impl ShadeRec
 
     pub fn set_world(&mut self, worldptr: Arc<World>)
     {
-        self.m_worldptr = Some(worldptr);
+        self.m_worldptr = worldptr.clone();
     }
 }
 

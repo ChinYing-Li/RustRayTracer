@@ -38,6 +38,26 @@ impl BBox
 
         BBox::new(Vector3::new(min_x, min_y, min_z), Vector3::new(max_x, max_y, max_z))
     }
+
+    /// Find the axis of which the bbox' dimension is largest.
+    pub fn maximum_extent(&self) -> f32
+    {
+        let diag = self.get_diagonal();
+        if diag.x > diag.y && diag.x > diag.z { return diag.x }
+        else if diag.y > diag.z { return diag.y }
+        else { return diag.z }
+    }
+
+    pub fn get_diagonal(&self) -> Vector3<f32>
+    {
+        self.m_vertex_1 - self.m_vertex_0
+    }
+
+    pub fn get_surface_area(&self) -> f32
+    {
+        let diag = self.get_diagonal();
+        2.0 * (diag.x * diag.y + diag.y * diag.z + diag.z * diag.x )
+    }
 }
 
 impl fmt::Debug for BBox

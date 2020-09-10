@@ -1,10 +1,11 @@
 use crate::geometry::{Geometry, GeomError, Boundable, BoundedConcrete};
 use std::sync::Arc;
-use cgmath::{Matrix3, SquareMatrix, Vector3, Matrix4, InnerSpace, ElementWise};
+use cgmath::{Matrix3, SquareMatrix, Vector3, Matrix4, InnerSpace, ElementWise, Rad, Deg, Zero, Vector4};
 use crate::utils::shaderec::ShadeRec;
 use crate::ray::Ray;
 use std::fmt;
 use std::ptr::null;
+use crate::math::constants;
 use crate::material::Material;
 use crate::geometry::bbox::BBox;
 use std::f32::INFINITY;
@@ -14,8 +15,8 @@ pub struct Instance
 {
     m_geomptr: Arc<dyn BoundedConcrete>,
     m_material_ptr: Arc<dyn Material>,
-    m_inv_matrix: Matrix3<f32>,
-    m_forward_matrix: Matrix3<f32>,
+    m_inv_matrix: Matrix4<f32>,
+    m_forward_matrix: Matrix4<f32>,
     m_do_transform_texture: bool,
     m_bbox: BBox,
 }
@@ -24,12 +25,15 @@ impl Instance
 {
     pub fn new(geomptr: Arc<dyn BoundedConcrete>) -> Instance
     {
+        let mut mat_buffer = Matrix4::identity();
+        mat_buffer[3][3] = 0.0;
+
         Instance
         {
             m_geomptr: geomptr.clone(),
             m_material_ptr: geomptr.get_material(),
-            m_inv_matrix: Matrix3::identity(),
-            m_forward_matrix: Matrix3::identity(),
+            m_inv_matrix: mat_buffer,
+            m_forward_matrix: mat_buffer,
             m_do_transform_texture: true,
             m_bbox: geomptr.as_ref().get_bbox(),
         }
@@ -45,16 +49,37 @@ impl Instance
         self.compute_bbox();
     }
 
-
-
-    pub fn translate(&mut self, displace: Vector3<f32>)
+    pub fn translate(&mut self, displace: Vector4<f32>)
     {
-
+        // the last element of displace must be zero
+        self.m_inv_matrix[3] -= displace;
+        self.m_forward_matrix[3] += displace;
     }
 
-    pub fn rotate(&mut self)
+    // theta is in radian
+    pub fn rotate_x(&mut self, theta: f32)
     {
+        self.m_forward_matrix = Matrix4::from_angle_x(Deg(theta)) * self.m_forward_matrix;
+        self.m_inv_matrix = Matrix4::from_angle_x(-Deg(theta)) * self.m_forward_matrix;
+    }
 
+    pub fn rotate_y(&mut self, theta: f32)
+    {
+        self.m_forward_matrix = Matrix4::from_angle_y(Deg(theta)) * self.m_forward_matrix;
+        self.m_inv_matrix = Matrix4::from_angle_y(-Deg(theta)) * self.m_forward_matrix;
+    }
+
+    pub fn rotate_z(&mut self, theta: f32)
+    {
+        self.m_forward_matrix = Matrix4::from_angle_z(Deg(theta)) * self.m_forward_matrix;
+        self.m_inv_matrix = Matrix4::from_angle_z(-Deg(theta)) * self.m_forward_matrix;
+    }
+
+    fn transform_vector3(mat4: &Matrix4<f32>, vector3: &Vector3<f32>) -> Vector3<f32>
+    {
+        let vector4 = Vector4::new(vector3.x, vector3.y, vector3.z, 1.0);
+        let transformed_vector4 = (*mat4) * vector4;
+        Vector3::new(transformed_vector4.x, transformed_vector4.y, transformed_vector4.z)
     }
 }
 
@@ -71,12 +96,13 @@ impl fmt::Debug for Instance
 impl Geometry for Instance
 {
     fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError> {
-        let mut inverted_ray = Ray::new(self.m_inv_matrix * incomeray.m_origin, self.m_inv_matrix * incomeray.m_direction);
+        let mut inverted_ray = Ray::new(Instance::transform_vector3(&self.m_inv_matrix, &(incomeray.m_origin)),
+                                        Instance::transform_vector3(&self.m_inv_matrix, &incomeray.m_direction));
 
         if self.m_geomptr.hit(&inverted_ray, time, shaderecord)
             .unwrap_or(false)
         {
-            shaderecord.m_normal = self.m_inv_matrix * shaderecord.m_normal;
+            shaderecord.m_normal = Instance::transform_vector3(&self.m_inv_matrix, &shaderecord.m_normal);
             shaderecord.m_normal.normalize();
 
             if !self.m_do_transform_texture
@@ -94,26 +120,30 @@ impl Boundable for Instance
     fn compute_bbox(&mut self)
     {
         self.m_bbox = self.m_geomptr.get_bbox();
-        let trans_vertices: [Vector3<f32>; 8] = [self.m_forward_matrix * self.m_bbox.m_vertex_0,
-            self.m_forward_matrix * Vector3::new(self.m_bbox.m_vertex_1.x,
-                                                 self.m_bbox.m_vertex_0.y,
-                                                 self.m_bbox.m_vertex_0.z),
-            self.m_forward_matrix * Vector3::new(self.m_bbox.m_vertex_0.x,
-                                                 self.m_bbox.m_vertex_1.y,
-                                                 self.m_bbox.m_vertex_0.z),
-            self.m_forward_matrix * Vector3::new(self.m_bbox.m_vertex_0.x,
-                                                 self.m_bbox.m_vertex_0.y,
-                                                 self.m_bbox.m_vertex_1.z),
-            self.m_forward_matrix * Vector3::new(self.m_bbox.m_vertex_1.x,
-                                                 self.m_bbox.m_vertex_1.y,
-                                                 self.m_bbox.m_vertex_0.z),
-            self.m_forward_matrix * Vector3::new(self.m_bbox.m_vertex_1.x,
-                                                 self.m_bbox.m_vertex_0.y,
-                                                 self.m_bbox.m_vertex_1.z),
-            self.m_forward_matrix * Vector3::new(self.m_bbox.m_vertex_0.x,
-                                                 self.m_bbox.m_vertex_1.y,
-                                                 self.m_bbox.m_vertex_1.z),
-            self.m_forward_matrix * self.m_bbox.m_vertex_1];
+        let mut trans_vertices = vec![self.m_bbox.m_vertex_0,
+            Vector3::new(self.m_bbox.m_vertex_1.x,
+                         self.m_bbox.m_vertex_0.y,
+                         self.m_bbox.m_vertex_0.z),
+            Vector3::new(self.m_bbox.m_vertex_0.x,
+                         self.m_bbox.m_vertex_1.y,
+                         self.m_bbox.m_vertex_0.z),
+            Vector3::new(self.m_bbox.m_vertex_0.x,
+                         self.m_bbox.m_vertex_0.y,
+                         self.m_bbox.m_vertex_1.z),
+            Vector3::new(self.m_bbox.m_vertex_1.x,
+                         self.m_bbox.m_vertex_1.y,
+                         self.m_bbox.m_vertex_0.z),
+            Vector3::new(self.m_bbox.m_vertex_1.x,
+                         self.m_bbox.m_vertex_0.y,
+                         self.m_bbox.m_vertex_1.z),
+            Vector3::new(self.m_bbox.m_vertex_0.x,
+                         self.m_bbox.m_vertex_1.y,
+                         self.m_bbox.m_vertex_1.z),
+            self.m_bbox.m_vertex_1];
+
+        trans_vertices = trans_vertices.iter()
+            .map(|vertex| Instance::transform_vector3(&self.m_forward_matrix, vertex))
+            .collect();
 
         let mut min_x = INFINITY;
         let mut min_y = INFINITY;
@@ -136,5 +166,22 @@ impl Boundable for Instance
     fn get_bbox(&self) -> BBox
     {
         self.m_bbox.clone()
+    }
+}
+
+#[cfg(test)]
+mod InstanceTest
+{
+    use super::*;
+    use std::f32::consts::PI;
+    use crate::geometry::sphere::Sphere;
+
+    const INV_PI: f32 = 1.0 / PI ;
+    const INV_GAMMA: f32 = 1.0 / 1.8;
+
+    #[test]
+    pub fn TestBBox()
+    {
+        //let sphere = Sphere::new(Vector3::new())
     }
 }

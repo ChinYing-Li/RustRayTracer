@@ -60,9 +60,7 @@ fn main()
 
     let c = vec![COLOR_BLUE, COLOR_RED, Colorf::new(0.0, 1.0, 1.0)];
     let objlen= world.m_objects.len();
-    let materials: Vec<Matte> = (0..objlen)
-        .collect::<Vec<_>>()
-        .iter()
+    let materials: Vec<Matte> = (0..objlen).collect::<Vec<_>>().iter()
         .map(|x| setUpMaterial(1.0/(*x) as f32, 0.3 * (*x) as f32, 0.5))
         .collect::<Vec<Matte>>();
 

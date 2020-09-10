@@ -36,8 +36,8 @@ impl BRDF for PerfectSpecular
     fn sampleFunc(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>, pdf: &mut f32) -> Colorf
     {
         let n_dot_w_o = sr.m_normal.dot(*w_o);
-        let new_w_i = -*w_o + sr.m_normal.mul_element_wise(n_dot_w_o * 2.0);
-        self.m_cr * (self.m_kr / sr.m_normal.dot(new_w_i))
+        *w_i = -*w_o + sr.m_normal.mul_element_wise(n_dot_w_o * 2.0);
+        self.m_cr * (self.m_kr / sr.m_normal.dot(*w_i))
     }
 
     fn rho(&self, sr: &ShadeRec, w_o: Vector3<f32>) -> Colorf

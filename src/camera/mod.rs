@@ -1,12 +1,13 @@
 use cgmath::{Vector3, InnerSpace, dot, ElementWise, Zero, Vector2};
-use std::{f32};
-use crate::world::world::World;
-use crate::tracer::Tracer;
-use crate::output::OutputManager;
-use std::sync::Arc;
+use std::{f32,
+          sync::Arc};
+use crate::{world::world::World,
+            tracer::Tracer,
+            output::OutputManager};
 
 type Point3<T> = Vector3<T>;
 
+/// The fundamental component of struct that implements the "Camera" trait.
 pub struct CamStruct
 {
     pub m_eye: Point3<f32>,
@@ -21,6 +22,7 @@ pub struct CamStruct
 
 impl CamStruct
 {
+    /// Create a new Camstruct and specified three fields: m_eye, m_lookat and m_up
     pub fn new(eye: Vector3<f32>, lookat: Vector3<f32>, up: Vector3<f32>) -> CamStruct
     {
         CamStruct
@@ -36,6 +38,7 @@ impl CamStruct
         }
     }
 
+    /// Compute the world denotation of axis of camera's local coordinate system
     pub fn ComputeUVW(&mut self)
     {
         self.m_w = (self.m_eye - self.m_lookat).normalize();

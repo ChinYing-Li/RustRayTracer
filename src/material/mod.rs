@@ -1,3 +1,4 @@
+mod dielectric;
 mod glossyreflector;
 pub mod reflector;
 pub mod emissive;

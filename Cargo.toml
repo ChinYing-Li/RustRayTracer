@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 approx = "0.3.2"
+arrayvec = "0.5.1"
 enum-set = "0.0.8"
 image = "0.23.7"
 rand = "0.7.3"

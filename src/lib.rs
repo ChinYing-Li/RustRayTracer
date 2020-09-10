@@ -17,6 +17,7 @@ pub mod world;
 extern crate enum_set as enum_set;
 extern crate rand;
 extern crate obj;
+extern crate arrayvec;
 #[macro_use]
 extern crate image;
 extern crate cgmath;
