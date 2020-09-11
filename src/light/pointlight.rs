@@ -50,7 +50,7 @@ impl Light for PointLight
     fn is_in_shadow(&self, sr: &ShadeRec, ray: &Ray) -> bool
     {
         let disance_to_shadowed = self.m_location.distance(ray.m_origin);
-        let world_ptr = sr.m_worldptr.clone().unwrap();
+        let world_ptr = sr.m_worldptr.clone();
         let mut t = INFINITY;
 
         for i in 0..world_ptr.m_objects.len()

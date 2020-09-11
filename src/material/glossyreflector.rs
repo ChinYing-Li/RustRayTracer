@@ -23,7 +23,7 @@ impl GlossyReflector
         GlossyReflector
         {
             m_phong: (*phong).clone(),
-            m_glossyspec_brdf: *glossyspec_brdf.clone(),
+            m_glossyspec_brdf: glossyspec_brdf.clone(),
         }
     }
 
@@ -59,7 +59,7 @@ impl Material for GlossyReflector
         let fr = self.m_glossyspec_brdf.sampleFunc(sr,&mut w_i, &mut w_o, &mut pdf);
         let reflected_ray = Ray::new(sr.m_hitpoint, w_i);
 
-        clr += fr * sr.m_worldptr.clone().unwrap().m_tracer.trace_ray(sr.m_worldptr.unwrap(), &reflected_ray, sr.m_depth +1)
+        clr += fr * sr.m_worldptr.clone().m_tracer.trace_ray(sr.m_worldptr.clone(), &reflected_ray, sr.m_depth +1)
             * sr.m_normal.dot(w_i) / pdf;
         clr
     }

@@ -75,8 +75,7 @@ impl World
 
     pub fn hit_objects(worldptr: Arc<World>, ray: &Ray, tmin: f32) -> ShadeRec
     {
-        let mut sr = ShadeRec::new();
-        sr.set_world(worldptr.clone());
+        let mut sr = ShadeRec::new(worldptr.clone());
         let srref = &mut sr;
         let mut normal = Vector3::zero();
         let mut hitpoint = Vector3::zero();
@@ -84,7 +83,7 @@ impl World
         let mut tglobal = 100000.0;
         let mut tminglobal = tmin;
 
-        for i in 0..worldptr.clone().m_objects.len()
+        for i in 0..worldptr.as_ref().m_objects.len()
         {
             if let x = worldptr.clone().m_objects[i].lock().unwrap()
             {

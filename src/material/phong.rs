@@ -36,8 +36,8 @@ impl Material for Phong
 {
     fn shade(&self, sr: &mut ShadeRec) -> Colorf {
         let mut w_o = -sr.m_ray.m_direction.normalize();
-        let worldptr = sr.m_worldptr.clone().unwrap();
-        let mut clr = sr.m_worldptr.clone().unwrap().m_ambientlight.L(sr)
+        let worldptr = sr.m_worldptr.clone();
+        let mut clr = worldptr.m_ambientlight.L(sr)
                             * self.m_ambient_brdf.rho(sr, w_o);
 
         for light in worldptr.m_lights.iter()

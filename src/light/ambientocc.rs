@@ -86,7 +86,7 @@ impl Light for AmbientOccluder
     fn is_in_shadow(&self, sr: &ShadeRec, ray: &Ray) -> bool
     {
         let mut time = INFINITY;
-        for object in &sr.m_worldptr.clone().unwrap().m_objects
+        for object in &sr.m_worldptr.clone().m_objects
         {
             if object.lock().unwrap().shadow_hit(ray, &mut time)
             {

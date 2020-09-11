@@ -31,7 +31,7 @@ impl Material for Matte
     fn shade(&self, sr: &mut ShadeRec) -> Colorf
     {
         let direction = -sr.m_ray.m_direction.normalize();
-        let worldptr = sr.m_worldptr.clone().unwrap();
+        let worldptr = sr.m_worldptr.clone();
         let mut res_color = worldptr.m_ambientlight.L(sr) * self.m_ambient_brdf.rho(sr, direction);
 
         for i in 0..(worldptr.m_lights.len())
@@ -59,10 +59,10 @@ impl Material for Matte
     fn area_light_shade(&self, sr: &mut ShadeRec) -> Colorf
     {
         let w_o = -sr.m_ray.m_direction.normalize();
-        let mut clr = sr.m_worldptr.clone().unwrap().m_ambientlight.L(sr)
+        let mut clr = sr.m_worldptr.clone().m_ambientlight.L(sr)
             * self.m_ambient_brdf.rho(sr, w_o);
 
-        for light in sr.m_worldptr.clone().unwrap().m_lights.iter()
+        for light in sr.m_worldptr.clone().m_lights.iter()
         {
             let mut w_i = Vector3::zero();
             let mut n_dot_w_i = 0.0_f32;
