@@ -32,7 +32,7 @@ impl Material for Reflective
         let fr = self.m_reflective_brdf.sampleFunc(sr,&mut w_i, &mut w_o, &mut dummy);
         let reflected_ray = Ray::new(sr.m_hitpoint, w_i);
 
-        clr += fr * sr.m_worldptr.clone().m_tracer.trace_ray(sr.m_worldptr.clone(), &reflected_ray, sr.m_depth +1)
+        clr += fr * sr.m_worldptr.as_ref().m_tracer.trace_ray(sr.m_worldptr.clone(), &reflected_ray, sr.m_depth +1)
             * sr.m_normal.dot(w_i);
         clr
     }

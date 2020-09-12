@@ -134,3 +134,25 @@ impl Shadable for Sphere
         false
     }
 }
+
+#[cfg(test)]
+mod TestSphere
+{
+    use super::*;
+    use std::f32::consts::PI;
+    use approx::{assert_relative_eq};
+    use crate::utils::colorconstant::COLOR_RED;
+
+    const INV_PI: f32 = 1.0 / PI ;
+    const INV_GAMMA: f32 = 1.0 / 1.8;
+
+    #[test]
+    pub fn TestSphereBBox()
+    {
+        let sphere = Sphere::new(10.0, Vector3::new(20.0, 10.0, 30.0), COLOR_RED);
+        let bbox = sphere.get_bbox();
+        assert_relative_eq!(bbox.m_vertex_0.x, 5.85786437626);
+        assert_relative_eq!(bbox.m_vertex_0.y, -4.1421356237);
+        assert_relative_eq!(bbox.m_vertex_1.z, 44.1421356237);
+    }
+}

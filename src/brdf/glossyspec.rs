@@ -26,7 +26,8 @@ impl GlossySpecular
 {
     pub fn new(kd: f32, colord: Colorf) -> GlossySpecular
     {
-        GlossySpecular{
+        GlossySpecular
+        {
             m_kd: kd,
             m_colord: colord,
             m_ks: 0.0,
@@ -94,7 +95,7 @@ impl BRDF for GlossySpecular
         }
 
         let phong_lobe = reflection_direction.dot(*w_i);
-        // pdf = sr.normal.mul_element_wise(phong_lobe * w_i);
+        //pdf = sr.m_normal.mul_element_wise(phong_lobe * w_i);
         self.m_colors * self.m_ks * phong_lobe
     }
 

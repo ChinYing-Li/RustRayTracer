@@ -6,9 +6,9 @@ use crate::utils::shaderec::ShadeRec;
 use crate::material::Material;
 use crate::ray::Ray;
 use std::fmt;
-use std::cmp::{max, min};
 use crate::utils::colorconstant::COLOR_BLACK;
 use crate::geometry::bbox::BBox;
+use crate::math::float_cmp::{max, min};
 
 pub struct Triangle
 {
@@ -56,6 +56,28 @@ impl Triangle
             none of 0, 1 or 2");
         }
         self.m_normals[normal_index] = new_normal;
+    }
+
+    fn min_coordinate_on_axis(&self, axis: usize) -> f32
+    {
+        match axis
+        {
+            0 =>  min(min(self.m_vertex_0.x, self.m_vertex_1.x), self.m_vertex_2.x),
+            1 => min(min(self.m_vertex_0.y, self.m_vertex_1.y), self.m_vertex_2.y),
+            2 => min(min(self.m_vertex_0.z, self.m_vertex_1.z), self.m_vertex_2.z),
+            _ => panic!("axis can only be of value 0, 1 or 2")
+        }
+    }
+
+    fn max_coordinate_on_axis(&self, axis: usize) -> f32
+    {
+        match axis
+        {
+            0 =>  max(max(self.m_vertex_0.x, self.m_vertex_1.x), self.m_vertex_2.x),
+            1 => max(max(self.m_vertex_0.y, self.m_vertex_1.y), self.m_vertex_2.y),
+            2 => max(max(self.m_vertex_0.z, self.m_vertex_1.z), self.m_vertex_2.z),
+            _ => panic!("axis can only be of value 0, 1 or 2")
+        }
     }
 }
 
@@ -108,7 +130,12 @@ impl Boundable for Triangle
 {
     fn get_bbox(&self) -> BBox
     {
-        unimplemented!()
+        BBox::new(Vector3::new(self.min_coordinate_on_axis(0),
+                                        self.min_coordinate_on_axis(1),
+                                        self.min_coordinate_on_axis(2)),
+            Vector3::new(self.max_coordinate_on_axis(0),
+                         self.max_coordinate_on_axis(1),
+                        self.max_coordinate_on_axis(2)))
     }
 }
 
@@ -163,6 +190,10 @@ mod TriangleTest
     use approx::{assert_relative_eq};
 
     use super::*;
+    use crate::world::viewplane::ViewPlane;
+    use crate::tracer::whitted::Whitted;
+    use crate::world::world::World;
+    use crate::sampler::mutijittered::MultiJittered;
 
     #[test]
     fn check_hit()
@@ -172,7 +203,10 @@ mod TriangleTest
         let v2 = Vector3::new(0.5, 1.0, 1.0);
         let mut triangle = Triangle::new(v0, v1, v2);
 
-        let mut sr = ShadeRec::new();
+        let mut sampler = MultiJittered::new(256, 1);
+        let vp = Box::new(ViewPlane::new(Arc::new(sampler)));
+        let mut sr = ShadeRec::new(Arc::new(World::new(vp)));
+
         let ray = Ray::new(Vector3::new(0.3, 0.5, -1.0),
                                 Vector3::new(0.01, 0.1, 1.2));
         let mut t = INFINITY;
@@ -180,7 +214,7 @@ mod TriangleTest
 
         assert_eq!(res.unwrap(), true);
         assert_relative_eq!(sr.m_normal, Vector3::new(0.8944271909999159, 0.0, -0.4472135954999579));
-        assert_relative_eq!(t, 1.3559322033898307);
+        assert_relative_eq!(t, 1.632815);
     }
 
     #[test]
@@ -190,12 +224,29 @@ mod TriangleTest
         let v1 = Vector3::new(0.0, 1.0, 0.0);
         let v2 = Vector3::new(0.5, 1.0, 1.0);
         let triangle = Triangle::new(v0, v1, v2);
-        let mut sr = ShadeRec::new();
+        let mut sampler = MultiJittered::new(256, 1);
+        let vp = Box::new(ViewPlane::new(Arc::new(sampler)));
+        let mut sr = ShadeRec::new(Arc::new(World::new(vp)));
+
         let ray = Ray::new(Vector3::new(-1.0, 0.0, 0.0),
                            Vector3::new(-0.5, 1.0, 1.0));
         let mut t = 2.0;
         let res = triangle.hit(&ray, &mut t, &mut sr);
 
         assert_eq!(res.unwrap(), false);
+    }
+
+    #[test]
+    fn testTriangleBBox()
+    {
+        let v0 = Vector3::new(1.0, 0.4, -1.0);
+        let v1 = Vector3::new(2.0, 1.0, -10.0);
+        let v2 = Vector3::new(0.5, 9.0, 1.0);
+        let triangle = Triangle::new(v0, v1, v2);
+
+        let bbox = triangle.get_bbox();
+        assert_relative_eq!(bbox.m_vertex_0.x, 0.5);
+        assert_relative_eq!(bbox.m_vertex_0.y, 0.4);
+        assert_relative_eq!(bbox.m_vertex_1.z, 1.0);
     }
 }

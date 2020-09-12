@@ -11,8 +11,8 @@ pub struct Ray
 
 impl Ray
 {
-    pub fn new(origin: Vector3<f32>, velocity: Vector3<f32>) -> Ray
+    pub fn new(origin: Vector3<f32>, direction: Vector3<f32>) -> Ray
     {
-        Ray{ m_origin: origin, m_direction: velocity.normalize()}
+        Ray{ m_origin: origin, m_direction: direction.normalize()}
     }
 }

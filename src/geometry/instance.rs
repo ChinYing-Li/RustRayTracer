@@ -180,8 +180,8 @@ mod InstanceTest
     const INV_GAMMA: f32 = 1.0 / 1.8;
 
     #[test]
-    pub fn TestBBox()
+    pub fn TestSphereBBox()
     {
-        //let sphere = Sphere::new(Vector3::new())
+        //let sphere = Sphere::new(10.0, Vector3::new())
     }
 }

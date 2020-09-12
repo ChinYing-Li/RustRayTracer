@@ -26,7 +26,9 @@ pub trait BRDF
 pub trait Transmitter
 {
     fn total_internal_reflection(&self, sr: &ShadeRec) -> bool;
+
     fn fresnel_reflectance(&self, sr: &ShadeRec) -> f32;
+
     fn sampleFunc(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>, w_t: &mut Vector3<f32>) -> Colorf
     { COLOR_BLACK }
 

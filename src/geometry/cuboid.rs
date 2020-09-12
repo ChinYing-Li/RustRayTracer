@@ -8,6 +8,8 @@ use crate::ray::Ray;
 use std::fmt;
 use std::cmp::{max, min};
 use crate::geometry::bbox::BBox;
+use core::num::FpCategory::Infinite;
+use std::f32::INFINITY;
 
 pub struct Cuboid
 {
@@ -52,22 +54,8 @@ impl Cuboid
             _ => Vector3::unit_z(),
         }
     }
-}
 
-impl fmt::Debug for Cuboid
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
-    {
-        f.debug_struct("Cuboid")
-            .field("Vector 0", &self.m_vec0)
-            .field("Vector 1", &self.m_vec1)
-            .finish()
-    }
-}
-
-impl Geometry for Cuboid
-{
-    fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
+    pub fn calculate_hit_time(&self, incomeray: &Ray, TMIN: &mut f32, TMAX: &mut f32) -> (bool, Face, Face)
     {
         let mut t_min = Vector3::zero();
         let mut t_max = Vector3::zero();
@@ -110,18 +98,18 @@ impl Geometry for Cuboid
 
         if t_min_max_component == t_min.x
         {
-                max_tmin = t_min.x;
-                face_in = if INV_VEL.x >= 0.0 { Face::SMALL_X } else { Face::BIG_X };
+            max_tmin = t_min.x;
+            face_in = if INV_VEL.x >= 0.0 { Face::SMALL_X } else { Face::BIG_X };
         }
         else if t_min_max_component == t_min.y
         {
-                    max_tmin = t_min.y;
-                    face_in = if INV_VEL.y >= 0.0 { Face::SMALL_Y } else { Face::BIG_Y };
+            max_tmin = t_min.y;
+            face_in = if INV_VEL.y >= 0.0 { Face::SMALL_Y } else { Face::BIG_Y };
         }
         else
         {
-                    max_tmin = t_min.z;
-                    face_in = if INV_VEL.z >= 0.0 { Face::SMALL_Z } else { Face::BIG_Z };
+            max_tmin = t_min.z;
+            face_in = if INV_VEL.z >= 0.0 { Face::SMALL_Z } else { Face::BIG_Z };
         }
 
         let mut t_max_min_component = if t_max.x <= t_max.y { t_max.x } else { t_max.y };
@@ -129,29 +117,56 @@ impl Geometry for Cuboid
 
         if t_max_min_component == t_max.x
         {
-                    min_tmax = t_max.x;
-                    face_out = if INV_VEL.x >= 0.0 { Face::SMALL_X } else { Face::BIG_X };
+            min_tmax = t_max.x;
+            face_out = if INV_VEL.x >= 0.0 { Face::SMALL_X } else { Face::BIG_X };
         }
         else if t_max_min_component == t_max.y
         {
-                    min_tmax = t_min.y;
-                    face_in = if INV_VEL.y >= 0.0 { Face::SMALL_Y } else { Face::BIG_Y };
+            min_tmax = t_min.y;
+            face_in = if INV_VEL.y >= 0.0 { Face::SMALL_Y } else { Face::BIG_Y };
         }
         else
         {
-                    min_tmax = t_min.z;
-                    face_in = if INV_VEL.z >= 0.0 { Face::SMALL_Z } else { Face::BIG_Z };
+            min_tmax = t_min.z;
+            face_in = if INV_VEL.z >= 0.0 { Face::SMALL_Z } else { Face::BIG_Z };
         }
-
         if max_tmin < min_tmax && min_tmax > KEPSILON
         {
-            if max_tmin > KEPSILON
+            *TMIN = max_tmin;
+            *TMAX = min_tmax;
+            return (true, face_in, face_out);
+        }
+        return (false, face_in, face_out);
+    }
+}
+
+impl fmt::Debug for Cuboid
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
+        f.debug_struct("Cuboid")
+            .field("Vector 0", &self.m_vec0)
+            .field("Vector 1", &self.m_vec1)
+            .finish()
+    }
+}
+
+impl Geometry for Cuboid
+{
+    fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
+    {
+        let mut TMIN = INFINITY;
+        let mut TMAX = 0.0_f32;
+
+        if let (true, face_in, face_out) = self.calculate_hit_time(incomeray, &mut TMIN, &mut TMAX)
+        {
+            if TMIN > KEPSILON
             {
-                *time = max_tmin;
+                *time = TMIN;
                 shaderecord.m_normal = self.get_normal(face_in);
             }
             else {
-                *time = min_tmax;
+                *time = TMAX;
                 shaderecord.m_normal = self.get_normal(face_out);
             }
             shaderecord.m_hitpoint = incomeray.m_origin + *time * incomeray.m_direction;
@@ -204,6 +219,10 @@ mod CuboidTest
 
     use super::*;
     use crate::utils::colorconstant::COLOR_BLACK;
+    use crate::world::viewplane::ViewPlane;
+    use crate::tracer::whitted::Whitted;
+    use crate::world::world::World;
+    use crate::sampler::mutijittered::MultiJittered;
 
     #[test]
     fn check_hit_small_x()
@@ -212,7 +231,10 @@ mod CuboidTest
         let v1 = Vector3::new(5.0, 0.0, 10.0);
         let cuboid = Cuboid::new(v0, v1, COLOR_BLACK);
 
-        let mut sr = ShadeRec::new();
+        let mut sampler = MultiJittered::new(256, 1);
+        let vp = Box::new(ViewPlane::new(Arc::new(sampler)));
+        let mut sr = ShadeRec::new(Arc::new(World::new(vp)));
+
         let ray = Ray::new(Vector3::new(-10.0, -2.0, 8.0),
                            Vector3::new(1.0, 0.0, 0.0));
         let mut t = INFINITY;

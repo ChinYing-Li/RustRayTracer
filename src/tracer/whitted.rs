@@ -40,7 +40,7 @@ impl Tracer for Whitted
 
     }
 }
-
+/*
 #[cfg(test)]
 mod WhittedTest
 {
@@ -64,18 +64,18 @@ mod WhittedTest
     }
 
     const sphereA: Sphere = Sphere
-                            {
-                                m_radius: 30.0,
-                                m_center: Vector3::new(70.0, 30.0, 20.0),
-                                m_color: COLOR_RED,
-                                m_material: None
-                            };
-    /*#[test]
+    {
+        m_radius: 30.0,
+        m_center: Vector3::new(70.0, 30.0, 20.0),
+        m_color: COLOR_RED,
+        m_material: None
+    };
+
+    #[test]
     fn HitOneSphereTest()
     {
         let mut world = setUpDummyWorld();
         world.m_viewplaneptr.m_pixsize = 0.5;
-        world.m_viewplaneptr.m_numsample = 3;
         sphereA.set_material();
         world.add_object(Arc::new(Mutex::new(sphereA)));
 
@@ -97,5 +97,5 @@ mod WhittedTest
         let ray = Ray::new(Vector3::new(90.0, 10.0, 0.0), Vector3::new(0.0, 0.0, 1.0));
         let res_color = tracer.trace_ray(Arc::new(world), &ray, 0);
         assert_relative_eq!(res_color.m_r, 0.0);
-    }*/
-}
+    }
+}*/

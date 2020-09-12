@@ -195,10 +195,14 @@ mod WorldSphereTest
     {
         let mut ray = Ray::new(Vector3::new(7.0, 0.5, 0.0), Vector3::new(-3.0, 3.0, 0.0));
         let mut world = set_up_dummy_world();
-        let mut shaderecord = ShadeRec::new();
+
+        let mut sampler = MultiJittered::new(256, 1);
+        let vp = Box::new(ViewPlane::new(Arc::new(sampler)));
+        let mut sr = ShadeRec::new(Arc::new(World::new(vp)));
+
         let mut tmin = 100.0;
         let sphere = setUpSphere();
-        let res = sphere.hit(&ray, &mut tmin, &mut shaderecord).unwrap();
+        let res = sphere.hit(&ray, &mut tmin, &mut sr).unwrap();
         assert_eq!(res, false);
     }
 }

@@ -46,7 +46,7 @@ impl Transmitter for PerfectTransmitter
             eta = eta.inv();
         }
 
-        let cos_theta_reflected = (1.0 - (1.0 - cos_theta_in.pow(2.0) / eta.pow(2.0))).sqrt();
+        let cos_theta_reflected = self.calculate_cos_theta_t(&cos_theta_in, &eta);
         *w_t = w_o.neg() / eta - (cos_theta_reflected - cos_theta_in) * normal / eta;
 
         COLOR_WHITE * self.m_kt / eta.pow(2.0) / sr.m_normal.dot(*w_i).abs()

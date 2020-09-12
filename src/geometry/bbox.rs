@@ -58,22 +58,8 @@ impl BBox
         let diag = self.get_diagonal();
         2.0 * (diag.x * diag.y + diag.y * diag.z + diag.z * diag.x )
     }
-}
 
-impl fmt::Debug for BBox
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
-    {
-        f.debug_struct("BBox")
-            .field("Vector 0", &self.m_vertex_0)
-            .field("Vector 1", &self.m_vertex_1)
-            .finish()
-    }
-}
-
-impl Geometry for BBox
-{
-    fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
+    pub fn calculate_hit_time(&self, incomeray: &Ray, TMIN: &mut f32, TMAX: &mut f32) -> bool
     {
         let mut t_min = Vector3::zero();
         let mut t_max =  Vector3::zero();
@@ -117,8 +103,32 @@ impl Geometry for BBox
 
         let mut t_max_min_component = if t_max.x <= t_max.y { t_max.x } else { t_max.y };
         t_max_min_component = if t_max.z <= t_max_min_component { t_max.z } else { t_max_min_component };
+        *TMIN = t_min_max_component;
+        *TMAX = t_max_min_component;
 
-        Ok(t_min_max_component < t_max_min_component && t_max_min_component > KEPSILON)
+        t_min_max_component < t_max_min_component && t_max_min_component > KEPSILON
+    }
+}
+
+impl fmt::Debug for BBox
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+    {
+        f.debug_struct("BBox")
+            .field("Vector 0", &self.m_vertex_0)
+            .field("Vector 1", &self.m_vertex_1)
+            .finish()
+    }
+}
+
+impl Geometry for BBox
+{
+    fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
+    {
+        let mut TMIN = 0.0_f32;
+        let mut TMAX = 0.0_f32;
+        let result = BBox::calculate_hit_time(self, incomeray, &mut TMIN, &mut TMAX);
+        Ok(result)
     }
 }
 
@@ -130,6 +140,10 @@ mod BBoxTest
     use approx::{assert_relative_eq};
 
     use super::*;
+    use crate::world::world::World;
+    use crate::world::viewplane::ViewPlane;
+    use crate::tracer::whitted::Whitted;
+    use crate::sampler::mutijittered::MultiJittered;
 
     #[test]
     fn check_hit_small_x()
@@ -138,7 +152,10 @@ mod BBoxTest
         let v1 = Vector3::new(5.0, 0.0, 10.0);
         let bbox = BBox::new(v0, v1);
 
-        let mut sr = ShadeRec::new();
+        let mut sampler = MultiJittered::new(256, 1);
+        let vp = Box::new(ViewPlane::new(Arc::new(sampler)));
+        let mut sr = ShadeRec::new(Arc::new(World::new(vp)));
+
         let ray = Ray::new(Vector3::new(-10.0, -10.0, 0.0),
                                 Vector3::new(5.0, 3.5, 4.0));
         let mut t = INFINITY;
