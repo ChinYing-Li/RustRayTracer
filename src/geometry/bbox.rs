@@ -40,12 +40,12 @@ impl BBox
     }
 
     /// Find the axis of which the bbox' dimension is largest.
-    pub fn maximum_extent(&self) -> f32
+    pub fn maximum_extent(&self) -> usize
     {
         let diag = self.get_diagonal();
-        if diag.x > diag.y && diag.x > diag.z { return diag.x }
-        else if diag.y > diag.z { return diag.y }
-        else { return diag.z }
+        return if diag.x > diag.y && diag.x > diag.z { 0 } // axis x
+                else if diag.y > diag.z { 1 } // axis y
+                else { 2 } // axis z
     }
 
     pub fn get_diagonal(&self) -> Vector3<f32>
