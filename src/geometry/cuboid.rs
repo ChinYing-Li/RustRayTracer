@@ -6,10 +6,11 @@ use crate::utils::shaderec::ShadeRec;
 use crate::material::Material;
 use crate::ray::Ray;
 use std::fmt;
-use std::cmp::{max, min};
+use crate::math::float_cmp;
 use crate::geometry::bbox::BBox;
 use core::num::FpCategory::Infinite;
 use std::f32::INFINITY;
+use crate::math::float_cmp::{max, min};
 
 pub struct Cuboid
 {
@@ -46,11 +47,11 @@ impl Cuboid
     {
         match face
         {
-            Face::SMALL_X => -Vector3::unit_x(),
+            Face::SMALL_X => Vector3::unit_x().mul_element_wise(-1.0),
             Face::BIG_X => Vector3::unit_x(),
-            Face::SMALL_Y => -Vector3::unit_y(),
+            Face::SMALL_Y => Vector3::unit_y().mul_element_wise(-1.0),
             Face::BIG_Y => Vector3::unit_y(),
-            Face::SMALL_Z => -Vector3::unit_z(),
+            Face::SMALL_Z => Vector3::unit_z().mul_element_wise(-1.0),
             _ => Vector3::unit_z(),
         }
     }
@@ -93,8 +94,7 @@ impl Cuboid
         let mut face_in: Face = Face::SMALL_X;
         let mut face_out: Face = Face::SMALL_X;
 
-        let mut t_min_max_component = if t_min.x >= t_min.y { t_min.x } else { t_min.y };
-        t_min_max_component = if t_min.z >= t_min_max_component { t_min.z } else { t_min_max_component };
+        let mut t_min_max_component = max(t_min.x, max(t_min.y , t_min.z ));
 
         if t_min_max_component == t_min.x
         {
@@ -112,8 +112,7 @@ impl Cuboid
             face_in = if INV_VEL.z >= 0.0 { Face::SMALL_Z } else { Face::BIG_Z };
         }
 
-        let mut t_max_min_component = if t_max.x <= t_max.y { t_max.x } else { t_max.y };
-        t_max_min_component = if t_max.z <= t_max_min_component { t_max.z } else { t_max_min_component };
+        let mut t_max_min_component = min( t_max.x , min(t_max.y, t_max.z));
 
         if t_max_min_component == t_max.x
         {
@@ -122,15 +121,15 @@ impl Cuboid
         }
         else if t_max_min_component == t_max.y
         {
-            min_tmax = t_min.y;
-            face_in = if INV_VEL.y >= 0.0 { Face::SMALL_Y } else { Face::BIG_Y };
+            min_tmax = t_max.y;
+            face_out = if INV_VEL.y >= 0.0 { Face::SMALL_Y } else { Face::BIG_Y };
         }
         else
         {
-            min_tmax = t_min.z;
-            face_in = if INV_VEL.z >= 0.0 { Face::SMALL_Z } else { Face::BIG_Z };
+            min_tmax = t_max.z;
+            face_out = if INV_VEL.z >= 0.0 { Face::SMALL_Z } else { Face::BIG_Z };
         }
-        if max_tmin < min_tmax && min_tmax > KEPSILON
+        if max_tmin < min_tmax
         {
             *TMIN = max_tmin;
             *TMAX = min_tmax;
@@ -160,13 +159,13 @@ impl Geometry for Cuboid
 
         if let (true, face_in, face_out) = self.calculate_hit_time(incomeray, &mut TMIN, &mut TMAX)
         {
-            if TMIN > KEPSILON
+            if TMIN > KEPSILON && *time > TMIN
             {
                 *time = TMIN;
                 shaderecord.m_normal = self.get_normal(face_in);
             }
-            else {
-                *time = TMAX;
+            else if *time > TMAX
+            {
                 shaderecord.m_normal = self.get_normal(face_out);
             }
             shaderecord.m_hitpoint = incomeray.m_origin + *time * incomeray.m_direction;

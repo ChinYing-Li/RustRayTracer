@@ -18,7 +18,7 @@ use raytracer::camera::Camera;
 use raytracer::material::phong::Phong;
 use raytracer::brdf::lambertian::Lambertian;
 use raytracer::brdf::glossyspec::GlossySpecular;
-use raytracer::utils::colorconstant::{COLOR_BLUE, COLOR_RED, COLOR_WHITE};
+use raytracer::utils::colorconstant::{COLOR_BLUE, COLOR_RED, COLOR_WHITE, COLOR_YELLOW};
 use raytracer::light::pointlight::PointLight;
 use raytracer::material::Material;
 use std::rc::Rc;
@@ -28,6 +28,7 @@ use raytracer::material::matte::Matte;
 use raytracer::light::ambientocc::AmbientOccluder;
 use raytracer::sampler::mutijittered::MultiJittered;
 use raytracer::sampler::Sampler;
+use raytracer::geometry::cuboid::Cuboid;
 
 fn main()
 {
@@ -48,17 +49,16 @@ fn main()
     let mut sphereA = Arc::new(Mutex::new(Sphere::new(10.0,
                                                       Vector3::new(12.0, 20.0, 15.0),
                                                       Colorf::new(0.0, 1.0, 0.0))));
-    let mut sphereB = Arc::new(Mutex::new(Sphere::new(15.0,
-                                                      Vector3::new(30.0, 10.0, 20.),
+    let mut cuboid = Arc::new(Mutex::new(Cuboid::new(Vector3::new(30.0, 20.0, 20.0),
+                                                      Vector3::new(50.0, 40.0, 50.),
                                                       Colorf::new(1.0, 0.0, 0.0))));
     let mut triangle = Arc::new(Mutex::new(Triangle::new(Vector3::new(-10.0, 40.0, 10.0),
                                                          Vector3::new(30.0, 40.0, 0.0),
                                                          Vector3::new(60.0, 40.0, 30.0))));
     world.add_object(sphereA);
-    world.add_object(sphereB);
+    world.add_object(cuboid);
     world.add_object(triangle);
 
-    let c = vec![COLOR_BLUE, COLOR_RED, Colorf::new(0.0, 1.0, 1.0)];
     let objlen= world.m_objects.len();
     let materials: Vec<Matte> = (0..objlen).collect::<Vec<_>>().iter()
         .map(|x| setUpMaterial(1.0/(*x) as f32, 0.3 * (*x) as f32, 0.5))
@@ -88,11 +88,13 @@ fn setUpMaterial(r: f32, g: f32, b: f32) -> Matte
 
 fn setUpLights(world: &mut World)
 {
-    let point = PointLight::new(0.5, COLOR_WHITE, Vector3::new(-30.0, 20.0, -20.0));
-    let point2 = PointLight::new(0.5, COLOR_RED, Vector3::new(30.0, 10.0, -5.0));
-    let mut ambient = Ambient::new(COLOR_BLUE);
-    ambient.set_radiance_scaling_factor(0.1);
+    let point = PointLight::new(0.2, COLOR_WHITE, Vector3::new(-30.0, 20.0, -20.0));
+    let point1 = PointLight::new(0.5, COLOR_RED, Vector3::new(30.0, 10.0, -5.0));
+    let point2 = PointLight::new(0.6, COLOR_YELLOW, Vector3::new(70.0, 40.0, 5.0));
+    let mut ambient = Ambient::new(COLOR_WHITE);
+    ambient.set_radiance_scaling_factor(0.02);
     world.add_light(Arc::new(point));
+    world.add_light(Arc::new(point1));
     world.add_light(Arc::new(point2));
     world.set_ambient(Arc::new(ambient));
 }
@@ -104,7 +106,7 @@ fn setUpAmbientOccluder(world: &mut World)
     mj.generate_sample_pattern();
 
     let mut ambocc = AmbientOccluder::new(0.0, 0.3, Arc::new(mj));
-    ambocc.set_color(COLOR_WHITE);
+    ambocc.set_color(COLOR_BLUE);
     world.add_light(Arc::new(ambocc));
 
     let mut ambient = Ambient::new(COLOR_WHITE);

@@ -51,9 +51,8 @@ impl Light for AreaLight
 
     fn L(&self, sr: &ShadeRec) -> Colorf
     {
-        let n_dot_w_i = -self.m_light_normal.dot(self.m_w_i);
-        if n_dot_w_i > 0.0 { return self.m_materialptr.get_Le(sr); }
-        else { return COLOR_BLACK }
+        return if -self.m_light_normal.dot(self.m_w_i) > 0.0 { self.m_materialptr.get_Le(sr) }
+                else { COLOR_BLACK }
     }
 
     fn does_cast_shadow(&self) -> bool {
@@ -64,7 +63,7 @@ impl Light for AreaLight
     {
         let mut time = INFINITY;
         let time_to_sample_point = (self.m_sample_point - ray.m_origin).dot(ray.m_direction);
-        for object in sr.m_worldptr.clone().m_objects.iter()
+        for object in sr.m_worldptr.as_ref().m_objects.iter()
         {
             if object.lock().unwrap().shadow_hit(ray, &mut time)
                 && time < time_to_sample_point

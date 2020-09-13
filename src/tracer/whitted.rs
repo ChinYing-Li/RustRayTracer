@@ -20,22 +20,21 @@ impl Tracer for Whitted
 {
     fn trace_ray(&self, worldptr: Arc<World>, ray: &Ray, currentdepth: u16) -> Colorf
     {
-        let worldptr_cloned = worldptr.clone();
-        if currentdepth > worldptr_cloned.m_viewplaneptr.m_maxdepth
+        if currentdepth > worldptr.as_ref().m_viewplaneptr.m_maxdepth
         {
             COLOR_BLACK
         }
         else
         {
-            let mut sr = World::hit_objects(worldptr, ray, INFINITY);
+            let mut sr = World::hit_objects(worldptr.clone(), ray, INFINITY);
             if sr.m_ishitting
             {
                 sr.m_depth = currentdepth;
                 sr.m_ray = *ray;
-                let mat_clone = sr.m_material.clone();
-                mat_clone.unwrap().shade(&mut sr)
+                sr.m_material.clone()
+                    .map(|material|  material.shade(&mut sr)).unwrap()
             }
-            else { worldptr_cloned.m_backgroundcolor }
+            else { worldptr.as_ref().m_backgroundcolor }
         }
 
     }

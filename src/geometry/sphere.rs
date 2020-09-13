@@ -73,7 +73,7 @@ impl Geometry for Sphere
         {
             if let Some(time) = it
             {
-                if *time > KEPSILON
+                if *time > KEPSILON && *tmin > *time
                 {
                     //c_updateShadeRecNormal(time);
                     shaderecord.m_normal = (temp + *time * incomeray.m_direction).normalize();
@@ -121,11 +121,11 @@ impl Shadable for Sphere
 
         for it in roots.iter()
         {
-            if let Some(time) = it
+            if let Some(root) = it
             {
-                if *time > KEPSILON
+                if *root > KEPSILON
                 {
-                    *tmin = *time;
+                    *tmin = *root;
                     println!("shadow hit!");
                     return true;
                 }

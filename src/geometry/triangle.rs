@@ -120,9 +120,13 @@ impl Geometry for Triangle
             3 => shaderecord.m_normal = self.interpolate_normal(solution.x, solution.y),
             _ => return Err(GeomError::WrongSizeError)
         }
-        *time = solution.z;
-        shaderecord.m_hitpoint = incomeray.m_origin + solution.z * incomeray.m_direction;
-        Ok(true)
+        if solution.z < *time
+        {
+            *time = solution.z;
+            shaderecord.m_hitpoint = incomeray.m_origin + solution.z * incomeray.m_direction;
+            return Ok(true);
+        }
+        Ok(false)
     }
 }
 

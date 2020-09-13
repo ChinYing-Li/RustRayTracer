@@ -182,6 +182,9 @@ mod InstanceTest
     #[test]
     pub fn TestSphereBBox()
     {
-        //let sphere = Sphere::new(10.0, Vector3::new())
+        let sphere = Sphere::new(10.0, Vector3::new(20.0, 10.0, 30.0), COLOR_RED);
+        let mut instance = Instance::new(Arc::new(sphere));
+        instance.translate(Vector4::new(-5.0, 10.0,10.0, 0.0));
+        
     }
 }

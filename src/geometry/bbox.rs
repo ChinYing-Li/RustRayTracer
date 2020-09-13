@@ -6,7 +6,8 @@ use crate::utils::shaderec::ShadeRec;
 use crate::material::Material;
 use crate::ray::Ray;
 use std::fmt;
-use std::cmp::{max, min};
+use crate::math::float_cmp;
+use crate::math::float_cmp::{min, max};
 
 #[derive(Clone)]
 pub struct BBox
@@ -98,15 +99,16 @@ impl BBox
             t_max.z = (self.m_vertex_0.z - incomeray.m_origin.z) * INV_VEL.z;
         }
 
-        let mut t_min_max_component = if t_min.x >= t_min.y { t_min.x } else { t_min.y };
-        t_min_max_component = if t_min.z >= t_min_max_component { t_min.z } else { t_min_max_component };
+        let mut t_min_max_component = max( t_min.x, max( t_min.y, t_min.z));
+        let mut t_max_min_component = min(t_max.x, min( t_max.y, t_max.z ));
 
-        let mut t_max_min_component = if t_max.x <= t_max.y { t_max.x } else { t_max.y };
-        t_max_min_component = if t_max.z <= t_max_min_component { t_max.z } else { t_max_min_component };
-        *TMIN = t_min_max_component;
-        *TMAX = t_max_min_component;
-
-        t_min_max_component < t_max_min_component && t_max_min_component > KEPSILON
+        if t_min_max_component < t_max_min_component && t_max_min_component > KEPSILON
+        {
+            *TMIN = t_min_max_component;
+            *TMAX = t_max_min_component;
+            return true;
+        }
+        false
     }
 }
 

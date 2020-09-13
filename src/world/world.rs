@@ -85,7 +85,7 @@ impl World
 
         for i in 0..worldptr.as_ref().m_objects.len()
         {
-            if let x = worldptr.clone().m_objects[i].lock().unwrap()
+            if let x = worldptr.as_ref().m_objects[i].lock().unwrap()
             {
                 if x.hit(ray, &mut tglobal, srref).unwrap_or(false) && tglobal < tminglobal
                 {
