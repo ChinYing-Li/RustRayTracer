@@ -105,7 +105,7 @@ impl fmt::Debug for Instance
 
 impl Geometry for Instance
 {
-    unsafe fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError> {
+     fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError> {
         let mut inverted_ray = Ray::new(Instance::transform_vector3(&self.m_inv_matrix, &(incomeray.m_origin)),
                                         Instance::transform_vector3(&self.m_inv_matrix, &incomeray.m_direction));
 

@@ -152,7 +152,7 @@ impl fmt::Debug for Cuboid
 
 impl Geometry for Cuboid
 {
-    unsafe fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
+    fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
     {
         let mut TMIN = INFINITY;
         let mut TMAX = 0.0_f32;

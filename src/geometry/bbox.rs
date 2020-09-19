@@ -125,7 +125,7 @@ impl fmt::Debug for BBox
 
 impl Geometry for BBox
 {
-    unsafe fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
+    fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
     {
         let mut TMIN = 0.0_f32;
         let mut TMAX = 0.0_f32;

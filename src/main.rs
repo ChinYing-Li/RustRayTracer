@@ -43,9 +43,8 @@ fn main()
     boxed_vp.m_pixsize = 0.5;
     boxed_vp.set_gamma(1.8);
 
-    let mut imgwriter = ImageWriter::new("3_reflective_spheresjpg", vp_hres, vp_vres);
+    let mut imgwriter = ImageWriter::new("3_reflective_spheres.jpg", vp_hres, vp_vres);
     let mut world = World::new(boxed_vp);
-
 
     let mut sphereA = Arc::new(Mutex::new(Sphere::new(10.0,
                                                       Vector3::new(12.0, 20.0, 15.0),
@@ -60,11 +59,13 @@ fn main()
     world.add_object(sphereA);
     world.add_object(cuboid);
     world.add_object(triangle);
-
+    /*
     for i in 0..5
     {
-        world.add_object(Arc::new(Instance::new(Arc::new(sphereA))));
-    }
+        let mut instance = Instance::new(sphereA.clone());
+        instance.translate(Vector3::new(i as f32 *10.0, i as f32 * 5.0, i as f32 * 5.0));
+        world.add_object(Arc::new(Mutex::new(instance)));
+    }*/
 
     let objlen= world.m_objects.len();
     let materials: Vec<Matte> = (0..objlen).collect::<Vec<_>>().iter()
