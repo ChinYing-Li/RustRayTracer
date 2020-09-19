@@ -94,8 +94,8 @@ impl BRDF for GlossySpecular
             *w_i -= 2.0 * (u.mul_element_wise(sample_point.x ) + v.mul_element_wise(sample_point.y));
         }
 
-        let phong_lobe = reflection_direction.dot(*w_i);
-        //pdf = sr.m_normal.mul_element_wise(phong_lobe * w_i);
+        let phong_lobe = reflection_direction.dot(*w_i).powf(self.m_exp);
+        *pdf = sr.m_normal.dot(*w_i) * phong_lobe;
         self.m_colors * self.m_ks * phong_lobe
     }
 

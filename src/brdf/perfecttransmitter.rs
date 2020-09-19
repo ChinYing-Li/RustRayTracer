@@ -33,10 +33,10 @@ impl Transmitter for PerfectTransmitter
         unimplemented!()
     }
 
-    fn sampleFunc(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>, w_t: &mut Vector3<f32>) -> Colorf
+    fn sampleFunc(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_t: &mut Vector3<f32>) -> Colorf
     {
         let mut normal = sr.m_normal;
-        let mut cos_theta_in = normal.dot(*w_o);
+        let mut cos_theta_in = normal.dot(*w_i);
         let mut eta = self.m_index_of_reflection;
 
         if cos_theta_in < 0.0
@@ -46,8 +46,8 @@ impl Transmitter for PerfectTransmitter
             eta = eta.inv();
         }
 
-        let cos_theta_reflected = self.calculate_cos_theta_t(&cos_theta_in, &eta);
-        *w_t = w_o.neg() / eta - (cos_theta_reflected - cos_theta_in) * normal / eta;
+        let cos_theta_transmitted = self.calculate_cos_theta_t(&cos_theta_in, &eta);
+        *w_t = w_i.neg() / eta - (cos_theta_transmitted - cos_theta_in / eta) * normal;
 
         COLOR_WHITE * self.m_kt / eta.pow(2.0) / sr.m_normal.dot(*w_i).abs()
     }

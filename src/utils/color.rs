@@ -1,5 +1,6 @@
 use std::{f32, convert::{From, Into}};
 use std::ops::{Add, Mul, Div, Sub, MulAssign, AddAssign, SubAssign, DivAssign};
+use crate::utils::colorconstant::e;
 
 const INV_255 : f32 = 1.0 / 255.0;
 
@@ -32,6 +33,11 @@ impl Colorf
     pub fn clamp(&self) -> Colorf
     {
         Colorf{ m_r: Colorf::clamp_elem(self.m_r), m_g: Colorf::clamp_elem(self.m_g), m_b: Colorf::clamp_elem(self.m_b)}
+    }
+
+    pub fn color_filter_exponential(&self, t: f32) -> Colorf
+    {
+        Colorf::new(e.powf(-self.m_r * t), e.powf(-self.m_g * t), e.powf(-self.m_b * t))
     }
 }
 

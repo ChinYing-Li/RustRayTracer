@@ -95,7 +95,7 @@ impl fmt::Debug for Triangle
 
 impl Geometry for Triangle
 {
-    fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError> {
+    unsafe fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError> {
         let v10 = self.m_vertex_0 - self.m_vertex_1;
         let v20 = self.m_vertex_0 - self.m_vertex_2;
         let mat = Matrix3::new(v10.x, v10.y, v10.z,

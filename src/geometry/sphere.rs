@@ -60,7 +60,7 @@ impl fmt::Debug for Sphere
 
 impl Geometry for Sphere
 {
-    fn hit(&self, incomeray: &Ray, tmin: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
+    unsafe fn hit(&self, incomeray: &Ray, tmin: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
     {
         let temp = incomeray.m_origin - self.m_center;
         let a = dot(incomeray.m_direction, incomeray.m_direction);

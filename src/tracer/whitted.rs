@@ -2,7 +2,7 @@ use crate::ray::Ray;
 use crate::utils::color::{Colorf};
 use crate::world::world::World;
 use std::sync::Arc;
-use crate::tracer::Tracer;
+use crate::tracer::{Tracer, HUGE_VAL_FOR_TIME};
 use std::f32::INFINITY;
 use crate::utils::colorconstant::COLOR_BLACK;
 
@@ -18,9 +18,9 @@ impl Whitted
 
 impl Tracer for Whitted
 {
-    fn trace_ray(&self, worldptr: Arc<World>, ray: &Ray, currentdepth: u16) -> Colorf
+    fn trace_ray(&self, worldptr: Arc<World>, ray: &Ray, depth: u16) -> Colorf
     {
-        if currentdepth > worldptr.as_ref().m_viewplaneptr.m_maxdepth
+        if depth > worldptr.as_ref().m_viewplaneptr.m_maxdepth
         {
             COLOR_BLACK
         }
@@ -29,14 +29,38 @@ impl Tracer for Whitted
             let mut sr = World::hit_objects(worldptr.clone(), ray, INFINITY);
             if sr.m_ishitting
             {
-                sr.m_depth = currentdepth;
+                sr.m_depth = depth;
                 sr.m_ray = *ray;
                 sr.m_material.clone()
                     .map(|material|  material.shade(&mut sr)).unwrap()
             }
             else { worldptr.as_ref().m_backgroundcolor }
         }
+    }
 
+    fn trace_ray_with_time(&self, worldptr: Arc<World>, ray: &Ray, time: &mut f32, depth: u16) -> Colorf
+    {
+        if depth > worldptr.as_ref().m_viewplaneptr.m_maxdepth
+        {
+            COLOR_BLACK
+        }
+        else
+        {
+            let mut sr = World::hit_objects(worldptr.clone(), ray, INFINITY);
+            if sr.m_ishitting
+            {
+                sr.m_depth = depth;
+                sr.m_ray = *ray;
+                *time = sr.m_time;
+                sr.m_material.clone()
+                    .map(|material|  material.shade(&mut sr)).unwrap()
+            }
+            else
+            {
+                *time = HUGE_VAL_FOR_TIME;
+                worldptr.as_ref().m_backgroundcolor
+            }
+        }
     }
 }
 /*

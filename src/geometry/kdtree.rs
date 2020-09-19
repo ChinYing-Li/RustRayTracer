@@ -1,4 +1,4 @@
-/*use crate::geometry::{Boundable, Geometry, GeomError, BoundedConcrete, Shadable};
+use crate::geometry::{Boundable, Geometry, GeomError, BoundedConcrete, Shadable};
 use crate::geometry::bbox::BBox;
 use std::sync::Arc;
 use cgmath::{Vector3, Zero, ElementWise, Array};
@@ -157,8 +157,8 @@ impl<T> KDTree<T> where T: BoundedConcrete
                 {
                     n_above -= 1;
                 }
-                let edge_T = edges_ref[axis][i].m_t;
-                if edge_T > KDTree::vector3_index_get(&node_bbox.m_vertex_0, axis) && edge_T < KDTree::vector3_index_get(&node_bbox.m_vertex_1, axis)
+                let edgeT = edges_ref[axis][i].m_t;
+                if edgeT > KDTree::<T>::vector3_index_get(&node_bbox.m_vertex_0, axis) && edgeT < KDTree::<T>::vector3_index_get(&node_bbox.m_vertex_1, axis)
                 {
                     // Compute cost for aplit at this edge.
                     // 1. Compute child surface areas.
@@ -166,9 +166,9 @@ impl<T> KDTree<T> where T: BoundedConcrete
                     let axis1 = (axis + 2) % 3;
 
                     let below_surfacearea = 2.0 * (diff[axis0] * diff[axis1]
-                        + (edge_T - node_bbox.m_vertex_0[axis]) * (diff[axis0] + diff[axis1]));
+                        + (edgeT - node_bbox.m_vertex_0[axis]) * (diff[axis0] + diff[axis1]));
                     let above_surfacearea = 2.0 * (diff[axis0] * diff[axis1]
-                        + (node_bbox.m_vertex_1[axis] - edge_T) * (diff[axis0] + diff[axis1]));
+                        + (node_bbox.m_vertex_1[axis] - edgeT) * (diff[axis0] + diff[axis1]));
 
                     let percentage_below = below_surfacearea * inv_total_SA;
                     let percentage_above = above_surfacearea * inv_total_SA;
@@ -233,8 +233,8 @@ impl<T> KDTree<T> where T: BoundedConcrete
         let t_split = edges_ref[best_axis][best_offset].m_t;
         let mut bbox0 = (*node_bbox).clone();
         let mut bbox1 = (*node_bbox).clone();
-        KDTree::vector3_index_set(&mut bbox0.m_vertex_1, best_axis, t_split);
-        KDTree::vector3_index_set(&mut bbox1.m_vertex_0, best_axis, t_split);
+        KDTree::<T>::vector3_index_set(&mut bbox0.m_vertex_1, best_axis, t_split);
+        KDTree::<T>::vector3_index_set(&mut bbox1.m_vertex_0, best_axis, t_split);
 
         self.built_tree(node_num + 1, &bbox0, all_prim_bbox,
                         prim_nums, n0, depth - 1, edges_ref,
@@ -308,7 +308,7 @@ impl<T> Geometry for KDTree<T> where T: BoundedConcrete
                                    incomeray.m_direction.y.inv(),
                                    incomeray.m_direction.z.inv());
 
-        let mut tasks = vec![KDTasks.default; 3];
+        let mut tasks = vec![KDTasks::default(); 64];
         let mut task_offset = 0;
         let is_hitting = false;
         let mut node = self.m_nodes.as_ptr();
@@ -328,9 +328,11 @@ impl<T> Geometry for KDTree<T> where T: BoundedConcrete
                         }
                     _ =>
                         {
-                            for index in self.m_sorted_indices[(node_ref.offset..min(node_ref.get_n_primitives(), self.m_sorted_indices.len()))]
+                            let mut time = INFINITY;
+                            for i in node_ref.get_primitives_indices_offset()..min(node_ref.get_n_primitives(), self.m_sorted_indices.len())
                             {
-                                if self.m_primitives[index].hit(incomeray, shaderecord)
+                                let index = self.m_sorted_indices[i];
+                                if self.m_primitives[index].hit(incomeray, &mut time, shaderecord).unwrap_or(false)
                                 {
                                     return Ok(true);
                                 }
@@ -341,20 +343,21 @@ impl<T> Geometry for KDTree<T> where T: BoundedConcrete
                 if task_offset > 0
                 {
                     task_offset -= 1;
-                    node = tasks[task_offset].node;
-                    tMin = tasks[task_offset].tMin;
-                    tMax = tasks[task_offset].tMax;
+                    node = tasks[task_offset].m_node;
+                    tmin = tasks[task_offset].m_tmin;
+                    tmax = tasks[task_offset].m_tmax;
                 } else { break; }
             }
             else
             {
                 let axis = node_ref.get_split_axis();
-                let t_plane = KDTree::vector3_index_get(&inv_dir,axis) * (node_ref.get_split_position() - KDTree::vector3_index_get(&incomeray.m_origin, axis));
+                let t_plane = KDTree::<T>::vector3_index_get(&inv_dir,axis) * (node_ref.get_split_position() - KDTree::<T>::vector3_index_get(&incomeray.m_origin, axis));
 
                 let mut first_child = null();
                 let mut second_child = null();
-                match KDTree::vector3_index_get(&incomeray.m_direction, axis) < node_ref.get_split_position()
-                    || KDTree::vector3_index_get(&incomeray.m_direction, axis) == node_ref.get_split_position() && KDTree::vector3_index_get(&incomeray.m_direction, axis) < 0.0
+                match KDTree::<T>::vector3_index_get(&incomeray.m_direction, axis) < node_ref.get_split_position()
+                    || (KDTree::<T>::vector3_index_get(&incomeray.m_direction, axis) == node_ref.get_split_position()
+                        && KDTree::<T>::vector3_index_get(&incomeray.m_direction, axis) < 0.0)
                 {
                     true =>
                         unsafe {
@@ -366,16 +369,16 @@ impl<T> Geometry for KDTree<T> where T: BoundedConcrete
                             {
                             first_child = self.m_nodes.as_ptr().offset((*node).m_priv_union.m_above_child as isize);
                             second_child = node.offset(1);
-                        }
+                            }
                 }
                 // Advance to next child node, possibly enqueue another children
                 if t_plane > tmax || t_plane <= 0.0 { node = first_child; }
                 else if t_plane < tmin { node = second_child; }
                 else
                 {
-                    tasks[task_offset].node = second_child;
-                    tasks[task_offset].tmin = t_plane;
-                    tasks[task_offset].tax = tmax;
+                    tasks[task_offset].m_node = second_child;
+                    tasks[task_offset].m_tmin = t_plane;
+                    tasks[task_offset].m_tmax = tmax;
                     task_offset += 1;
                     node = first_child;
                     tmax = t_plane;
@@ -469,7 +472,7 @@ impl KDTreeNode
     pub fn get_split_axis(&self) -> usize { self.m_priv_union.m_flags & 3 }
     pub fn is_leaf(&self) -> bool { self.m_priv_union.m_flags & 3 == 3 }
     pub fn get_above_child(&self) -> usize { self.m_priv_union.m_above_child >> 2 }
-
+    pub fn get_primitives_indices_offset(&self) -> usize { self.m_pub_union.m_prim_indices_offset }
 }
 
 union KDTreeNode_pub_union
@@ -486,6 +489,7 @@ union KDTreeNode_priv_union
     m_above_child: usize,
 }
 
+#[derive(Clone, Debug)]
 struct KDTasks
 {
     m_node: *const  KDTreeNode,
@@ -512,4 +516,3 @@ impl Default for KDTasks
         KDTasks::new()
     }
 }
-*/

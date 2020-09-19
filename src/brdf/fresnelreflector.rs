@@ -47,14 +47,23 @@ impl BRDF for FresnelReflector
 
 impl Transmitter for FresnelReflector
 {
-    fn total_internal_reflection(&self, sr: &ShadeRec) -> bool {
-        unimplemented!()
+    fn total_internal_reflection(&self, sr: &ShadeRec) -> bool
+    {
+        let w_o = -sr.m_ray.m_direction;
+        let cos_theta_in = sr.m_normal.dot(w_o);
+        let mut eta = self.m_index_of_reflection_in;
+
+        if cos_theta_in < 0.0
+        {
+            eta = eta.inv();
+        }
+        self.calculate_cos_theta_t(&cos_theta_in, &eta) > 0.0
     }
 
     fn fresnel_reflectance(&self, sr: &ShadeRec) -> f32 {
         let mut normal = sr.m_normal;
         let n_dot_d = -normal.dot(sr.m_ray.m_direction);
-        let cos_theta_in = n_dot_d;
+
 
         let mut eta = self.m_index_of_reflection_in / self.m_index_of_reflection_out;
         if n_dot_d < 0.0
@@ -62,9 +71,10 @@ impl Transmitter for FresnelReflector
             normal = -normal;
             eta = eta.inv();
         }
-        let cos_theta_t = self.calculate_cos_theta_t(&cos_theta_in, &eta);
-        let r_parallel = (eta - cos_theta_in.pow(2.0)) / (eta * cos_theta_in + cos_theta_t);
-        let r_perpendicular = (cos_theta_in - eta * cos_theta_t) / (cos_theta_in + eta * cos_theta_t);
+        let cos_theta_i = -normal.dot(sr.m_ray.m_direction);
+        let cos_theta_t = self.calculate_cos_theta_t(&cos_theta_i, &eta);
+        let r_parallel = (eta * cos_theta_i - cos_theta_t) / (eta * cos_theta_i + cos_theta_t);
+        let r_perpendicular = (cos_theta_i - eta * cos_theta_t) / (cos_theta_i + eta * cos_theta_t);
 
         // Fresnel reflectance
         0.5 * (r_parallel.pow(2.0) + r_perpendicular.pow(2.0))

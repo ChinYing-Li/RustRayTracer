@@ -94,7 +94,7 @@ impl fmt::Debug for TriMesh
 
 impl Geometry for TriMesh
 {
-    fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
+    unsafe fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
     {
         unimplemented!()
     }

@@ -49,11 +49,18 @@ impl Instance
         self.compute_bbox();
     }
 
-    pub fn translate(&mut self, displace: Vector4<f32>)
+    pub fn set_material(&mut self, material: Arc<dyn Material>)
+    {
+        self.m_material_ptr = material.clone();
+    }
+
+    pub fn translate(&mut self, displace: Vector3<f32>)
     {
         // the last element of displace must be zero
-        self.m_inv_matrix[3] -= displace;
-        self.m_forward_matrix[3] += displace;
+        let augmented_displace = Vector4::new(displace.x, displace.y, displace.z, 0.0);
+        self.m_inv_matrix[3] -= augmented_displace;
+        self.m_forward_matrix[3] += augmented_displace;
+        self.compute_bbox();
     }
 
     // theta is in radian
@@ -61,18 +68,21 @@ impl Instance
     {
         self.m_forward_matrix = Matrix4::from_angle_x(Deg(theta)) * self.m_forward_matrix;
         self.m_inv_matrix = Matrix4::from_angle_x(-Deg(theta)) * self.m_forward_matrix;
+        self.compute_bbox();
     }
 
     pub fn rotate_y(&mut self, theta: f32)
     {
         self.m_forward_matrix = Matrix4::from_angle_y(Deg(theta)) * self.m_forward_matrix;
         self.m_inv_matrix = Matrix4::from_angle_y(-Deg(theta)) * self.m_forward_matrix;
+        self.compute_bbox();
     }
 
     pub fn rotate_z(&mut self, theta: f32)
     {
         self.m_forward_matrix = Matrix4::from_angle_z(Deg(theta)) * self.m_forward_matrix;
         self.m_inv_matrix = Matrix4::from_angle_z(-Deg(theta)) * self.m_forward_matrix;
+        self.compute_bbox();
     }
 
     fn transform_vector3(mat4: &Matrix4<f32>, vector3: &Vector3<f32>) -> Vector3<f32>
@@ -95,7 +105,7 @@ impl fmt::Debug for Instance
 
 impl Geometry for Instance
 {
-    fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError> {
+    unsafe fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError> {
         let mut inverted_ray = Ray::new(Instance::transform_vector3(&self.m_inv_matrix, &(incomeray.m_origin)),
                                         Instance::transform_vector3(&self.m_inv_matrix, &incomeray.m_direction));
 
@@ -159,7 +169,6 @@ impl Boundable for Instance
             if v.y < min_y { min_y = v.y } else if v.y > max_y { max_y = v.y };
             if v.z < min_z { min_z = v.z } else if v.z > max_z { max_z = v.z };
         }
-
         self.m_bbox = BBox::new(Vector3::new(min_x, min_y, min_z), Vector3::new(max_x, max_y, max_z))
     }
 
@@ -175,16 +184,63 @@ mod InstanceTest
     use super::*;
     use std::f32::consts::PI;
     use crate::geometry::sphere::Sphere;
+    use approx::{assert_relative_eq};
+    use crate::utils::colorconstant::COLOR_RED;
+    use crate::material::matte::Matte;
+    use crate::brdf::lambertian::Lambertian;
+    use crate::utils::color::Colorf;
+    use crate::geometry::Shadable;
+    use crate::geometry::triangle::Triangle;
 
     const INV_PI: f32 = 1.0 / PI ;
     const INV_GAMMA: f32 = 1.0 / 1.8;
 
     #[test]
-    pub fn TestSphereBBox()
+    pub fn TestTranslate()
     {
-        let sphere = Sphere::new(10.0, Vector3::new(20.0, 10.0, 30.0), COLOR_RED);
+        let sphere = setup_sphere();
         let mut instance = Instance::new(Arc::new(sphere));
-        instance.translate(Vector4::new(-5.0, 10.0,10.0, 0.0));
-        
+        instance.translate(Vector3::new(-5.0, 10.0,10.0));
+        let instance_bbox = instance.get_bbox();
+
+        assert_relative_eq!(instance_bbox.m_vertex_0.x, 5.85786437626 - 5.0);
+        assert_relative_eq!(instance_bbox.m_vertex_0.y, -4.1421356237 + 10.0);
+        assert_relative_eq!(instance_bbox.m_vertex_1.z, 44.1421356237 + 10.0);
+
+    }
+
+    #[test]
+    fn TestRotateX()
+    {
+        let triangle = setup_triangle();
+    }
+
+    #[test]
+    fn TestRotateY()
+    {
+        let triangle = setup_triangle();
+    }
+
+    #[test]
+    fn TestRotateZ()
+    {
+        let triangle = setup_triangle();
+    }
+
+    fn setup_sphere() -> Sphere
+    {
+        let mut sphere = Sphere::new(10.0, Vector3::new(20.0, 10.0, 30.0), COLOR_RED);
+        let material = Matte::new(Arc::new(Lambertian::new(0.5, Colorf::new(0.3, 0.3, 0.3))),
+                   Arc::new(Lambertian::new(0.3, Colorf::new(0.5, 0.2, 0.5))));
+        sphere.set_material(Arc::new(material));
+        sphere
+    }
+
+    fn setup_triangle() -> Triangle
+    {
+        let v0 = Vector3::new(1.0, 0.4, -1.0);
+        let v1 = Vector3::new(2.0, 1.0, -10.0);
+        let v2 = Vector3::new(0.5, 9.0, 1.0);
+        Triangle::new(v0, v1, v2)
     }
 }
