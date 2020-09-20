@@ -12,6 +12,7 @@ use core::num::FpCategory::Infinite;
 use std::f32::INFINITY;
 use crate::math::float_cmp::{max, min};
 
+#[derive(Clone)]
 pub struct Cuboid
 {
     pub m_vec0: Vector3<f32>,

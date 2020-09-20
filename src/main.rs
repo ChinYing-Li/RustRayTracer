@@ -30,6 +30,9 @@ use raytracer::sampler::mutijittered::MultiJittered;
 use raytracer::sampler::Sampler;
 use raytracer::geometry::cuboid::Cuboid;
 use raytracer::geometry::instance::Instance;
+use obj::Obj;
+use raytracer::geometry::trimesh::{TriMesh, MeshTriangle};
+use raytracer::geometry::kdtree::KDTree;
 
 fn main()
 {
@@ -59,6 +62,12 @@ fn main()
     world.add_object(sphereA);
     world.add_object(cuboid);
     world.add_object(triangle);
+
+    let dragon_color = Matte::new(Arc::new(Lambertian::new(0.5, Colorf::new(1.0, 0.0, 0.0))),
+               Arc::new(Lambertian::new(0.3, Colorf::new(0.5, 0.0, 0.5))));
+    let dragon = create_from_obj("", Arc::new(dragon_color));
+
+    world.add_object(Arc::new(Mutex::new(dragon)));
     /*
     for i in 0..5
     {
@@ -67,12 +76,11 @@ fn main()
         world.add_object(Arc::new(Mutex::new(instance)));
     }*/
 
-    let objlen= world.m_objects.len();
-    let materials: Vec<Matte> = (0..objlen).collect::<Vec<_>>().iter()
+    let materials: Vec<Matte> = (0..3).collect::<Vec<_>>().iter()
         .map(|x| setUpMaterial(1.0/(*x) as f32, 0.3 * (*x) as f32, 0.5))
         .collect::<Vec<Matte>>();
 
-    for i in 0..objlen
+    for i in 0..3
     {
         let mut obj = world.m_objects[i].lock().unwrap();
         obj.set_material(Arc::new(materials[i].clone()));
@@ -128,4 +136,19 @@ fn setUpCamera() -> Pinhole
     let lookat = Vector3::new(20.0, 30.0, 100.0);
     let up = Vector3::new(0.0, 1.0, 0.0);
     Pinhole::new(eye, lookat, up)
+}
+
+fn create_from_obj(path_to_obj: &str, material_ptr: Arc<dyn Material>) -> KDTree<MeshTriangle>
+{
+    let objdata = Obj::load(path_to_obj)
+        .unwrap_or(panic!("The path is not valid; can't load .obj file")).data;
+    let mesh = TriMesh::new(&objdata, material_ptr.clone());
+    let mut kdtree = KDTree::<MeshTriangle>::new(&mesh.create_triangles(&objdata),
+                                             20.0,
+                                             10.0,
+                                             10.0,
+                                             3,
+                                             -1);
+    kdtree.init();
+    kdtree
 }

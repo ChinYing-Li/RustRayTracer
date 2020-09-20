@@ -10,6 +10,7 @@ use crate::utils::colorconstant::COLOR_BLACK;
 use crate::geometry::bbox::BBox;
 use crate::math::float_cmp::{max, min};
 
+#[derive(Clone)]
 pub struct Triangle
 {
     pub m_vertex_0: Vector3<f32>,
