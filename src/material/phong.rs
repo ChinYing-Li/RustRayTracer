@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::brdf::glossyspec::GlossySpecular;
 use crate::material::Material;
 use crate::utils::color::Colorf;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::brdf::BRDF;
 use crate::light::Light;
 use cgmath::{InnerSpace, Vector3, Zero};

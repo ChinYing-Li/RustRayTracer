@@ -4,7 +4,7 @@ use crate::material::Material;
 use crate::geometry::Geometry;
 use crate::light::Light;
 use crate::utils::color::Colorf;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::ray::Ray;
 use std::f32::INFINITY;
 use crate::material::emissive::Emissive;

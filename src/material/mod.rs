@@ -5,7 +5,7 @@ pub mod emissive;
 pub mod matte;
 pub mod phong;
 
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::utils::color::Colorf;
 use std::fmt::{Debug, Formatter};
 use std::fmt;

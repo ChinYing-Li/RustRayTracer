@@ -1,5 +1,5 @@
 use crate::brdf::lambertian::Lambertian;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use std::sync::Arc;
 use crate::material::Material;
 use crate::utils::color::Colorf;

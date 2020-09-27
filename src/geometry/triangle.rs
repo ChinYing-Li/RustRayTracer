@@ -2,7 +2,7 @@ use cgmath::{Vector3, Zero, ElementWise, Matrix3, Transform, InnerSpace, SquareM
 use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError, Boundable};
 use crate::utils::color::Colorf;
 use std::sync::Arc;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::material::Material;
 use crate::ray::Ray;
 use std::fmt;

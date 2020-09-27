@@ -1,6 +1,7 @@
 pub mod mutijittered;
 pub mod nrooks;
 pub mod jittered;
+pub mod dummy;
 
 use cgmath::{Vector2, Vector3, ElementWise};
 use std::{f32, f32::consts::PI};

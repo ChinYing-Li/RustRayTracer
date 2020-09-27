@@ -9,7 +9,7 @@ use raytracer::world::world::World;
 
 use raytracer::geometry::sphere::Sphere;
 use raytracer::ray::Ray;
-use raytracer::world::shaderec::ShadeRec;
+use raytracer::utils::shaderec::ShadeRec;
 use raytracer::output::imagewriter::ImageWriter;
 use raytracer::output::OutputManager;
 use raytracer::camera::pinhole::Pinhole;
@@ -33,8 +33,6 @@ use raytracer::geometry::instance::Instance;
 use obj::Obj;
 use raytracer::geometry::trimesh::{TriMesh, MeshTriangle};
 use raytracer::geometry::kdtree::KDTree;
-use raytracer::geometry::Shadable;
-use std::path::Path;
 
 fn main()
 {
@@ -55,8 +53,8 @@ fn main()
                                                       Vector3::new(12.0, 20.0, 15.0),
                                                       Colorf::new(0.0, 1.0, 0.0))));
     let mut cuboid = Arc::new(Mutex::new(Cuboid::new(Vector3::new(30.0, 20.0, 20.0),
-                                                      Vector3::new(50.0, 40.0, 50.),
-                                                      Colorf::new(1.0, 0.0, 0.0))));
+                                                     Vector3::new(50.0, 40.0, 50.),
+                                                     Colorf::new(1.0, 0.0, 0.0))));
     let mut triangle = Arc::new(Mutex::new(Triangle::new(Vector3::new(-10.0, 40.0, 10.0),
                                                          Vector3::new(30.0, 40.0, 0.0),
                                                          Vector3::new(60.0, 40.0, 30.0))));
@@ -65,9 +63,9 @@ fn main()
     world.add_object(cuboid);
     world.add_object(triangle);
 
-    let dragon_material = Matte::new(Arc::new(Lambertian::new(0.5, Colorf::new(1.0, 0.0, 0.0))),
-               Arc::new(Lambertian::new(0.3, Colorf::new(0.5, 0.0, 0.5))));
-    let dragon = create_from_obj("~/Desktop/bunny.obj", Arc::new(dragon_material));
+    let dragon_color = Matte::new(Arc::new(Lambertian::new(0.5, Colorf::new(1.0, 0.0, 0.0))),
+                                  Arc::new(Lambertian::new(0.3, Colorf::new(0.5, 0.0, 0.5))));
+    let dragon = create_from_obj("", Arc::new(dragon_color));
 
     world.add_object(Arc::new(Mutex::new(dragon)));
     /*
@@ -78,11 +76,11 @@ fn main()
         world.add_object(Arc::new(Mutex::new(instance)));
     }*/
 
-    let materials: Vec<Matte> = (0..4).collect::<Vec<_>>().iter()
+    let materials: Vec<Matte> = (0..3).collect::<Vec<_>>().iter()
         .map(|x| setUpMaterial(1.0/(*x) as f32, 0.3 * (*x) as f32, 0.5))
         .collect::<Vec<Matte>>();
 
-    for i in 0..4
+    for i in 0..3
     {
         let mut obj = world.m_objects[i].lock().unwrap();
         obj.set_material(Arc::new(materials[i].clone()));
@@ -142,15 +140,15 @@ fn setUpCamera() -> Pinhole
 
 fn create_from_obj(path_to_obj: &str, material_ptr: Arc<dyn Material>) -> KDTree<MeshTriangle>
 {
-    let path = Path::new(path_to_obj);
-    let objdata = Obj::load(path).unwrap().data;
+    let objdata = Obj::load(path_to_obj)
+        .unwrap_or(panic!("The path is not valid; can't load .obj file")).data;
     let mesh = TriMesh::new(&objdata, material_ptr.clone());
-    let mut kdtree_temp = KDTree::<MeshTriangle>::new(&mesh.create_meshtriangles(&objdata),
+    let mut kdtree = KDTree::<MeshTriangle>::new(&mesh.create_meshtriangles(&objdata),
                                                  20.0,
                                                  10.0,
                                                  10.0,
                                                  3,
-                                                 0);
-    kdtree_temp.init();
-    kdtree_temp
+                                                 -1);
+    kdtree.init();
+    kdtree
 }

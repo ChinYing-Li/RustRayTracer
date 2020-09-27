@@ -3,7 +3,7 @@ pub mod ambientocc;
 
 use cgmath::Vector3;
 
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::utils::color::Colorf;
 use std::fmt::{Debug, Formatter, Error};
 use crate::ray::Ray;

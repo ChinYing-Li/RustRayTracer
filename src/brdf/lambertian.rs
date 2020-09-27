@@ -2,7 +2,7 @@ use crate::utils::color::Colorf;
 use cgmath::{Vector3, InnerSpace};
 use crate::brdf::BRDF;
 use std::f32::consts::PI;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::sampler::mutijittered::MultiJittered;
 use crate::utils::colorconstant::COLOR_BLACK;
 use crate::sampler::Sampler;

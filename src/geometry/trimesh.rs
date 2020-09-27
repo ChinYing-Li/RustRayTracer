@@ -1,18 +1,21 @@
 use cgmath::{Vector3, Zero, ElementWise, Matrix3, SquareMatrix, InnerSpace, Vector2};
+use obj::{Obj, ObjData};
+use std::cmp::{max, min};
+use std::fmt;
+use std::sync::Arc;
+
 use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError, Boundable};
 use crate::utils::color::Colorf;
-use std::sync::Arc;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
+use crate::math::float_cmp;
 use crate::material::Material;
 use crate::ray::Ray;
-use std::fmt;
-use std::cmp::{max, min};
 use crate::geometry::triangle::Triangle;
-use obj::{Obj, ObjData};
 use crate::geometry::bbox::BBox;
 
 
 // Stores the indices of the face only
+#[derive(Clone)]
 pub struct MeshTriangle<'a>
 {
     m_vertex0_index: usize,
@@ -41,6 +44,46 @@ impl MeshTriangle<'_>
             + beta * (*normal1)
             + gamma * (*normal2)).normalize()
     }
+
+    fn min_coordinate_on_axis(&self, axis: u8) -> f32
+    {
+        match axis
+        {
+            0 => {
+                let temp = float_cmp::min(self.m_mesh_ref.m_vertex_position[self.m_vertex0_index].x, self.m_mesh_ref.m_vertex_position[self.m_vertex1_index].x);
+                return float_cmp::min(temp, self.m_mesh_ref.m_vertex_position[self.m_vertex2_index].x).clone()
+            },
+            1 => {
+                let temp = float_cmp::min(self.m_mesh_ref.m_vertex_position[self.m_vertex0_index].y, self.m_mesh_ref.m_vertex_position[self.m_vertex1_index].y);
+                return float_cmp::min(temp, self.m_mesh_ref.m_vertex_position[self.m_vertex2_index].y).clone()
+            },
+            2 => {
+                let temp = float_cmp::min(self.m_mesh_ref.m_vertex_position[self.m_vertex0_index].z, self.m_mesh_ref.m_vertex_position[self.m_vertex1_index].z);
+                return float_cmp::min(temp, self.m_mesh_ref.m_vertex_position[self.m_vertex2_index].z).clone()
+            },
+            _ => panic!("fsdasfd")
+        }
+    }
+
+    fn max_coordinate_on_axis(&self, axis: u8) -> f32
+    {
+        match axis
+        {
+            0 => {
+                let temp = float_cmp::max(self.m_mesh_ref.m_vertex_position[self.m_vertex0_index].x, self.m_mesh_ref.m_vertex_position[self.m_vertex1_index].x);
+                return float_cmp::max(temp, self.m_mesh_ref.m_vertex_position[self.m_vertex2_index].x).clone()
+            },
+            1 => {
+                let temp = float_cmp::max(self.m_mesh_ref.m_vertex_position[self.m_vertex0_index].y, self.m_mesh_ref.m_vertex_position[self.m_vertex1_index].y);
+                return float_cmp::max(temp, self.m_mesh_ref.m_vertex_position[self.m_vertex2_index].y).clone()
+            },
+            2 => {
+                let temp = float_cmp::max(self.m_mesh_ref.m_vertex_position[self.m_vertex0_index].z, self.m_mesh_ref.m_vertex_position[self.m_vertex1_index].z);
+                return float_cmp::max(temp, self.m_mesh_ref.m_vertex_position[self.m_vertex2_index].z).clone()
+            },
+            _ => panic!("fsdasfd")
+        }
+    }
 }
 
 impl fmt::Debug for MeshTriangle<'_>
@@ -48,6 +91,9 @@ impl fmt::Debug for MeshTriangle<'_>
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
         f.debug_struct("Mesh triangle")
+            .field("vertex 0 index", &self.m_vertex0_index)
+            .field("vertex 1 index", &self.m_vertex1_index)
+            .field("vertex 2 index", &self.m_vertex2_index)
             .finish()
     }
 }
@@ -125,7 +171,7 @@ impl Shadable for MeshTriangle<'_>
     }
 }
 
-impl Boundable for MeshTriangle
+impl Boundable for MeshTriangle<'_>
 {
     fn get_bbox(&self) -> BBox
     {
@@ -145,7 +191,7 @@ pub struct TriMesh
     m_mtl: Vec<obj::Mtl>, // Currently not supporting rendering materials defined in Mtl
     m_normals: Vec<Vector3<f32>>,
     m_texture: Vec<Vector2<f32>>,
-    m_material: Arc<dyn Material>,
+    pub m_material: Arc<dyn Material>,
 }
 
 impl TriMesh
@@ -163,7 +209,7 @@ impl TriMesh
         }
     }
 
-    pub fn create_triangles(&self, objdata: &ObjData) -> Vec<MeshTriangle>
+    pub fn create_meshtriangles(&self, objdata: &ObjData) -> Vec<MeshTriangle>
     {
         let mut v = Vec::new();
         for object in objdata.objects.iter()
@@ -172,7 +218,7 @@ impl TriMesh
             {
                 for poly in group.polys.iter()
                 {
-                    assert!(poly.0.len() == 3);
+                    assert_eq!(poly.0.len(), 3);
                     v.push(MeshTriangle::new(poly.0[0].0, poly.0[1].0, poly.0[2].0, self));
                 }
             }

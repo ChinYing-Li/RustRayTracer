@@ -4,7 +4,7 @@ use std::{f32};
 
 use crate::utils::color::Colorf;
 use crate::world::viewplane::ViewPlane;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::ray::Ray;
 use crate::geometry::{Geometry, Shadable, Concrete};
 use crate::light::ambient::Ambient;
@@ -111,6 +111,10 @@ impl World
         sr
     }
 
+    pub fn get_dummy() -> World
+    {
+        World::new(Box::new(ViewPlane::get_dummy()))
+    }
     /*pub fn trace_ray_with_internal_tracer(&self) -> Colorf
     {
         self.m_tracer.trace_ray()
@@ -146,7 +150,7 @@ mod WorldSphereTest
     use super::*;
     use crate::geometry::sphere::Sphere;
     use crate::ray::Ray;
-    use crate::utils::shaderec::ShadeRec;
+    use crate::world::shaderec::ShadeRec;
     use crate::world::world::World;
     use crate::tracer::whitted::Whitted;
     use crate::utils::colorconstant::{COLOR_BLUE, COLOR_RED};

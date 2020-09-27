@@ -1,5 +1,5 @@
 use crate::material::Material;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::utils::color::Colorf;
 use cgmath::InnerSpace;
 use crate::utils::colorconstant::COLOR_BLACK;

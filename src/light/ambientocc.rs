@@ -1,6 +1,6 @@
 use crate::light::Light;
 use crate::utils::color::Colorf;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use cgmath::{Vector3, InnerSpace, Zero, ElementWise};
 use crate::ray::Ray;
 use crate::sampler::Sampler;

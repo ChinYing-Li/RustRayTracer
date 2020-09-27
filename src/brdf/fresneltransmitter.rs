@@ -1,5 +1,5 @@
 use crate::brdf::{BRDF, Transmitter};
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use cgmath::{Vector3, InnerSpace};
 use crate::utils::color::Colorf;
 use cgmath::num_traits::{Inv, Pow};

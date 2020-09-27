@@ -1,7 +1,7 @@
 use cgmath::{Vector3, InnerSpace};
 use crate::light::Light;
 use crate::utils::color::Colorf;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::ray::Ray;
 
 #[derive(Debug)]

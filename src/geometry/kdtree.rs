@@ -6,7 +6,7 @@ use std::cmp::{max, min, Ordering};
 use crate::geometry::kdtree::EdgeType::{ET_start, ET_end};
 use arrayvec::ArrayVec;
 use std::f32::INFINITY;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::ray::Ray;
 use std::fmt::{Debug, Formatter};
 use std::fmt;
@@ -16,6 +16,7 @@ use std::borrow::Borrow;
 use obj::Obj;
 use crate::geometry::trimesh::{TriMesh, MeshTriangle};
 use crate::material::Material;
+use crate::utils::color::Colorf;
 
 /// KDTree is implemented for accelerating ray tracing. The implementation takes reference from
 /// "Physically Based Rendering: From Theory To Implementation" by Matt Pharr, Wenzel Jakob, and Greg Humphreys.
@@ -37,6 +38,9 @@ pub struct KDTree<T> where T: BoundedConcrete + Clone
     m_number_of_allocated_nodes: usize,
     m_next_free_node_slot: usize,
     m_nodes: Vec<KDTreeNode>,
+
+    // field needed for shading
+    m_material: Option<Arc<dyn Material>>,
 }
 
 impl<T> KDTree<T> where T: BoundedConcrete + Clone
@@ -57,7 +61,7 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
             m_sorted_indices: Vec::with_capacity(prim_vec_len),
 
             m_max_prim_per_node: max_prim_per_node,
-            m_max_depth: if max_depth <= 0 { (8.0 + (1.3 * prim_vec_len as f32).floor()) as usize }
+            m_max_depth: if max_depth == 0 { (8.0 + (1.3 * prim_vec_len as f32).floor()) as usize }
                         else { max_depth },
             m_bounds: BBox::new(Vector3::zero(), Vector3::zero()),
 
@@ -68,6 +72,7 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
             m_number_of_allocated_nodes: 0,
             m_next_free_node_slot: 0,
             m_nodes: Vec::with_capacity(0),
+            m_material: None,
         }
     }
 
@@ -291,6 +296,101 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
         }
     }
 
+    fn custom_shadow_hit(&self, shadowray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> (bool, usize)
+    {
+        let mut tmin = 0.0_f32;
+        let mut tmax = 0.0_f32;
+        if !self.m_bounds.calculate_hit_time(shadowray, &mut tmin, &mut tmax)
+        {
+            return (false, 0);
+        }
+
+        let inv_dir = Vector3::new(shadowray.m_direction.x.inv(),
+                                   shadowray.m_direction.y.inv(),
+                                   shadowray.m_direction.z.inv());
+
+        let mut tasks = vec![KDTasks::default(); 64];
+        let mut task_offset = 0;
+        let mut result = (false, 0);
+        let mut node = self.m_nodes.as_ptr();
+        unsafe
+            {
+                while let node_ref = node.as_ref().unwrap()
+                {
+                    if node_ref.is_leaf()
+                    {
+                        match node_ref.get_n_primitives()
+                        {
+                            1 =>
+                                {
+                                    let index = node_ref.m_pub_union.m_one_primitive as usize;
+                                    if self.m_primitives[index].shadow_hit(shadowray, time)
+                                    {
+                                        result = (true, index);
+                                    }
+                                }
+                            _ =>
+                                {
+                                    let mut time_temp = INFINITY;
+                                    for i in node_ref.get_primitives_indices_offset()..min(node_ref.get_n_primitives(), self.m_sorted_indices.len())
+                                    {
+                                        let index = self.m_sorted_indices[i];
+                                        if self.m_primitives[index].shadow_hit(shadowray, &mut time_temp)
+                                        {
+                                            result = (true, index);
+                                        }
+                                    }
+                                }
+                        }
+
+                        if task_offset > 0
+                        {
+                            task_offset -= 1;
+                            node = tasks[task_offset].m_node;
+                            tmin = tasks[task_offset].m_tmin;
+                            tmax = tasks[task_offset].m_tmax;
+                        } else { break; }
+                    }
+                    else
+                    {
+                        let axis = node_ref.get_split_axis();
+                        let t_plane = KDTree::<T>::vector3_index_get(&inv_dir,axis) * (node_ref.get_split_position() - KDTree::<T>::vector3_index_get(&shadowray.m_origin, axis));
+
+                        let mut first_child = null();
+                        let mut second_child = null();
+                        match KDTree::<T>::vector3_index_get(&shadowray.m_direction, axis) < node_ref.get_split_position()
+                            || (KDTree::<T>::vector3_index_get(&shadowray.m_direction, axis) == node_ref.get_split_position()
+                            && KDTree::<T>::vector3_index_get(&shadowray.m_direction, axis) < 0.0)
+                        {
+                            true =>
+                                unsafe {
+                                    first_child = node.offset(1);
+                                    second_child = self.m_nodes.as_ptr().offset((*node).m_priv_union.m_above_child as isize);
+                                }
+                            false =>
+                                unsafe
+                                    {
+                                        first_child = self.m_nodes.as_ptr().offset((*node).m_priv_union.m_above_child as isize);
+                                        second_child = node.offset(1);
+                                    }
+                        }
+                        // Advance to next child node, possibly enqueue another children
+                        if t_plane > tmax || t_plane <= 0.0 { node = first_child; }
+                        else if t_plane < tmin { node = second_child; }
+                        else
+                        {
+                            tasks[task_offset].m_node = second_child;
+                            tasks[task_offset].m_tmin = t_plane;
+                            tasks[task_offset].m_tmax = tmax;
+                            task_offset += 1;
+                            node = first_child;
+                            tmax = t_plane;
+                        }
+                    }
+                }
+            }
+        (false, 0)
+    }
 }
 
 impl<T> Debug for KDTree<T> where T: BoundedConcrete + Clone
@@ -305,101 +405,45 @@ impl<T> Geometry for KDTree<T> where T: BoundedConcrete + Clone
 {
     fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
     {
-        let mut tmin = 0.0_f32;
-        let mut tmax = 0.0_f32;
-        if !self.m_bounds.calculate_hit_time(incomeray, &mut tmin, &mut tmax)
+        let mut dummy_time = 0.0_f32;
+        let mut dummy_sr = ShadeRec::get_dummy();
+        match self.custom_shadow_hit(incomeray, &mut dummy_time, &mut dummy_sr)
         {
-            return Ok(false);
+            (true, index) => self.m_primitives[index].hit(incomeray, time, shaderecord),
+            (false, index) => Ok(false),
         }
 
-        let inv_dir = Vector3::new(incomeray.m_direction.x.inv(),
-                                   incomeray.m_direction.y.inv(),
-                                   incomeray.m_direction.z.inv());
-
-        let mut tasks = vec![KDTasks::default(); 64];
-        let mut task_offset = 0;
-        let is_hitting = false;
-        let mut node = self.m_nodes.as_ptr();
-        unsafe
-            {
-            while let node_ref = node.as_ref().unwrap()
-            {
-                if node_ref.is_leaf()
-                {
-                    match node_ref.get_n_primitives()
-                    {
-                        1 =>
-                            {
-                                if self.m_primitives[node_ref.m_pub_union.m_one_primitive as usize].hit(incomeray, time, shaderecord).unwrap_or(false)
-                                {
-                                    return Ok(true);
-                                }
-                            }
-                        _ =>
-                            {
-                                let mut time = INFINITY;
-                                for i in node_ref.get_primitives_indices_offset()..min(node_ref.get_n_primitives(), self.m_sorted_indices.len())
-                                {
-                                    let index = self.m_sorted_indices[i];
-                                    if self.m_primitives[index].hit(incomeray, &mut time, shaderecord).unwrap_or(false)
-                                    {
-                                        return Ok(true);
-                                    }
-                                }
-                            }
-                    }
-
-                    if task_offset > 0
-                    {
-                        task_offset -= 1;
-                        node = tasks[task_offset].m_node;
-                        tmin = tasks[task_offset].m_tmin;
-                        tmax = tasks[task_offset].m_tmax;
-                    } else { break; }
-                }
-                else
-                {
-                    let axis = node_ref.get_split_axis();
-                    let t_plane = KDTree::<T>::vector3_index_get(&inv_dir,axis) * (node_ref.get_split_position() - KDTree::<T>::vector3_index_get(&incomeray.m_origin, axis));
-
-                    let mut first_child = null();
-                    let mut second_child = null();
-                    match KDTree::<T>::vector3_index_get(&incomeray.m_direction, axis) < node_ref.get_split_position()
-                        || (KDTree::<T>::vector3_index_get(&incomeray.m_direction, axis) == node_ref.get_split_position()
-                        && KDTree::<T>::vector3_index_get(&incomeray.m_direction, axis) < 0.0)
-                    {
-                        true =>
-                            unsafe {
-                                first_child = node.offset(1);
-                                second_child = self.m_nodes.as_ptr().offset((*node).m_priv_union.m_above_child as isize);
-                            }
-                        false =>
-                            unsafe
-                                {
-                                    first_child = self.m_nodes.as_ptr().offset((*node).m_priv_union.m_above_child as isize);
-                                    second_child = node.offset(1);
-                                }
-                    }
-                    // Advance to next child node, possibly enqueue another children
-                    if t_plane > tmax || t_plane <= 0.0 { node = first_child; }
-                    else if t_plane < tmin { node = second_child; }
-                    else
-                    {
-                        tasks[task_offset].m_node = second_child;
-                        tasks[task_offset].m_tmin = t_plane;
-                        tasks[task_offset].m_tmax = tmax;
-                        task_offset += 1;
-                        node = first_child;
-                        tmax = t_plane;
-                    }
-                }
-            }
-            }
-
-        Ok(false)
     }
 }
 
+impl<T> Shadable for KDTree<T> where T: BoundedConcrete + Clone
+{
+    fn get_color(&self) -> Colorf { unimplemented!() }
+
+    fn set_color(&mut self, newcolor: Colorf) { unimplemented!() }
+
+    fn get_material(&self) -> Arc<dyn Material>
+    {
+        if let Some(x) = self.m_material.clone() { x }
+        else { panic!("The material for sphere is Not set") }
+    }
+
+    fn set_material(&mut self, material: Arc<dyn Material>)
+    {
+        self.m_material = Some(material.clone());
+    }
+
+    /// Return a tuple (does_hit: bool, triangle_index: usize)
+    fn shadow_hit(&self, shadowray: &Ray, tmin: &mut f32) -> bool
+    {
+        let mut dummy = ShadeRec::get_dummy();
+        match self.custom_shadow_hit(shadowray, tmin, &mut dummy)
+        {
+            (true, index) => true,
+            (false, index) => false,
+        }
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, PartialOrd)]
 enum EdgeType

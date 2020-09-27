@@ -2,6 +2,7 @@ use std::{f32};
 use cgmath::Vector2;
 use crate::sampler::Sampler;
 use std::sync::Arc;
+use crate::sampler::dummy::DummySampler;
 
 #[derive(Clone, Debug)]
 pub struct ViewPlane
@@ -65,6 +66,11 @@ impl ViewPlane
             res = false;
         }
         res
+    }
+
+    pub fn get_dummy() -> ViewPlane
+    {
+        ViewPlane::new(Arc::new(DummySampler::new(0, 0)))
     }
 }
 

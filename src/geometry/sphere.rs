@@ -4,7 +4,7 @@ use cgmath::{Vector3, dot};
 
 use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError, Boundable};
 use crate::ray::Ray;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::math::polynomial::*;
 use std::fmt;
 use crate::utils::color::Colorf;

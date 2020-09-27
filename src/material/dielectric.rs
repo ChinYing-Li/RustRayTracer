@@ -1,7 +1,7 @@
 use crate::utils::color::Colorf;
 use std::sync::Arc;
 use crate::material::Material;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::material::phong::Phong;
 use crate::brdf::fresnelreflector::FresnelReflector;
 use crate::brdf::fresneltransmitter::FresnelTransmitter;

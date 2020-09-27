@@ -7,7 +7,7 @@ pub mod lambertian;
 
 use cgmath::{Vector3};
 use crate::utils::color::Colorf;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::utils::colorconstant::COLOR_BLACK;
 
 pub trait BRDF

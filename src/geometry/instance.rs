@@ -1,7 +1,7 @@
 use crate::geometry::{Geometry, GeomError, Boundable, BoundedConcrete};
 use std::sync::Arc;
 use cgmath::{Matrix3, SquareMatrix, Vector3, Matrix4, InnerSpace, ElementWise, Rad, Deg, Zero, Vector4};
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::ray::Ray;
 use std::fmt;
 use std::ptr::null;

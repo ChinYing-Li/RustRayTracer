@@ -50,6 +50,11 @@ impl ShadeRec
     {
         self.m_worldptr = worldptr.clone();
     }
+
+    pub fn get_dummy() -> ShadeRec
+    {
+        ShadeRec::new(Arc::new(World::get_dummy()))
+    }
 }
 
 impl Debug for ShadeRec
