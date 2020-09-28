@@ -31,7 +31,7 @@ use raytracer::sampler::Sampler;
 use raytracer::geometry::cuboid::Cuboid;
 use raytracer::geometry::instance::Instance;
 use obj::Obj;
-use raytracer::geometry::trimesh::{TriMesh, MeshTriangle};
+use raytracer::geometry::trimesh::{TriMesh, MeshTriangle, create_meshtriangles};
 use raytracer::geometry::kdtree::KDTree;
 use raytracer::geometry::Shadable;
 use std::path::Path;
@@ -48,7 +48,7 @@ fn main()
     boxed_vp.m_pixsize = 0.5;
     boxed_vp.set_gamma(1.8);
 
-    let mut imgwriter = ImageWriter::new("3_reflective_spheres.jpg", vp_hres, vp_vres);
+    let mut imgwriter = ImageWriter::new("4_bunny.jpg", vp_hres, vp_vres);
     let mut world = World::new(boxed_vp);
 
     let mut sphereA = Arc::new(Mutex::new(Sphere::new(10.0,
@@ -67,9 +67,19 @@ fn main()
 
     let dragon_material = Matte::new(Arc::new(Lambertian::new(0.5, Colorf::new(1.0, 0.0, 0.0))),
                Arc::new(Lambertian::new(0.3, Colorf::new(0.5, 0.0, 0.5))));
-    let dragon = create_from_obj("~/Desktop/bunny.obj", Arc::new(dragon_material));
-
-    world.add_object(Arc::new(Mutex::new(dragon)));
+    let path = Path::new("~/Desktop/bunny.obj");
+    let objdata = Obj::load(path).unwrap().data;
+    let mesh = TriMesh::new(&objdata, Arc::new(dragon_material));
+    let mesh_ptr = Arc::new(mesh);
+    let triangles = create_meshtriangles(mesh_ptr, &objdata);
+    let mut kdtree_temp = KDTree::<MeshTriangle>::new(triangles,
+                                                      20.0,
+                                                      10.0,
+                                                      10.0,
+                                                      3,
+                                                      0);
+    kdtree_temp.init();
+    world.add_object(Arc::new(Mutex::new(kdtree_temp)));
     /*
     for i in 0..5
     {
@@ -139,18 +149,20 @@ fn setUpCamera() -> Pinhole
     let up = Vector3::new(0.0, 1.0, 0.0);
     Pinhole::new(eye, lookat, up)
 }
-
+/*
 fn create_from_obj(path_to_obj: &str, material_ptr: Arc<dyn Material>) -> KDTree<MeshTriangle>
 {
     let path = Path::new(path_to_obj);
     let objdata = Obj::load(path).unwrap().data;
     let mesh = TriMesh::new(&objdata, material_ptr.clone());
-    let mut kdtree_temp = KDTree::<MeshTriangle>::new(&mesh.create_meshtriangles(&objdata),
+    let triangles = mesh.create_meshtriangles(&objdata);
+    let mut kdtree_temp = KDTree::<MeshTriangle>::new(triangles,
                                                  20.0,
                                                  10.0,
                                                  10.0,
                                                  3,
                                                  0);
     kdtree_temp.init();
+    drop(mesh);
     kdtree_temp
-}
+}*/

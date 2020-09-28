@@ -29,14 +29,11 @@ A ray tracer written in Rust, based on "Ray-tracing From the Ground Up" by Kevin
 - [] Chapter 17 - Ambient Occlusion
 - [] Chapter 18 - Area Llights
 - [x] Chapter 19 - Ray-Object Intersections
-- [] Chapter 20 - Affine transformations
-- [] Chapter 22 - Regular Grids
-- [] Chapter 23 - Triangle Mesh
-- [] Chapter 24 - Mirror Reflection
-- [] Chapter 25 - Glossy Reflection
+- [x] Chapter 20 - Affine transformations
+- [x] Chapter 22 - Regular Grids (implemented KD-Tree instead)
+- [x] Chapter 23 - Triangle Mesh
+- [x] Chapter 24 - Mirror Reflection
+- [x] Chapter 25 - Glossy Reflection
 - [] Chapter 26 - Global Illumination
-- [] Chapter 27 - Simple Transparency
-- [] Chapter 28 - Realistic Transparency
-- [] Chapter 29 - Texture Mapping 
-- [] Chapter 30 - Procedural Textures
-- [] Chapter 31 - Noise-Based Textures
+- [x] Chapter 27 - Simple Transparency
+- [x] Chapter 28 - Realistic Transparency

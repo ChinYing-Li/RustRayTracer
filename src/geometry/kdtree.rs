@@ -47,7 +47,7 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
 {
     const MAX_KDTREE_TASKS: u8 = 64;
 
-    pub fn new(prim_vec: &Vec<T>,
+    pub fn new(prim_vec: Vec<T>,
                 intersect_cost: f32,
                 traversal_cost: f32,
                 empty_bonus: f32,
@@ -57,7 +57,7 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
         let prim_vec_len = prim_vec.len();
         KDTree
         {
-            m_primitives: (*prim_vec).clone(),
+            m_primitives: prim_vec.clone(),
             m_sorted_indices: Vec::with_capacity(prim_vec_len),
 
             m_max_prim_per_node: max_prim_per_node,
