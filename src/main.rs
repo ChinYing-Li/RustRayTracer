@@ -30,7 +30,9 @@ use raytracer::sampler::mutijittered::MultiJittered;
 use raytracer::sampler::Sampler;
 use raytracer::geometry::cuboid::Cuboid;
 use raytracer::geometry::instance::Instance;
-use obj::Obj;
+use std::fs::File;
+use std::io::BufReader;
+use obj::{Obj};
 use raytracer::geometry::trimesh::{TriMesh, MeshTriangle, create_meshtriangles};
 use raytracer::geometry::kdtree::KDTree;
 use raytracer::geometry::Shadable;
@@ -67,11 +69,11 @@ fn main()
 
     let dragon_material = Matte::new(Arc::new(Lambertian::new(0.5, Colorf::new(1.0, 0.0, 0.0))),
                Arc::new(Lambertian::new(0.3, Colorf::new(0.5, 0.0, 0.5))));
-    let path = Path::new("~/Desktop/bunny.obj");
-    let objdata = Obj::load(path).unwrap().data;
-    let mesh = TriMesh::new(&objdata, Arc::new(dragon_material));
+
+    let mut bunny = Obj::load("/media/cyli/SD/misc/Penguin/PenguinBaseMesh.obj").unwrap();
+    let mesh = TriMesh::new(&bunny.data, Arc::new(dragon_material));
     let mesh_ptr = Arc::new(mesh);
-    let triangles = create_meshtriangles(mesh_ptr, &objdata);
+    let triangles = create_meshtriangles(mesh_ptr, &bunny.data);
     let mut kdtree_temp = KDTree::<MeshTriangle>::new(triangles,
                                                       20.0,
                                                       10.0,
@@ -144,7 +146,7 @@ fn setUpAmbientOccluder(world: &mut World)
 
 fn setUpCamera() -> Pinhole
 {
-    let eye = Vector3::new(20.0, 30.0, -10.0);
+    let eye = Vector3::new(20.0, 30.0, -100.0);
     let lookat = Vector3::new(20.0, 30.0, 100.0);
     let up = Vector3::new(0.0, 1.0, 0.0);
     Pinhole::new(eye, lookat, up)

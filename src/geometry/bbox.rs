@@ -41,7 +41,7 @@ impl BBox
     }
 
     /// Find the axis of which the bbox' dimension is largest.
-    pub fn maximum_extent(&self) -> usize
+    pub fn maximum_extent(&self) -> u8
     {
         let diag = self.get_diagonal();
         return if diag.x > diag.y && diag.x > diag.z { 0 } // axis x
