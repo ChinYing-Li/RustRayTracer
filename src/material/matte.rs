@@ -1,5 +1,5 @@
 use crate::brdf::lambertian::Lambertian;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use std::sync::Arc;
 use crate::material::Material;
 use crate::utils::color::Colorf;
@@ -62,7 +62,7 @@ impl Material for Matte
         let mut clr = sr.m_worldptr.clone().m_ambientlight.L(sr)
             * self.m_ambient_brdf.rho(sr, w_o);
 
-        for light in sr.m_worldptr.clone().m_lights.iter()
+        for light in sr.m_worldptr.as_ref().m_lights.iter()
         {
             let mut w_i = Vector3::zero();
             let mut n_dot_w_i = 0.0_f32;

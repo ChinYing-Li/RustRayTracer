@@ -1,6 +1,6 @@
 use crate::light::Light;
 use crate::utils::color::Colorf;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use cgmath::{Vector3, InnerSpace, Zero, ElementWise};
 use crate::ray::Ray;
 use crate::sampler::Sampler;
@@ -53,8 +53,8 @@ impl Light for AmbientOccluder
     {
         let sample = self.m_samplerptr.get_hemisphere_sample();
         let result = (self.m_u.borrow().mul_element_wise(sample.x)
-        + self.m_v.borrow().mul_element_wise(sample.y )
-        + self.m_w.borrow().mul_element_wise(sample.z )).normalize();
+            + self.m_v.borrow().mul_element_wise(sample.y )
+            + self.m_w.borrow().mul_element_wise(sample.z )).normalize();
         //println!("{}, {}, {}", result.x, result.y, result.z);
         result
     }
@@ -64,7 +64,7 @@ impl Light for AmbientOccluder
         println!("before w {}", self.m_w.borrow().y);
         *self.m_w.borrow_mut() = sr.m_normal;
         println!("after w {}", self.m_w.borrow().y);
-        let jittered_up = Vector3::new(0.00031, 0.0, 1.00021).normalize();
+        let jittered_up = Vector3::new(0.00031, 1.0, 0.00021).normalize();
 
         println!("before w {}", self.m_v.borrow().y);
         *self.m_v.borrow_mut() = self.m_w.borrow().cross(jittered_up).normalize();
@@ -86,7 +86,7 @@ impl Light for AmbientOccluder
     fn is_in_shadow(&self, sr: &ShadeRec, ray: &Ray) -> bool
     {
         let mut time = INFINITY;
-        for object in &sr.m_worldptr.clone().m_objects
+        for object in sr.m_worldptr.as_ref().m_objects.iter()
         {
             if object.lock().unwrap().shadow_hit(ray, &mut time)
             {

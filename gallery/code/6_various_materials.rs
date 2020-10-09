@@ -44,8 +44,8 @@ use rand::{thread_rng, Rng};
 fn main()
 {
     let tracer = Whitted::new();
-    let multijittered = MultiJittered::new(32, 3);
-    let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(multijittered)));
+
+    let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(MultiJittered::new(32, 3))));
     let vp_hres = 800;
     let vp_vres = 600;
     boxed_vp.m_hres = vp_hres;
@@ -53,7 +53,7 @@ fn main()
     boxed_vp.m_pixsize = 0.5;
     boxed_vp.set_gamma(1.8);
 
-    let mut imgwriter = ImageWriter::new("4_bunny_3.jpg", vp_hres, vp_vres);
+    let mut imgwriter = ImageWriter::new("4_bunny.jpg", vp_hres, vp_vres);
     let mut world = World::new(boxed_vp);
 
     let mut sphere = Arc::new(Mutex::new(Sphere::new(10.0,
@@ -69,15 +69,18 @@ fn main()
     {
         for j in 0..5
         {
-            let center = Vector3::new(i as f32 * 70.0 + rng.gen_range(-3.0, 3.0),
-                                      50.0 * rng.gen_range(-1.0, 3.0),
-                                       50.0 * i as f32 + rng.gen_range(0.0, 1.0));
-            world.add_object(get_random_sphere(center));
-            let displacement = Vector3::new(i as f32 * 45.0 + rng.gen_range(-3.0, 3.0),
-                                            j as f32 * 45.0 + rng.gen_range(-3.0, 3.0),
-                                            50.0 * rng.gen_range(0.0, 3.0));
-            world.add_object(get_random_cuboid(displacement));
+            sphere.lock().unwrap().m_center = Vector3::new(i as f32 * 5.0 + rng.gen_range(-3.0, 3.0),
+                                                            j as f32 * 5.0 + rng.gen_range(-3.0, 3.0),
+                                                            i as f32 * rng.gen_range(-10.0, 10.0) + j as f32 * rng.gen_range(-10.0, 10.0));
+            world.add_object(sphere.clone());
 
+            let displacement = Vector3::new(i as f32 * 15.0 + rng.gen_range(-3.0, 3.0),
+                                            j as f32 * 15.0 + rng.gen_range(-3.0, 3.0),
+                                            i as f32 * rng.gen_range(-10.0, 10.0) + j as f32 * rng.gen_range(-10.0, 10.0));
+            cuboid.lock().unwrap().m_vec0 = displacement;
+            cuboid.lock().unwrap().m_vec1 = displacement;
+
+            world.add_object(cuboid.clone());
         }
     }
 
@@ -87,57 +90,50 @@ fn main()
                                                          Vector3::new(30.0, 40.0, 0.0),
                                                          Vector3::new(60.0, 40.0, 1000.0))));
 
-    world.add_object(triangle.clone());
+    world.add_object(triangle);
 
     let matte_materials: Vec<Arc<dyn Material>> = (0..4).collect::<Vec<_>>().iter()
-        .map(|x| setUpMaterial(rng.gen_range(0.0, 1.0),
-                               rng.gen_range(0.0, 1.0),
-                               rng.gen_range(0.0, 1.0),
+        .map(|x| setUpMaterial(rng.gen_range(0.0, 1.0) * (*x) as f32,
+                               rng.gen_range(0.0, 1.0) * (*x) as f32,
+                               rng.gen_range(0.0, 1.0) * (*x) as f32,
                                "matte"))
         .collect::<Vec<Arc<dyn Material>>>();
 
     let phong_materials: Vec<Arc<dyn Material>> = (0..4).collect::<Vec<_>>().iter()
-        .map(|x| setUpMaterial(rng.gen_range(0.0, 1.0),
-                               rng.gen_range(0.0, 1.0) ,
-                               rng.gen_range(0.0, 1.0),
+        .map(|x| setUpMaterial(rng.gen_range(0.0, 1.0)* (*x) as f32,
+                               rng.gen_range(0.0, 1.0) * (*x) as f32,
+                               rng.gen_range(0.0, 1.0)* (*x) as f32,
                                "phong"))
         .collect::<Vec<Arc<dyn Material>>>();
 
     let glossy_materials: Vec<Arc<dyn Material>> = (0..4).collect::<Vec<_>>().iter()
-        .map(|x| setUpMaterial(rng.gen_range(0.0, 1.0),
-                               rng.gen_range(0.0, 1.0),
-                               rng.gen_range(0.0, 1.0),
+        .map(|x| setUpMaterial(rng.gen_range(0.0, 1.0)* (*x) as f32,
+                               rng.gen_range(0.0, 1.0) * (*x) as f32,
+                               rng.gen_range(0.0, 1.0)* (*x) as f32,
                                "glossy"))
         .collect::<Vec<Arc<dyn Material>>>();
 
-    println!("initilzed materials");
-
     let mut rand_uint = 0 as u8;
-    for i in 0..world.m_objects.len()
+    for i in 0..4
     {
         rand_uint = thread_rng().gen();
         let mut obj = world.m_objects[i].lock().unwrap();
         let index = (rand_uint % 4) as usize;
-        match rand_uint % 2
+        match rand_uint % 3
         {
-            //1 => obj.set_material(matte_materials[index].clone()),
-            //2 => obj.set_material(phong_materials[index].clone()),
+            1 => obj.set_material(matte_materials[index].clone()),
+            2 => obj.set_material(phong_materials[index].clone()),
             _ => obj.set_material(glossy_materials[index].clone()),
         }
     }
 
-    println!("set materials");
     setUpLights(&mut world);
-    println!("set up light");
     let mut ph = setUpCamera();
-    println!("set camera");
     ph.m_distance_from_vp = 100.0;
     ph.m_zoom = 1.0;
     ph.m_core.m_exposure_time = 0.05;
-    println!("intializing world ptr");
     let worldptr = Arc::new(world);
-    println!("about to render");
-    ph.render_scene(worldptr, &tracer, &mut imgwriter, 1.0);
+    ph.render_scene(worldptr, &tracer, &mut imgwriter,1.0);
     imgwriter.output();
 }
 
@@ -145,14 +141,9 @@ fn setUpMaterial(r: f32, g: f32, b: f32, material_type: &str) -> Arc<dyn Materia
 {
     let color = Colorf::new(r, g, b);
     let random_lambertian = Arc::new(Lambertian::new(0.5*g, color.clone()));
-    let mut glossy_spec = GlossySpecular::new(r, color.clone());
-    glossy_spec.set_sampler("multi_jittered");
-    glossy_spec.set_exponent((r + b + g) * 0.2);
-    glossy_spec.set_ks(0.2);
-
-    let glossy_ptr = Arc::new(glossy_spec);
+    let glossy = Arc::new(GlossySpecular::new(r, color.clone()));
     let phong = Arc::new(Phong::new(random_lambertian.clone(), random_lambertian.clone(),
-                                    glossy_ptr.clone()));
+                                    glossy.clone()));
 
     return match material_type
     {
@@ -166,7 +157,7 @@ fn setUpMaterial(r: f32, g: f32, b: f32, material_type: &str) -> Arc<dyn Materia
             }
         "glossy" => // GlossyReflector
             {
-                Arc::new(GlossyReflector::new(phong.clone(), glossy_ptr.clone()))
+                Arc::new(GlossyReflector::new(phong.clone(), glossy.clone()))
             }
         _ =>
             {
@@ -179,11 +170,11 @@ fn setUpMaterial(r: f32, g: f32, b: f32, material_type: &str) -> Arc<dyn Materia
 
 fn setUpLights(world: &mut World)
 {
-    let point = PointLight::new(0.4, COLOR_WHITE, Vector3::new(-100.0, 20.0, -100.0));
-    let point1 = PointLight::new(0.2, COLOR_RED, Vector3::new(130.0, 10.0, -40.0));
-    let point2 = PointLight::new(0.4, COLOR_YELLOW, Vector3::new(70.0, 140.0, 5.0));
+    let point = PointLight::new(0.2, COLOR_WHITE, Vector3::new(-30.0, 20.0, -20.0));
+    let point1 = PointLight::new(0.5, COLOR_RED, Vector3::new(30.0, 10.0, -5.0));
+    let point2 = PointLight::new(0.6, COLOR_YELLOW, Vector3::new(70.0, 40.0, 5.0));
     let mut ambient = Ambient::new(COLOR_WHITE);
-    ambient.set_radiance_scaling_factor(0.01);
+    ambient.set_radiance_scaling_factor(0.02);
     world.add_light(Arc::new(point));
     world.add_light(Arc::new(point1));
     world.add_light(Arc::new(point2));
@@ -207,23 +198,25 @@ fn setUpAmbientOccluder(world: &mut World)
 
 fn setUpCamera() -> Pinhole
 {
-    let eye = Vector3::new(80.0, 50.0, -100.0);
+    let eye = Vector3::new(20.0, 30.0, -100.0);
     let lookat = Vector3::new(20.0, 30.0, 100.0);
     let up = Vector3::new(0.0, 1.0, 0.0);
     Pinhole::new(eye, lookat, up)
 }
-
-fn get_random_sphere(center: Vector3<f32>) -> Arc<Mutex<Sphere>>
+/*
+fn create_from_obj(path_to_obj: &str, material_ptr: Arc<dyn Material>) -> KDTree<MeshTriangle>
 {
-    Arc::new(Mutex::new(Sphere::new(20.0,
-                                    center,
-                                    Colorf::new(0.0, 1.0, 0.0))))
-}
-
-fn get_random_cuboid(displacement: Vector3<f32>) -> Arc<Mutex<Cuboid>>
-{
-     Arc::new(Mutex::new(Cuboid::new(Vector3::zero() + displacement,
-                                     Vector3::new(20.0, 20.0, 20.0) + displacement,
-                                     Colorf::new(1.0, 0.0, 0.0))))
-
-}
+    let path = Path::new(path_to_obj);
+    let objdata = Obj::load(path).unwrap().data;
+    let mesh = TriMesh::new(&objdata, material_ptr.clone());
+    let triangles = mesh.create_meshtriangles(&objdata);
+    let mut kdtree_temp = KDTree::<MeshTriangle>::new(triangles,
+                                                 20.0,
+                                                 10.0,
+                                                 10.0,
+                                                 3,
+                                                 0);
+    kdtree_temp.init();
+    drop(mesh);
+    kdtree_temp
+}*/

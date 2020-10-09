@@ -1,7 +1,7 @@
 use crate::utils::color::Colorf;
 use std::sync::Arc;
 use crate::material::Material;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::material::phong::Phong;
 use crate::brdf::fresnelreflector::FresnelReflector;
 use crate::brdf::fresneltransmitter::FresnelTransmitter;
@@ -16,11 +16,31 @@ use std::ops::Deref;
 /// and FresnelTransmitter::sampleFunc
 pub struct Dielectric
 {
-    m_phong: Phong,
+    m_phong: Arc<Phong>,
     m_color_filter_in: Colorf,
     m_color_filter_out: Colorf,
     m_fresnel_brdf: Arc<FresnelReflector>,
     m_fresnel_btdf: Arc<FresnelTransmitter>,
+}
+
+impl Dielectric
+{
+    pub fn new(phong: Arc<Phong>,
+               color_filter_in: Colorf,
+               color_filter_out: Colorf,
+                fresnel_brdf: Arc<FresnelReflector>,
+                fresnel_btdf: Arc<FresnelTransmitter>
+                ) -> Dielectric
+    {
+        Dielectric
+        {
+            m_phong: phong,
+            m_color_filter_in: color_filter_in,
+            m_color_filter_out: color_filter_out,
+            m_fresnel_brdf: fresnel_brdf,
+            m_fresnel_btdf: fresnel_btdf
+        }
+    }
 }
 
 impl Material for Dielectric

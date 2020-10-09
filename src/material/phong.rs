@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::brdf::glossyspec::GlossySpecular;
 use crate::material::Material;
 use crate::utils::color::Colorf;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::brdf::BRDF;
 use crate::light::Light;
 use cgmath::{InnerSpace, Vector3, Zero};
@@ -72,10 +72,4 @@ impl Material for Phong
     fn area_light_shade(&self, sr: &mut ShadeRec) -> Colorf {
         unimplemented!()
     }
-
-    /*
-    fn pathShade<'a>(&self, sr: &'a mut ShadeRec<'a>) {
-        unimplemented!()
-    }
-    */
 }

@@ -1,7 +1,7 @@
 use crate::geometry::{Geometry, GeomError, Boundable, BoundedConcrete};
 use std::sync::Arc;
 use cgmath::{Matrix3, SquareMatrix, Vector3, Matrix4, InnerSpace, ElementWise, Rad, Deg, Zero, Vector4};
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::ray::Ray;
 use std::fmt;
 use std::ptr::null;
@@ -51,7 +51,7 @@ impl Instance
 
     pub fn set_material(&mut self, material: Arc<dyn Material>)
     {
-        self.m_material_ptr = material.clone();
+        self.m_material_ptr = material;
     }
 
     pub fn translate(&mut self, displace: Vector3<f32>)

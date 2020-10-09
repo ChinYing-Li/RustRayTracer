@@ -2,7 +2,7 @@ use cgmath::{Vector3, Zero, ElementWise};
 use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError, Boundable};
 use crate::utils::color::Colorf;
 use std::sync::Arc;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::material::Material;
 use crate::ray::Ray;
 use std::fmt;
@@ -202,7 +202,7 @@ impl Shadable for Cuboid
     }
 
     fn set_material(&mut self, material: Arc<dyn Material>) {
-        self.m_material = Some(material.clone());
+        self.m_material = Some(material);
     }
 
     fn shadow_hit(&self, ray: &Ray, tmin: &mut f32) -> bool {

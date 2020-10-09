@@ -9,12 +9,13 @@ use std::fmt;
 use cgmath::prelude::*;
 
 use crate::{ray::Ray,
-            utils::{shaderec::ShadeRec, color::Colorf}};
+            utils::{color::Colorf}};
 use crate::material::Material;
 use std::sync::Arc;
 use std::ops::{Deref, DerefMut};
 use crate::utils::colorconstant::COLOR_BLACK;
 use crate::geometry::bbox::BBox;
+use crate::world::shaderec::ShadeRec;
 
 pub mod sphere;
 pub const KEPSILON: f32 = 0.0001;

@@ -1,7 +1,7 @@
 // Just a temporary solution to transparent material
 
 use crate::brdf::{Transmitter, BRDF};
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use cgmath::{InnerSpace, Vector3};
 use cgmath::num_traits::{Inv, Pow};
 use crate::utils::color::Colorf;

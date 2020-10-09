@@ -26,7 +26,6 @@ impl Tracer for AreaLighting
             let mat_clone = sr.m_material.clone().unwrap();
             return mat_clone.area_light_shade(&mut sr);
         }
-
         worldptr.m_backgroundcolor
     }
 }

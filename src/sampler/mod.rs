@@ -1,6 +1,7 @@
 pub mod mutijittered;
 pub mod nrooks;
 pub mod jittered;
+pub mod dummy;
 
 use cgmath::{Vector2, Vector3, ElementWise};
 use std::{f32, f32::consts::PI};
@@ -47,6 +48,7 @@ impl SamplerCore
         }
     }
 
+    // TODO: What the heck is this "flag" variable???
     fn set_map_to_disk(&mut self, flag: bool)
     {
         if flag != self.m_map_to_disk

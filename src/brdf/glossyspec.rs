@@ -1,7 +1,7 @@
 use crate::utils::color::Colorf;
 use cgmath::{Vector3, InnerSpace, ElementWise};
 use crate::brdf::BRDF;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use std::f32::consts::PI;
 use crate::utils::colorconstant::COLOR_BLACK;
 use crate::sampler::mutijittered::MultiJittered;
@@ -14,11 +14,11 @@ const INV_PI: f32 = 1.0 / PI;
 #[derive(Clone, Debug)]
 pub struct GlossySpecular
 {
-    m_kd: f32,
     pub m_colord: Colorf,
-    m_ks: f32,
     pub m_colors: Colorf,
-    m_exp: f32,
+    pub m_ks: f32,
+    pub m_exp: f32,
+    m_kd: f32,
     m_samplerptr: Option<MultiJittered>
 }
 
@@ -32,16 +32,24 @@ impl GlossySpecular
             m_colord: colord,
             m_ks: 0.0,
             m_colors: COLOR_BLACK,
-            m_exp: 2.0,
+            m_exp: 1.0,
             m_samplerptr: None,
         }
     }
 
-    fn setup_sampler(num_pattern: usize, sample_per_pattern: usize, e: f32) -> MultiJittered
+    pub fn set_sampler(&mut self, sampler_name: &str)
     {
-        let mut sampler = MultiJittered::new(sample_per_pattern, num_pattern);
-        sampler.set_map_to_hemisphere(true, e);
-        sampler
+        match sampler_name
+        {
+            "multi_jittered" =>
+                {
+                    let mut sampler = MultiJittered::new(32, 3);
+                    sampler.generate_sample_pattern();
+                    sampler.set_map_to_hemisphere(true, 1.0);
+                    self.m_samplerptr = Some(sampler);
+                },
+            _ => panic!("Unknown sampler name")
+        }
     }
 
     pub fn set_kd(&mut self, kd: f32)
@@ -78,8 +86,8 @@ impl BRDF for GlossySpecular
 
     fn sampleFunc(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>, pdf: &mut f32) -> Colorf
     {
-        let n_dot_w_o = sr.m_normal.dot(*w_o);
-        let reflection_direction = sr.m_normal.mul_element_wise(2.0 * n_dot_w_o) - *w_o;
+        let n_dot_w_o = sr.m_normal.normalize().dot(*w_o);
+        let reflection_direction: Vector3<f32> = sr.m_normal * (2.0 * n_dot_w_o) - *w_o;
         let w = reflection_direction.normalize();
         let u = Vector3::new(0.00045, 0.00053, 1.0).cross(w).normalize();
         let v = u.cross(w);

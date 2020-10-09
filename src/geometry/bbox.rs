@@ -2,7 +2,7 @@ use cgmath::{Vector3, Zero, ElementWise};
 use crate::geometry::{Geometry, Concrete, KEPSILON, GeomError};
 use crate::utils::color::Colorf;
 use std::sync::Arc;
-use crate::utils::shaderec::ShadeRec;
+use crate::world::shaderec::ShadeRec;
 use crate::material::Material;
 use crate::ray::Ray;
 use std::fmt;
@@ -41,7 +41,7 @@ impl BBox
     }
 
     /// Find the axis of which the bbox' dimension is largest.
-    pub fn maximum_extent(&self) -> usize
+    pub fn maximum_extent(&self) -> u8
     {
         let diag = self.get_diagonal();
         return if diag.x > diag.y && diag.x > diag.z { 0 } // axis x
