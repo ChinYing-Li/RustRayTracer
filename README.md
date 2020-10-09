@@ -1,39 +1,23 @@
 # RustRayTracer
-A ray tracer written in Rust, based on "Ray-tracing From the Ground Up" by Kevin Sufferin.
 
-![Rendered output](https://github.com/ChinYing-Li/RustRayTracer/blob/master/gallery/images/2_sphere_and_triangle.jpg)
+![Latest rendered: glossy specular materials](https://raw.githubusercontent.com/ChinYing-Li/RustRayTracer/master/gallery/images/glossy_specular.jpg)
 
+## Table of Contents
+[Introduction](#introduction)
+[Dependencies](#dependencies)
+[Build](#build)
+[Gallery](#gallery)
 
-[create-an-anchor](##Dependencies)
-[create-an-anchor](##Build-and-Run)
-[create-an-anchor](##Progress)
+## Introduction
+Never tried any system program language besides C++, I decided to give Rust a try - and here's the toy raytracer! The project is based on "Ray-tracing From the Ground Up" by Kevin Sufferin, though the design was adjusted to make the ray tracer more "Rustic". 
 
 ## Dependencies
 - Rust (see [official Rust guide](https://doc.rust-lang.org/cargo/getting-started/installation.html) for installation instructions)
 
-## Build and Run
+## Build
 1. Go to a preferred directory and `git clone https://github.com/ChinYing-Li/RustRayTracer.git`
 2. `cd RustRayTracer`
 3. `cargo run`
 
-## Progress
-- [x] Chapter 3 - Bare-bones ray tracing
-- [x] Chapter 4 - Antialiasing
-- [x] Chapter 5 - Sampling
-- [x] Chapter 6 - Mapping Samples to a Disk
-- [x] Chapter 7 - Mapping Samples to a Hemisphere
-- [x] Chapter 9 - A Practical Viewing System
-- [x] Chapter 14 - Lights and Materials
-- [x] Chapter 15 - Specular Reflection
-- [x] Chapter 16 - Shadows
-- [] Chapter 17 - Ambient Occlusion
-- [] Chapter 18 - Area Llights
-- [x] Chapter 19 - Ray-Object Intersections
-- [x] Chapter 20 - Affine transformations
-- [x] Chapter 22 - Regular Grids (implemented KD-Tree instead)
-- [x] Chapter 23 - Triangle Mesh
-- [x] Chapter 24 - Mirror Reflection
-- [x] Chapter 25 - Glossy Reflection
-- [] Chapter 26 - Global Illumination
-- [x] Chapter 27 - Simple Transparency
-- [x] Chapter 28 - Realistic Transparency
+## Gallery
+![Matte and Phong](https://github.com/ChinYing-Li/RustRayTracer/blob/master/gallery/images/matte_and_phong.jpg)
