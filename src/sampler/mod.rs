@@ -48,6 +48,7 @@ impl SamplerCore
         }
     }
 
+    // TODO: What the heck is this "flag" variable???
     fn set_map_to_disk(&mut self, flag: bool)
     {
         if flag != self.m_map_to_disk

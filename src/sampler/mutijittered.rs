@@ -90,7 +90,10 @@ impl Sampler for MultiJittered
         match self.m_core.get_disk_sample(index)
         {
             Ok(sample) => sample,
-            _ => panic!("The MultiJittered Sampler isn't set to generate samples on disk")
+            _ =>
+                {
+                    panic!("The MultiJittered Sampler isn't set to generate samples on hemisphere");
+                }
         }
     }
 

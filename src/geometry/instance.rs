@@ -51,7 +51,7 @@ impl Instance
 
     pub fn set_material(&mut self, material: Arc<dyn Material>)
     {
-        self.m_material_ptr = material.clone();
+        self.m_material_ptr = material;
     }
 
     pub fn translate(&mut self, displace: Vector3<f32>)

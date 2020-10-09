@@ -72,10 +72,4 @@ impl Material for Phong
     fn area_light_shade(&self, sr: &mut ShadeRec) -> Colorf {
         unimplemented!()
     }
-
-    /*
-    fn pathShade<'a>(&self, sr: &'a mut ShadeRec<'a>) {
-        unimplemented!()
-    }
-    */
 }

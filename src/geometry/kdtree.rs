@@ -122,7 +122,8 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
         if self.m_next_free_node_slot == self.m_number_of_allocated_nodes
         {
             let additional_allocated_nodes = max(2 * self.m_number_of_allocated_nodes, 512) as usize - self.m_nodes.len();
-            self.m_nodes.resize(additional_allocated_nodes, DEFAULT_NODE);
+            let new_len = additional_allocated_nodes + self.m_nodes.len();
+            self.m_nodes.resize(new_len, DEFAULT_NODE);
             self.m_number_of_allocated_nodes = self.m_nodes.len() as u32;
         }
 

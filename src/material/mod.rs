@@ -1,5 +1,5 @@
-mod dielectric;
-mod glossyreflector;
+pub mod dielectric;
+pub mod glossyreflector;
 pub mod reflector;
 pub mod emissive;
 pub mod matte;
@@ -16,7 +16,6 @@ pub trait Material
 {
     fn shade(&self, sr: &mut ShadeRec) -> Colorf;
     fn area_light_shade(&self, sr: &mut ShadeRec) -> Colorf;
-   // fn pathShade<'a>(&self, sr: &'a mut ShadeRec);
 }
 
 impl Debug for Material

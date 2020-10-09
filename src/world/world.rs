@@ -48,6 +48,7 @@ impl World
         // Not following the book
     }
 
+    /// Using Mutex as we might want to mutate the underlying object... Or do we?
     pub fn add_object(&mut self, object: Arc<Mutex<dyn Concrete>>)
     {
         self.m_objects.push(object);

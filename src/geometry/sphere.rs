@@ -109,7 +109,7 @@ impl Shadable for Sphere
     }
     fn set_material(&mut self, material: Arc<dyn Material>)
     {
-        self.m_material = Some(material.clone());
+        self.m_material = Some(material);
     }
 
     fn shadow_hit(&self, shadowray: &Ray, tmin: &mut f32) -> bool {
