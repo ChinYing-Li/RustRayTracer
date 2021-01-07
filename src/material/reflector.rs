@@ -5,7 +5,6 @@ use crate::utils::color::Colorf;
 use crate::world::shaderec::ShadeRec;
 use crate::ray::Ray;
 use crate::material::Material;
-use crate::utils::colorconstant::COLOR_BLACK;
 use crate::material::phong::Phong;
 use crate::tracer::Tracer;
 use crate::brdf::perfectspec::PerfectSpecular;

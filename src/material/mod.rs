@@ -5,11 +5,11 @@ pub mod emissive;
 pub mod matte;
 pub mod phong;
 
-use crate::world::shaderec::ShadeRec;
-use crate::utils::color::Colorf;
-use std::fmt::{Debug, Formatter};
 use std::fmt;
 use std::error::Error;
+
+use crate::world::shaderec::ShadeRec;
+use crate::utils::color::Colorf;
 use crate::tracer::Tracer;
 
 pub trait Material
@@ -18,9 +18,9 @@ pub trait Material
     fn area_light_shade(&self, sr: &mut ShadeRec) -> Colorf;
 }
 
-impl Debug for Material
+impl fmt::Debug for dyn Material
 {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Material")
             .finish()
     }

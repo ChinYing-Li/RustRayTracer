@@ -5,11 +5,8 @@ use crate::material::Material;
 use crate::utils::color::Colorf;
 use crate::world::shaderec::ShadeRec;
 use crate::brdf::BRDF;
-use crate::light::Light;
 use cgmath::{InnerSpace, Vector3, Zero};
 use crate::ray::Ray;
-use crate::utils::colorconstant::COLOR_BLACK;
-use crate::tracer::Tracer;
 
 #[derive(Clone, Debug)]
 pub struct Phong

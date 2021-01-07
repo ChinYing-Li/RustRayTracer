@@ -13,7 +13,7 @@ use crate::utils::colorconstant::COLOR_BLACK;
 pub trait BRDF
 {
     /// the Bidirectional Reflectance Distribution Function itself
-    fn func(&self, sr: &ShadeRec, w_i: Vector3<f32>, w_o: Vector3<f32>) -> Colorf { COLOR_BLACK }
+    fn func(&self, _sr: &ShadeRec, w_i: Vector3<f32>, w_o: Vector3<f32>) -> Colorf { COLOR_BLACK }
 
     /// For computing the direction of the reflected ray
     ///

@@ -1,27 +1,27 @@
-use crate::geometry::{Boundable, Geometry, GeomError, BoundedConcrete, Shadable};
-use crate::geometry::bbox::BBox;
 use std::sync::Arc;
 use cgmath::{Vector3, Zero, ElementWise, Array};
 use std::cmp::{max, min, Ordering};
 use crate::geometry::kdtree::EdgeType::{ET_start, ET_end};
 use arrayvec::ArrayVec;
 use std::f32::INFINITY;
-use crate::world::shaderec::ShadeRec;
-use crate::ray::Ray;
 use std::fmt::{Debug, Formatter};
 use std::fmt;
 use cgmath::num_traits::Inv;
 use std::ptr::null;
 use std::borrow::Borrow;
 use obj::Obj;
+use std::collections::hash_map::DefaultHasher;
+
+use crate::world::shaderec::ShadeRec;
+use crate::ray::Ray;
 use crate::geometry::trimesh::{TriMesh, MeshTriangle};
 use crate::material::Material;
 use crate::utils::color::Colorf;
-use std::collections::hash_map::DefaultHasher;
+use crate::geometry::{Boundable, Geometry, GeomError, BoundedConcrete, Shadable};
+use crate::geometry::bbox::BBox;
 
 /// KDTree is implemented for accelerating ray tracing. The implementation takes reference from
 /// "Physically Based Rendering: From Theory To Implementation" by Matt Pharr, Wenzel Jakob, and Greg Humphreys.
-
 pub struct KDTree<T> where T: BoundedConcrete + Clone
 {
     pub m_primitives: Vec<T>,

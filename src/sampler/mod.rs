@@ -4,8 +4,7 @@ pub mod jittered;
 pub mod dummy;
 
 use cgmath::{Vector2, Vector3, ElementWise};
-use std::{f32, f32::consts::PI};
-use approx::RelativeEq;
+use std::{f32};
 use cgmath::num_traits::Inv;
 use rand::{Rng, seq::SliceRandom, thread_rng};
 use std::error::Error;
@@ -187,7 +186,7 @@ impl SamplerCore
                 }
             }
 
-            phi *= PI / 4.0;
+            phi *= f32::consts::PI / 4.0;
             diskpattern.push(Vector2::new(radius * phi.cos(), radius * phi.sin()));
         }
         self.m_samples_on_disk = Some(diskpattern);
@@ -199,8 +198,8 @@ impl SamplerCore
         let mut hemisphere_pattern = Vec::with_capacity(n);
         for s in self.m_samples.iter()
         {
-            let cos_phi = (2.0 * PI * s.x).cos();
-            let sin_phi = (2.0 * PI * s.x).sin();
+            let cos_phi = (2.0 * f32::consts::PI * s.x).cos();
+            let sin_phi = (2.0 * f32::consts::PI * s.x).sin();
             let cos_theta = (1.0 - s.y).powf((e + 1.0).inv());
             let sin_theta = (1.0 - cos_theta.powf(2.0)).sqrt();
             let pu = sin_theta * cos_phi;

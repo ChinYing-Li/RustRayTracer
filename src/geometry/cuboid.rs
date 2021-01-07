@@ -1,16 +1,16 @@
 use cgmath::{Vector3, Zero, ElementWise};
-use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError, Boundable};
-use crate::utils::color::Colorf;
 use std::sync::Arc;
+
 use crate::world::shaderec::ShadeRec;
 use crate::material::Material;
 use crate::ray::Ray;
 use std::fmt;
 use crate::math::float_cmp;
 use crate::geometry::bbox::BBox;
-use core::num::FpCategory::Infinite;
 use std::f32::INFINITY;
 use crate::math::float_cmp::{max, min};
+use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError, Boundable};
+use crate::utils::color::Colorf;
 
 #[derive(Clone)]
 pub struct Cuboid

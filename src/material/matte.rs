@@ -1,16 +1,13 @@
 use cgmath::{InnerSpace, Vector3, Zero};
 use std::sync::Arc;
-use std::any::type_name;
+// use std::any::type_name;
 
 use crate::brdf::lambertian::Lambertian;
 use crate::world::shaderec::ShadeRec;
 use crate::material::Material;
 use crate::utils::color::Colorf;
 use crate::brdf::BRDF;
-use crate::light::Light;
-use crate::utils::colorconstant::COLOR_BLACK;
 use crate::ray::Ray;
-use crate::tracer::Tracer;
 
 #[derive(Clone, Debug)]
 pub struct Matte

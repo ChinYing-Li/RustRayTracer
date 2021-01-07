@@ -8,18 +8,26 @@ use cgmath::Vector2;
 
 pub struct ImageWriter<'a>
 {
-    m_imgdst: &'a str,
+    m_imgpath: &'a str,
     m_imgresolution: Vector2<u16>,
     m_imgbuffer: RgbaImage,
 }
 
 impl ImageWriter<'_>
 {
-    pub fn new(imgdst: &str, width: u16, height: u16) -> ImageWriter
+    pub fn new(imgpath: &str, width: u16, height: u16) -> ImageWriter
     {
-        ImageWriter{ m_imgdst: imgdst,
-                    m_imgresolution: Vector2::new(width, height),
-                    m_imgbuffer: RgbaImage::new(width.into(), height.into()) }
+        ImageWriter
+        {
+            m_imgpath: imgpath,
+            m_imgresolution: Vector2::new(width, height),
+            m_imgbuffer: RgbaImage::new(width.into(), height.into())
+        }
+    }
+
+    fn gamma_correction()
+    {
+        // TODO: make the gamma correction a function
     }
 }
 
@@ -28,7 +36,7 @@ impl fmt::Debug for ImageWriter<'_>
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
         f.debug_struct("ImageWriter")
-            .field("image file destination", &self.m_imgdst)
+            .field("image file destination", &self.m_imgpath)
             .field("image resolution", &self.m_imgresolution)
             .finish()
     }
@@ -47,6 +55,6 @@ impl OutputManager for ImageWriter<'_>
 
     fn output(&mut self)
     {
-        self.m_imgbuffer.save(self.m_imgdst).unwrap();
+        self.m_imgbuffer.save(self.m_imgpath).unwrap();
     }
 }

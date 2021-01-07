@@ -3,7 +3,6 @@ use crate::world::shaderec::ShadeRec;
 use crate::utils::color::Colorf;
 use cgmath::InnerSpace;
 use crate::utils::colorconstant::COLOR_BLACK;
-use crate::tracer::Tracer;
 
 pub struct Emissive
 {

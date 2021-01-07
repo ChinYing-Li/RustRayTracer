@@ -1,9 +1,7 @@
 use cgmath::{Vector3, Zero, ElementWise};
 use crate::geometry::{Geometry, Concrete, KEPSILON, GeomError};
 use crate::utils::color::Colorf;
-use std::sync::Arc;
 use crate::world::shaderec::ShadeRec;
-use crate::material::Material;
 use crate::ray::Ray;
 use std::fmt;
 use crate::math::float_cmp;

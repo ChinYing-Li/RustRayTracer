@@ -1,14 +1,15 @@
+use cgmath::{Vector3, InnerSpace, ElementWise};
+use std::sync::Arc;
+use std::f32::INFINITY;
+use std::borrow::BorrowMut;
+use std::cell::RefCell;
+
 use crate::light::Light;
 use crate::utils::color::Colorf;
 use crate::world::shaderec::ShadeRec;
-use cgmath::{Vector3, InnerSpace, Zero, ElementWise};
 use crate::ray::Ray;
 use crate::sampler::Sampler;
-use std::sync::Arc;
-use std::f32::INFINITY;
 use crate::utils::colorconstant::COLOR_BLACK;
-use std::borrow::BorrowMut;
-use std::cell::RefCell;
 
 pub struct AmbientOccluder
 {
@@ -17,13 +18,13 @@ pub struct AmbientOccluder
     pub m_w: RefCell<Vector3<f32>>,
     m_color: Colorf,
     m_ls: f32,
-    pub m_min_amount: f32,
+    pub m_min_color: Colorf,
     m_samplerptr: Arc<dyn Sampler>,
 }
 
 impl AmbientOccluder
 {
-    pub fn new(min_amount: f32, ls: f32, samplerptr: Arc<dyn Sampler>) -> AmbientOccluder
+    pub fn new(min_color: Colorf, ls: f32, samplerptr: Arc<dyn Sampler>) -> AmbientOccluder
     {
         AmbientOccluder
         {
@@ -32,7 +33,7 @@ impl AmbientOccluder
             m_w: RefCell::new(Vector3::unit_z()),
             m_color: COLOR_BLACK,
             m_ls: ls,
-            m_min_amount: min_amount,
+            m_min_color: min_color,
             m_samplerptr: samplerptr,
         }
     }
@@ -74,7 +75,7 @@ impl Light for AmbientOccluder
         let shadow_ray = Ray::new(sr.m_hitpoint, self.get_direction(sr));
         if self.is_in_shadow(sr, &shadow_ray)
         {
-            return self.m_color * self.m_ls * self.m_min_amount;
+            return self.m_color * self.m_min_color * self.m_ls;
         }
         self.m_color * self.m_ls
     }

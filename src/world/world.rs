@@ -18,7 +18,7 @@ pub struct World
     pub m_backgroundcolor: Colorf,
     pub m_viewplaneptr: Box<ViewPlane>,
     pub m_objects: Vec<Arc<Mutex<dyn Concrete>>>,
-    pub m_ambientlight: Arc<Ambient>,
+    pub m_ambientlight: Arc<dyn Light>,
     pub m_lights: Vec<Arc<dyn Light>>,
     pub m_tracer: Arc<dyn Tracer>,
 }
@@ -69,7 +69,7 @@ impl World
         self.m_lights.remove(index);
     }
 
-    pub fn set_ambient(&mut self, ambient: Arc<Ambient>)
+    pub fn set_ambient(&mut self, ambient: Arc<dyn Light>)
     {
         self.m_ambientlight = ambient;
     }

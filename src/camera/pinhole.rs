@@ -54,7 +54,7 @@ impl Camera for Pinhole
             {
                 clr = COLOR_BLACK;
 
-                for i in 0..vp.m_sampler.get_sample_per_pattern()
+                for _i in 0..vp.m_sampler.get_sample_per_pattern()
                 {
                     // TODO use Sampler !!!
                     sq_sample_point = rng.gen_range(0.0, 1.0);

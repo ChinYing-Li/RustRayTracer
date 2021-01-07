@@ -7,8 +7,6 @@ use crate::world::shaderec::ShadeRec;
 use crate::ray::Ray;
 use crate::brdf::BRDF;
 use cgmath::{Vector3, Zero, InnerSpace};
-use crate::tracer::Tracer;
-use crate::utils::colorconstant::COLOR_BLACK;
 use std::borrow::BorrowMut;
 
 pub struct GlossyReflector

@@ -6,13 +6,12 @@ pub mod cuboid;
 pub mod bbox;
 
 use std::fmt;
-use cgmath::prelude::*;
+use std::sync::Arc;
+use std::ops::{Deref, DerefMut};
 
 use crate::{ray::Ray,
             utils::{color::Colorf}};
 use crate::material::Material;
-use std::sync::Arc;
-use std::ops::{Deref, DerefMut};
 use crate::utils::colorconstant::COLOR_BLACK;
 use crate::geometry::bbox::BBox;
 use crate::world::shaderec::ShadeRec;

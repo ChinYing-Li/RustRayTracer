@@ -1,6 +1,5 @@
 use cgmath::{Vector3, InnerSpace, Zero};
 use std::sync::Arc;
-use crate::material::Material;
 use crate::geometry::Geometry;
 use crate::light::Light;
 use crate::utils::color::Colorf;

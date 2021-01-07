@@ -9,29 +9,26 @@ use raytracer::world::world::World;
 
 use raytracer::geometry::sphere::Sphere;
 use raytracer::ray::Ray;
-use raytracer::utils::shaderec::ShadeRec;
+use raytracer::world::shaderec::ShadeRec;
 use raytracer::output::imagewriter::ImageWriter;
 use raytracer::output::OutputManager;
 use raytracer::camera::pinhole::Pinhole;
-use cgmath::num_traits::zero;
 use raytracer::camera::Camera;
 use raytracer::material::phong::Phong;
 use raytracer::brdf::lambertian::Lambertian;
 use raytracer::brdf::glossyspec::GlossySpecular;
 use raytracer::utils::colorconstant::{COLOR_BLUE, COLOR_RED, COLOR_WHITE};
 use raytracer::light::pointlight::PointLight;
-use raytracer::material::Material;
-use std::rc::Rc;
-use raytracer::light::ambient::Ambient;
 use raytracer::geometry::triangle::Triangle;
 use raytracer::material::matte::Matte;
 use raytracer::light::ambientocc::AmbientOccluder;
 use raytracer::sampler::mutijittered::MultiJittered;
 use raytracer::sampler::Sampler;
+use raytracer::tracer::raycast::RayCast;
 
 fn main()
 {
-    let tracer = Whitted::new();
+    let tracer = RayCast::new();
 
     let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(MultiJittered::new(32, 3))));
     let vp_hres = 800;
@@ -46,24 +43,24 @@ fn main()
 
 
     let mut sphereA = Arc::new(Mutex::new(Sphere::new(10.0,
-                                                      Vector3::new(12.0, 20.0, 15.0),
-                                                      Colorf::new(0.0, 1.0, 0.0))));
+                                                      Vector3::new(-12.0, 20.0, 10.0),
+                                                      Colorf::new(1.0, 1.0, 0.0))));
     let mut sphereB = Arc::new(Mutex::new(Sphere::new(15.0,
-                                                      Vector3::new(30.0, 10.0, 20.),
-                                                      Colorf::new(1.0, 0.0, 0.0))));
-    let mut triangle = Arc::new(Mutex::new(Triangle::new(Vector3::new(-10.0, 30.0, 10.0),
-                                                         Vector3::new(30.0, 30.0, 0.0),
-                                                         Vector3::new(60.0, 30.0, 30.0))));
+                                                      Vector3::new(30.0, 10.0, 15.0),
+                                                      Colorf::new(1.0, 0.0, 1.0))));
+    let mut triangle = Arc::new(Mutex::new(Triangle::new(Vector3::new(-100.0, 0.0, 0.0),
+                                                         Vector3::new(100.0, 0.0, 0.0),
+                                                         Vector3::new(0.0, 200.0, 0.0))));
     world.add_object(sphereA);
     world.add_object(sphereB);
     world.add_object(triangle);
 
-    let c = vec![COLOR_BLUE, COLOR_RED, Colorf::new(0.0, 1.0, 1.0)];
+    let c = vec![Colorf::new(0.7, 1.0, 0.0), Colorf::new(0.6, 0.7, 0.8), Colorf::new(0.0, 1.0, 1.0)];
     let objlen= world.m_objects.len();
     let materials: Vec<Matte> = (0..objlen)
         .collect::<Vec<_>>()
         .iter()
-        .map(|x| setUpMaterial(1.0/(*x) as f32, 0.3 * (*x) as f32, 0.5))
+        .map(|x| setUpMaterial(c[*x].m_r, c[*x].m_g, c[*x].m_b))
         .collect::<Vec<Matte>>();
 
     for i in 0..objlen
@@ -88,32 +85,21 @@ fn setUpMaterial(r: f32, g: f32, b: f32) -> Matte
                Arc::new(Lambertian::new(0.3, Colorf::new(0.5*r, g, 0.5*b))))
 }
 
-fn setUpLights(world: &mut World)
-{
-    let point = PointLight::new(0.5, COLOR_WHITE, Vector3::new(-30.0, 20.0, -20.0));
-    let point2 = PointLight::new(0.5, COLOR_RED, Vector3::new(30.0, 10.0, -5.0));
-    let mut ambient = Ambient::new(COLOR_BLUE);
-    ambient.set_radiance_scaling_factor(0.1);
-    world.add_light(Arc::new(point));
-    world.add_light(Arc::new(point2));
-    world.set_ambient(Arc::new(ambient));
-}
-
 fn setUpAmbientOccluder(world: &mut World)
 {
     let mut mj= MultiJittered::new(32, 3);
     mj.set_map_to_hemisphere(true, 1.0);
     mj.generate_sample_pattern();
 
-    let mut ambocc = AmbientOccluder::new(0.0, 0.001, Arc::new(mj));
-    ambocc.set_color(COLOR_RED);
-    world.add_light(Arc::new(ambocc));
+    let mut ambocc = AmbientOccluder::new(Colorf::new(0.0, 0.1, 0.0), 0.5, Arc::new(mj));
+    ambocc.set_color(COLOR_WHITE);
+    world.set_ambient(Arc::new(ambocc));
 }
 
 fn setUpCamera() -> Pinhole
 {
-    let eye = Vector3::new(20.0, 30.0, -10.0);
-    let lookat = Vector3::new(20.0, 30.0, 100.0);
+    let eye = Vector3::new(0.0, -30.0, 30.0);
+    let lookat = Vector3::new(20.0, 30.0, 0.0);
     let up = Vector3::new(0.0, 1.0, 0.0);
     Pinhole::new(eye, lookat, up)
 }

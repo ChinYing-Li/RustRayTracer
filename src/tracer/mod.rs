@@ -18,7 +18,7 @@ pub trait Tracer
     { COLOR_BLACK }
 }
 
-impl std::fmt::Debug for Tracer
+impl std::fmt::Debug for dyn Tracer
 {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result
     {
