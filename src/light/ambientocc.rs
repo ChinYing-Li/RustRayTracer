@@ -62,14 +62,9 @@ impl Light for AmbientOccluder
 
     fn L(&self, sr: &ShadeRec) -> Colorf
     {
-        println!("before w {}", self.m_w.borrow().y);
         *self.m_w.borrow_mut() = sr.m_normal;
-        println!("after w {}", self.m_w.borrow().y);
         let jittered_up = Vector3::new(0.00031, 1.0, 0.00021).normalize();
-
-        println!("before w {}", self.m_v.borrow().y);
         *self.m_v.borrow_mut() = self.m_w.borrow().cross(jittered_up).normalize();
-        println!("after w {}", self.m_v.borrow().y);
         *self.m_u.borrow_mut() = self.m_v.borrow().cross(*self.m_w.borrow()).normalize();
 
         let shadow_ray = Ray::new(sr.m_hitpoint, self.get_direction(sr));

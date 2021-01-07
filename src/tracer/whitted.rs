@@ -15,6 +15,10 @@ pub struct Whitted
 impl Whitted
 {
     pub fn new() -> Whitted { Whitted{} }
+    pub fn trace_ray(&self, worldptr: Arc<World>, ray: Ray, depth: u16) -> Colorf
+    {
+
+    }
 }
 
 impl Tracer for Whitted

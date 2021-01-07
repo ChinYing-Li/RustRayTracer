@@ -10,6 +10,8 @@ use crate::tracer::Tracer;
 use crate::brdf::perfectspec::PerfectSpecular;
 
 use crate::brdf::BRDF;
+use crate::brdf::lambertian::Lambertian;
+use crate::brdf::glossyspec::GlossySpecular;
 
 pub struct Reflective
 {
@@ -19,21 +21,34 @@ pub struct Reflective
 
 impl Reflective
 {
-
+    pub fn new(ambient_brdf: Arc<Lambertian>,
+               diffuse_brdf: Arc<Lambertian>,
+               spec_brdf: Arc<GlossySpecular>,
+                kr: f32,
+                cr: Colorf)
+    -> Reflective
+    {
+        Reflective
+        {
+            m_phong: Phong::new(ambient_brdf, diffuse_brdf, spec_brdf),
+            m_reflective_brdf: Arc::new(PerfectSpecular::new(kr, cr))
+        }
+    }
 }
 
 impl Material for Reflective
 {
     fn shade(&self, sr: &mut ShadeRec) -> Colorf
     {
-        let mut clr = self.m_phong.area_light_shade(sr);
+        let mut clr = self.m_phong.shade(sr);
         let mut w_o = -sr.m_ray.m_direction;
         let mut w_i = Vector3::zero();
         let mut dummy = 0.0;
-        let fr = self.m_reflective_brdf.sampleFunc(sr,&mut w_i, &mut w_o, &mut dummy);
+        let f_reflect = self.m_reflective_brdf.sampleFunc(sr, &mut w_i, &mut w_o, &mut dummy);
         let reflected_ray = Ray::new(sr.m_hitpoint, w_i);
 
-        clr += fr * sr.m_worldptr.as_ref().m_tracer.trace_ray(sr.m_worldptr.clone(), &reflected_ray, sr.m_depth +1)
+        // TODO: Have to pass ray by value
+        clr += f_reflect * sr.m_worldptr.as_ref().m_tracer.trace_ray(sr.m_worldptr.clone(), &reflected_ray, sr.m_depth +1)
             * sr.m_normal.dot(w_i);
         clr
     }

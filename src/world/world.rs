@@ -10,7 +10,6 @@ use crate::geometry::{Geometry, Shadable, Concrete};
 use crate::light::ambient::Ambient;
 use crate::light::Light;
 use crate::tracer::Tracer;
-use crate::tracer::whitted::Whitted;
 
 #[derive(Debug)]
 pub struct World

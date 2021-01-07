@@ -30,7 +30,8 @@ fn main()
 {
     let tracer = RayCast::new();
 
-    let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(MultiJittered::new(32, 3))));
+    let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(
+        MultiJittered::new(64, 3))));
     let vp_hres = 800;
     let vp_vres = 600;
     boxed_vp.m_hres = vp_hres;
@@ -38,7 +39,9 @@ fn main()
     boxed_vp.m_pixsize = 0.5;
     boxed_vp.set_gamma(1.8);
 
-    let mut imgwriter = ImageWriter::new("2_sphere_and_triangle_ambientoccluder.jpg", vp_hres, vp_vres);
+    let mut imgwriter = ImageWriter::new("2_sphere_and_triangle_ambientoccluder.jpg",
+                                         vp_hres,
+                                         vp_vres);
     let mut world = World::new(boxed_vp);
 
 
@@ -55,7 +58,9 @@ fn main()
     world.add_object(sphereB);
     world.add_object(triangle);
 
-    let c = vec![Colorf::new(0.7, 1.0, 0.0), Colorf::new(0.6, 0.7, 0.8), Colorf::new(0.0, 1.0, 1.0)];
+    let c = vec![Colorf::new(0.7, 1.0, 0.0),
+                 Colorf::new(0.6, 0.7, 0.8),
+                 Colorf::new(0.0, 1.0, 1.0)];
     let objlen= world.m_objects.len();
     let materials: Vec<Matte> = (0..objlen)
         .collect::<Vec<_>>()
@@ -73,7 +78,7 @@ fn main()
     let mut ph = setUpCamera();
     ph.m_distance_from_vp = 100.0;
     ph.m_zoom = 1.0;
-    ph.m_core.m_exposure_time = 0.005;
+    ph.m_core.m_exposure_time = 0.0007;
     let worldptr = Arc::new(world);
     ph.render_scene(worldptr, &tracer, &mut imgwriter,1.0);
     imgwriter.output();

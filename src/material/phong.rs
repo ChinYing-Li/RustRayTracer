@@ -18,7 +18,10 @@ pub struct Phong
 
 impl Phong
 {
-    pub fn new(ambient_brdf: Arc<Lambertian>, diffuse_brdf: Arc<Lambertian>, spec_brdf: Arc<GlossySpecular>) -> Phong
+    pub fn new(ambient_brdf: Arc<Lambertian>,
+               diffuse_brdf: Arc<Lambertian>,
+               spec_brdf: Arc<GlossySpecular>)
+        -> Phong
     {
         Phong
         {

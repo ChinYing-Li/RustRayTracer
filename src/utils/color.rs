@@ -48,8 +48,7 @@ impl Add for Colorf
     /// Add two rgb color.
     fn add(self, rhs: Colorf) -> Colorf
     {
-        let res = Colorf{ m_r: self.m_r + rhs.m_r, m_g: self.m_g + rhs.m_g, m_b: self.m_b + rhs.m_b};
-        res.clamp()
+        Colorf{ m_r: self.m_r + rhs.m_r, m_g: self.m_g + rhs.m_g, m_b: self.m_b + rhs.m_b}
     }
 }
 
@@ -60,7 +59,6 @@ impl AddAssign for Colorf
         self.m_r += rhs.m_r;
         self.m_g += rhs.m_g;
         self.m_b += rhs.m_b;
-        self.clamp();
     }
 }
 
@@ -70,8 +68,7 @@ impl Mul for Colorf
     /// Multiply two rgb color.
     fn mul(self, rhs: Self) -> Colorf
     {
-        let res = Colorf{ m_r: self.m_r*rhs.m_r, m_g: self.m_g*rhs.m_g, m_b: self.m_b*rhs.m_b};
-        res.clamp()
+        Colorf{ m_r: self.m_r * rhs.m_r, m_g: self.m_g * rhs.m_g, m_b: self.m_b * rhs.m_b}
     }
 }
 
@@ -91,7 +88,6 @@ impl MulAssign<f32> for Colorf
         self.m_r *= rhs;
         self.m_g *= rhs;
         self.m_b *= rhs;
-        self.clamp();
     }
 }
 
@@ -101,8 +97,7 @@ impl Mul<f32> for Colorf
     /// Multiply by a scalar
     fn mul(self, rhs: f32) -> Colorf
     {
-        let res = Colorf{ m_r: self.m_r*rhs, m_g: self.m_g*rhs, m_b: self.m_b*rhs};
-        res.clamp()
+        Colorf{ m_r: self.m_r * rhs, m_g: self.m_g * rhs, m_b: self.m_b * rhs}
     }
 }
 
@@ -112,8 +107,8 @@ impl Div<f32> for Colorf
     /// Divide color by a scalar
     fn div(self, rhs: f32) -> Colorf
     {
-        let res = Colorf{ m_r: self.m_r/rhs, m_g: self.m_g/rhs, m_b: self.m_b/rhs};
-        res.clamp()
+        let rhs_inv = 1.0f32 / rhs;
+        Colorf{ m_r: self.m_r * rhs_inv, m_g: self.m_g * rhs_inv, m_b: self.m_b * rhs_inv}
     }
 }
 
@@ -133,8 +128,7 @@ impl Sub for Colorf
     /// Subtract a rgb color from another rgn color.
     fn sub(self, rhs: Colorf) -> Colorf
     {
-        let res = Colorf{ m_r: self.m_r-rhs.m_r, m_g: self.m_g-rhs.m_g, m_b: self.m_b-rhs.m_b};
-        res.clamp()
+        Colorf{ m_r: self.m_r-rhs.m_r, m_g: self.m_g-rhs.m_g, m_b: self.m_b-rhs.m_b}
     }
 }
 
@@ -145,7 +139,6 @@ impl SubAssign for Colorf
         self.m_r -= rhs.m_r;
         self.m_g -= rhs.m_g;
         self.m_b -= rhs.m_b;
-        self.clamp();
     }
 }
 
