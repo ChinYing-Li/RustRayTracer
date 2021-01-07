@@ -1,13 +1,15 @@
+use cgmath::{Vector3, Zero, InnerSpace};
+use std::sync::Arc;
+
 use crate::utils::color::Colorf;
 use crate::world::shaderec::ShadeRec;
-use cgmath::{Vector3, Zero, InnerSpace};
 use crate::ray::Ray;
 use crate::material::Material;
 use crate::utils::colorconstant::COLOR_BLACK;
 use crate::material::phong::Phong;
 use crate::tracer::Tracer;
 use crate::brdf::perfectspec::PerfectSpecular;
-use std::sync::Arc;
+
 use crate::brdf::BRDF;
 
 pub struct Reflective

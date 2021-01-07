@@ -1,7 +1,8 @@
 use std::{f32};
-use cgmath::Vector2;
-use crate::sampler::Sampler;
 use std::sync::Arc;
+use cgmath::Vector2;
+
+use crate::sampler::Sampler;
 use crate::sampler::dummy::DummySampler;
 
 #[derive(Clone, Debug)]

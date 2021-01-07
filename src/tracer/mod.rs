@@ -1,14 +1,15 @@
 pub mod arealighting;
+pub mod raycast;
+pub mod whitted;
+
+use std::sync::Arc;
 
 use crate::ray::Ray;
 use crate::utils::color::Colorf;
 use crate::world::world::World;
-use std::sync::Arc;
 use crate::utils::colorconstant::COLOR_BLACK;
 
 const HUGE_VAL_FOR_TIME: f32 = 1e9;
-
-pub mod whitted;
 
 pub trait Tracer
 {

@@ -1,14 +1,19 @@
-use crate::utils::color::Colorf;
-use cgmath::{Vector3, InnerSpace};
-use crate::brdf::BRDF;
+use cgmath::{Vector3,
+             InnerSpace};
 use std::f32::consts::PI;
+
+use crate::brdf::BRDF;
 use crate::world::shaderec::ShadeRec;
-use crate::sampler::mutijittered::MultiJittered;
-use crate::utils::colorconstant::COLOR_BLACK;
-use crate::sampler::Sampler;
+use crate::sampler::{mutijittered::MultiJittered,
+                     Sampler};
+use crate::utils::color::Colorf;
 
 const INV_PI: f32 = 1.0 / PI;
 
+/// The Lambertian BRDF
+/// m_kd: The diffuse reflection coefficient
+/// m_colord: The diffuse color
+/// m_samplrptr: TODO: this is a misnomer!!!
 #[derive(Clone, Debug)]
 pub struct Lambertian
 {
@@ -21,11 +26,17 @@ impl Lambertian
 {
     pub fn new(kd: f32, colord: Colorf) -> Lambertian
     {
-        Lambertian{
+        Lambertian
+        {
             m_kd: kd,
             m_colord: colord,
             m_samplerptr: None,
         }
+    }
+
+    pub fn set_kd(&mut self, kd: f32)
+    {
+        self.m_kd = kd;
     }
 
     fn setup_sampler(num_pattern: usize, sample_per_pattern: usize, e: f32) -> MultiJittered

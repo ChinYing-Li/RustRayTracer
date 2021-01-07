@@ -84,17 +84,16 @@ impl World
         let mut tglobal = 100000.0;
         let mut tminglobal = tmin;
 
-        for i in 0..worldptr.as_ref().m_objects.len()
+        for object in &worldptr.as_ref().m_objects
         {
-            if let x = worldptr.as_ref().m_objects[i].lock().unwrap()
+            if let x = object.lock().unwrap()
             {
                 if x.hit(ray, &mut tglobal, srref).unwrap_or(false) && tglobal < tminglobal
                 {
                     println!("does hit!");
                     tminglobal = tglobal;
-                    srref.m_color = x.get_color();
                     srref.m_material = Some(x.get_material());
-                    srref.m_ishitting = true;
+                    srref.m_hit = true;
                     srref.m_hitpoint = ray.m_origin + tminglobal * ray.m_direction;
                     normal = srref.m_normal;
                     hitpoint = srref.m_hitpoint;
@@ -103,7 +102,7 @@ impl World
             }
         }
 
-        if sr.m_ishitting
+        if sr.m_hit
         {
             sr.m_time = tminglobal;
             sr.m_normal = normal;

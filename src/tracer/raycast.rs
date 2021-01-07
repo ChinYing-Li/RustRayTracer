@@ -8,28 +8,34 @@ use crate::tracer::{Tracer, HUGE_VAL_FOR_TIME};
 use crate::utils::colorconstant::COLOR_BLACK;
 use crate::tracer::whitted::Whitted;
 use crate::world::shaderec::ShadeRec;
-pub struct AreaLighting
+
+pub struct RayCast
 {}
 
-impl AreaLighting
+impl RayCast
 {
-    pub fn new() -> AreaLighting
-    {
-        AreaLighting{}
-    }
+    pub fn new() -> RayCast { RayCast{} }
 }
 
-impl Tracer for AreaLighting
+impl Tracer for RayCast
 {
+    // In Raycast, we ignore the recursion depth.
     fn trace_ray(&self, worldptr: Arc<World>, ray: &Ray, depth: u16) -> Colorf
     {
         let mut sr = World::hit_objects(worldptr.clone(), ray, f32::INFINITY);
         if sr.m_hit
         {
             sr.m_ray = *ray;
-            let mat_clone = sr.m_material.clone().unwrap();
-            return mat_clone.area_light_shade(&mut sr);
+            if let material = sr.m_material.clone().unwrap()
+            {
+                return material.shade(&mut sr);
+            }
         }
-        worldptr.m_backgroundcolor
+        worldptr.as_ref().m_backgroundcolor
+    }
+
+    fn trace_ray_with_time(&self, worldptr: Arc<World>, ray: &Ray, time: &mut f32, depth: u16) -> Colorf
+    {
+        unimplemented!()
     }
 }

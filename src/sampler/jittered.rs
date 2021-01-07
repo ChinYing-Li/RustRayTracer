@@ -1,9 +1,10 @@
 use cgmath::{Vector2, Vector3};
-use crate::sampler::{Sampler, SamplerCore};
 use rand::Rng;
 use rand::rngs::ThreadRng;
 use std::borrow::BorrowMut;
 use std::cell::RefCell;
+
+use crate::sampler::{Sampler, SamplerCore};
 
 #[derive(Clone, Debug)]
 pub struct Jittered

@@ -1,9 +1,10 @@
+use std::f32;
+use std::sync::Arc;
+
 use crate::ray::Ray;
 use crate::utils::color::{Colorf};
 use crate::world::world::World;
-use std::sync::Arc;
 use crate::tracer::{Tracer, HUGE_VAL_FOR_TIME};
-use std::f32::INFINITY;
 use crate::utils::colorconstant::COLOR_BLACK;
 
 pub struct Whitted
@@ -26,15 +27,21 @@ impl Tracer for Whitted
         }
         else
         {
-            let mut sr = World::hit_objects(worldptr.clone(), ray, INFINITY);
-            if sr.m_ishitting
+            let mut sr = World::hit_objects(worldptr.clone(), ray, f32::INFINITY);
+            if sr.m_hit
             {
                 sr.m_depth = depth;
                 sr.m_ray = *ray;
+                if let material = sr.m_material.clone().unwrap()
+                {
+                    return material.shade(&mut sr);
+                }
+                /*
                 sr.m_material.clone()
                     .map(|material|  material.shade(&mut sr)).unwrap()
+                */
             }
-            else { worldptr.as_ref().m_backgroundcolor }
+            worldptr.as_ref().m_backgroundcolor
         }
     }
 
@@ -46,8 +53,8 @@ impl Tracer for Whitted
         }
         else
         {
-            let mut sr = World::hit_objects(worldptr.clone(), ray, INFINITY);
-            if sr.m_ishitting
+            let mut sr = World::hit_objects(worldptr.clone(), ray, f32::INFINITY);
+            if sr.m_hit
             {
                 sr.m_depth = depth;
                 sr.m_ray = *ray;

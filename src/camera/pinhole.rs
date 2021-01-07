@@ -1,13 +1,14 @@
+use cgmath::{Vector3, Vector2, Zero, ElementWise, InnerSpace};
+use rand::Rng;
+use std::sync::Arc;
+
 use crate::{camera::{CamStruct, Camera},
             ray::Ray,
             world::world::World};
-
-use cgmath::{Vector3, Vector2, Zero, ElementWise, InnerSpace};
-use rand::Rng;
 use crate::utils::colorconstant::COLOR_BLACK;
 use crate::tracer::Tracer;
 use crate::output::OutputManager;
-use std::sync::Arc;
+
 
 pub struct Pinhole
 {

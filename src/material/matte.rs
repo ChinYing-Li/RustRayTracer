@@ -1,14 +1,15 @@
+use cgmath::{InnerSpace, Vector3, Zero};
+use std::sync::Arc;
+use std::any::type_name;
+
 use crate::brdf::lambertian::Lambertian;
 use crate::world::shaderec::ShadeRec;
-use std::sync::Arc;
 use crate::material::Material;
 use crate::utils::color::Colorf;
 use crate::brdf::BRDF;
-use cgmath::{InnerSpace, Vector3, Zero};
 use crate::light::Light;
 use crate::utils::colorconstant::COLOR_BLACK;
 use crate::ray::Ray;
-use std::any::type_name;
 use crate::tracer::Tracer;
 
 #[derive(Clone, Debug)]
@@ -23,6 +24,21 @@ impl Matte
     pub fn new(ambient_brdf: Arc<Lambertian>, diffuse_brdf: Arc<Lambertian>) -> Matte
     {
         Matte{ m_ambient_brdf: ambient_brdf, m_diffuse_brdf: diffuse_brdf}
+    }
+
+    pub fn set_ka(&mut self, ka: f32)
+    {
+        Arc::get_mut(&mut self.m_ambient_brdf).unwrap().set_kd(ka);
+    }
+
+    pub fn set_kd(&mut self, kd: f32)
+    {
+        Arc::get_mut(&mut self.m_diffuse_brdf).unwrap().set_kd(kd);
+    }
+
+    pub fn set_cd(&mut self, clr: Colorf)
+    {
+
     }
 }
 

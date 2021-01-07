@@ -1,5 +1,6 @@
-use crate::sampler::Sampler;
 use cgmath::{Vector2, Vector3};
+
+use crate::sampler::Sampler;
 
 #[derive(Clone, Debug)]
 pub struct DummySampler
