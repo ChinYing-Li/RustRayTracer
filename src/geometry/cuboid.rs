@@ -11,6 +11,7 @@ use std::f32::INFINITY;
 use crate::math::float_cmp::{max, min};
 use crate::geometry::{Geometry, KEPSILON, Shadable, GeomError, Boundable};
 use crate::utils::color::Colorf;
+use crate::utils::colorconstant::COLOR_WHITE;
 
 #[derive(Clone)]
 pub struct Cuboid
@@ -33,13 +34,13 @@ pub enum Face
 
 impl Cuboid
 {
-    pub fn new(vec0: Vector3<f32>, vec1: Vector3<f32>, color: Colorf) -> Cuboid
+    pub fn new(vec0: Vector3<f32>, vec1: Vector3<f32>) -> Cuboid
     {
         Cuboid
         {
             m_vec0: vec0,
             m_vec1: vec1,
-            m_color: color,
+            m_color: COLOR_WHITE,
             m_material: None
         }
     }

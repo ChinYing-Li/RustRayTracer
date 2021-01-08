@@ -7,30 +7,28 @@ use crate::ray::Ray;
 use crate::material::Material;
 use crate::material::phong::Phong;
 use crate::tracer::Tracer;
-use crate::brdf::perfectspec::PerfectSpecular;
+use crate::brdf::{BRDF,
+                  perfectspec::PerfectSpecular,
+                  lambertian::Lambertian,
+                  glossyspec::GlossySpecular};
 
-use crate::brdf::BRDF;
-use crate::brdf::lambertian::Lambertian;
-use crate::brdf::glossyspec::GlossySpecular;
-
+#[derive(Clone, Debug)]
 pub struct Reflective
 {
-    m_phong: Phong,
+    m_phong: Arc<Phong>,
     m_reflective_brdf: Arc<PerfectSpecular>,
 }
 
 impl Reflective
 {
-    pub fn new(ambient_brdf: Arc<Lambertian>,
-               diffuse_brdf: Arc<Lambertian>,
-               spec_brdf: Arc<GlossySpecular>,
+    pub fn new(phong: Arc<Phong>,
                 kr: f32,
                 cr: Colorf)
     -> Reflective
     {
         Reflective
         {
-            m_phong: Phong::new(ambient_brdf, diffuse_brdf, spec_brdf),
+            m_phong: phong,
             m_reflective_brdf: Arc::new(PerfectSpecular::new(kr, cr))
         }
     }

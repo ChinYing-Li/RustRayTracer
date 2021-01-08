@@ -89,7 +89,7 @@ fn main()
                  Colorf::new(0.6, 0.7, 0.8),
                  Colorf::new(0.9, 0.2, 0.3),
                  Colorf::new(0.0, 1.0, 1.0),
-                 ];
+    ];
     let objlen= world.m_objects.len();
     let materials: Vec<Reflective> = (0..objlen)
         .collect::<Vec<_>>()

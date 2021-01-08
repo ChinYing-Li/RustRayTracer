@@ -10,6 +10,9 @@ use crate::geometry::{Geometry, Shadable, Concrete};
 use crate::light::ambient::Ambient;
 use crate::light::Light;
 use crate::tracer::Tracer;
+use crate::tracer::whitted::Whitted;
+use crate::tracer::raycast::RayCast;
+use crate::utils::colorconstant::COLOR_WHITE;
 
 #[derive(Debug)]
 pub struct World
@@ -19,21 +22,21 @@ pub struct World
     pub m_objects: Vec<Arc<Mutex<dyn Concrete>>>,
     pub m_ambientlight: Arc<dyn Light>,
     pub m_lights: Vec<Arc<dyn Light>>,
-    pub m_tracer: Arc<dyn Tracer>,
+    pub m_tracer: Arc<dyn Tracer>, // TODO: Holy crap, we don't even use member tracer in World
 }
 
 impl World
 {
-    pub fn new(viewplane: Box<ViewPlane>) -> World
+    pub fn new(viewplane: Box<ViewPlane>, tracer: &str) -> World
     {
         World
         {
             m_backgroundcolor: Colorf::new(0.0, 0.0, 0.0),
             m_viewplaneptr: viewplane,
             m_objects: Vec::new(),
-            m_ambientlight: Arc::new(Ambient::new(Colorf::new(1.0 , 1.0, 1.0))),
+            m_ambientlight: Arc::new(Ambient::new(COLOR_WHITE)),
             m_lights: Vec::with_capacity(30),
-            m_tracer: Arc::new(Whitted::new()),
+            m_tracer: World::get_tracer(tracer),
         }
     }
 
@@ -112,12 +115,17 @@ impl World
 
     pub fn get_dummy() -> World
     {
-        World::new(Box::new(ViewPlane::get_dummy()))
+        World::new(Box::new(ViewPlane::get_dummy()), "whitted")
     }
-    /*pub fn trace_ray_with_internal_tracer(&self) -> Colorf
+
+    fn get_tracer(name: &str) -> Arc<dyn Tracer>
     {
-        self.m_tracer.trace_ray()
-    }*/
+        return match name
+        {
+            "whitted" => Arc::new(Whitted::new()),
+            _ => Arc::new(RayCast::new())
+        }
+    }
 }
 
 #[cfg(test)]
@@ -165,7 +173,7 @@ mod WorldSphereTest
         let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(sampler)));
         let mut imgwriter = Box::new(ImageWriter::new("filedest", 100, 100));
 
-        World::new(boxed_vp)
+        World::new(boxed_vp, "whitted")
     }
 
     fn setUpSphere() -> Sphere
@@ -201,7 +209,7 @@ mod WorldSphereTest
 
         let mut sampler = MultiJittered::new(256, 1);
         let vp = Box::new(ViewPlane::new(Arc::new(sampler)));
-        let mut sr = ShadeRec::new(Arc::new(World::new(vp)));
+        let mut sr = ShadeRec::new(Arc::new(World::new(vp, "whitted")));
 
         let mut tmin = 100.0;
         let sphere = setUpSphere();
