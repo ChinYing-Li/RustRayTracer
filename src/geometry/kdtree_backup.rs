@@ -1,13 +1,16 @@
 use std::sync::Arc;
 use cgmath::{Vector3, Zero, ElementWise, Array};
 use std::cmp::{max, min, Ordering};
-use crate::geometry::kdtree::EdgeType::{ET_start, ET_end};
+use crate::geometry::kdtree_backup::EdgeType::{ET_start, ET_end};
+use arrayvec::ArrayVec;
 use std::f32::INFINITY;
+use std::fmt::{Debug, Formatter};
 use std::fmt;
 use cgmath::num_traits::Inv;
+use std::ptr::null;
 use std::borrow::Borrow;
 use obj::Obj;
-// use std::collections::hash_map::DefaultHasher;
+use std::collections::hash_map::DefaultHasher;
 
 use crate::world::shaderec::ShadeRec;
 use crate::ray::Ray;
@@ -16,12 +19,11 @@ use crate::material::Material;
 use crate::utils::color::Colorf;
 use crate::geometry::{Boundable, Geometry, GeomError, BoundedConcrete, Shadable};
 use crate::geometry::bbox::BBox;
-use std::ptr::null;
 
-// TODO: Fix fatal bugs in this implementation
+// TODO: Fix fatal bugs in this implementation; this is the backup
 /// KDTree is implemented for accelerating ray tracing. The implementation takes reference from
 /// "Physically Based Rendering: From Theory To Implementation" by Matt Pharr, Wenzel Jakob, and Greg Humphreys.
-pub struct KDTree<T> where T: BoundedConcrete + Clone
+pub struct KDTree_R<T> where T: BoundedConcrete + Clone
 {
     pub m_primitives: Vec<T>,
     pub m_sorted_indices: Vec<u32>,
@@ -43,26 +45,26 @@ pub struct KDTree<T> where T: BoundedConcrete + Clone
     m_material: Option<Arc<dyn Material>>,
 }
 
-impl<T> KDTree<T> where T: BoundedConcrete + Clone
+impl<T> KDTree_R<T> where T: BoundedConcrete + Clone
 {
     const MAX_KDTREE_TASKS: u8 = 64;
 
     pub fn new(prim_vec: Vec<T>,
-                intersect_cost: f32,
-                traversal_cost: f32,
-                empty_bonus: f32,
-                max_prim_per_node: u8,
-                max_depth: u32) -> KDTree<T>
+               intersect_cost: f32,
+               traversal_cost: f32,
+               empty_bonus: f32,
+               max_prim_per_node: u8,
+               max_depth: u32) -> KDTree_R<T>
     {
         let prim_vec_len = prim_vec.len();
-        KDTree
+        KDTree_R
         {
             m_primitives: prim_vec.clone(),
             m_sorted_indices: Vec::with_capacity(prim_vec_len),
 
             m_max_prim_per_node: max_prim_per_node,
             m_max_depth: if max_depth == 0 { (8.0 + (1.3 * prim_vec_len as f32).floor()) as u32 }
-                        else { max_depth },
+            else { max_depth },
             m_bounds: BBox::new(Vector3::zero(), Vector3::zero()),
 
             m_empty_bonus: empty_bonus,
@@ -89,44 +91,31 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
 
         // Allocate memory for kd-tree construction
         let mut edges_vec = vec![vec![ BoundEdge::default(); 2 * self.m_primitives.len()]; 3];
-        // let mut edges = edges_vec.iter_mut().map(|v| v.as_mut_slice()).collect();
+        let mut edges = edges_vec.iter_mut().map(|v| v.as_mut_slice()).collect();
 
-        let mut prims0_vec = vec![0_u32; self.m_primitives.len()];
-        // let prims0 = prims0_vec.as_mut_slice();
+        let mut prims0_vec = vec![0_u16; self.m_primitives.len()];
+        let prims0 = prims0_vec.as_mut_slice();
 
-        let mut prims1_vec = vec![0_u32; (self.m_max_depth + 1) as usize * self.m_primitives.len()];
-        // let prims1 = prims1_vec.as_mut_slice();
+        let mut prims1_vec = vec![0_u16; (self.m_max_depth + 1) as usize * self.m_primitives.len()];
+        let prims1 = prims1_vec.as_mut_slice();
 
-        let mut vec_prim_nums: Vec<u32> = (0..self.m_primitives.len() as u32).collect();
-        // let prim_nums = vec_prim_nums.as_mut_slice();
+        let mut arr_prim_nums: Vec<u32> = (0..self.m_primitives.len() as u32).collect();
+        let prim_nums = arr_prim_nums.as_mut_slice();
 
         let bounds = self.m_bounds.clone();
         let n_primitives = self.m_primitives.len() as u32;
-        let max_depth = self.m_max_depth;
-
-        KDTree::built_tree(self, 0,
-                           &bounds, &vec_bbox,
-                            &mut vec_prim_nums, n_primitives,
-                           max_depth, &mut edges_vec,
-                           &mut prims0_vec, 0,
-                           &mut prims1_vec, 0,
-                           0);
+        let max_depth = self.m_max_depth.clone();
+        KDTree_R::built_tree(self, 0, &bounds, &vec_bbox,
+                           prim_nums, n_primitives, max_depth,
+                           &mut edges, prims0, prims1, 0);
     }
 
     /**
      * This method builds the KD-tree recursively.
      */
-    fn built_tree(&mut self,
-                  node_num: usize,
-                  node_bbox: &BBox,
-                  all_prim_bbox: &Vec<BBox>,
-                  prim_nums: &mut Vec<u32>,
-                  n_primitives: u32,
-                  depth: u32,
-                  edges_ref: &mut Vec<Vec<BoundEdge>>,
-                  prims0: &mut Vec<u32>, prims0_offset: u32,
-                  prims1: &mut Vec<u32>, prims1_offset: u32,
-                  mut bad_refine: u8)
+    fn built_tree(&mut self, node_num: usize, node_bbox: &BBox, all_prim_bbox: &Vec<BBox>,
+                  prim_nums: &mut [u32], n_primitives: u32, depth: u32,
+                  edges_ref: &mut Vec<&mut [BoundEdge]>, prims0: &mut [u16], prims1: &mut [u16], mut bad_refine: u8)
     {
         assert_eq!(node_num as u32, self.m_next_free_node_slot);
 
@@ -157,25 +146,28 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
         let diff = node_bbox.get_diagonal();
 
         // Choose the axis to split
-        let mut axis = node_bbox.maximum_extent();
-        let mut retries = 0_u8;
+        let mut axis = node_bbox.maximum_extent() as usize;
+        let mut retries = 0;
 
         loop
         {
             for i in 0..n_primitives as usize
             {
                 let _prim_num = prim_nums[i];
-                let bbox = &all_prim_bbox[_prim_num as usize];
+                let bbox = all_prim_bbox[_prim_num as usize].clone();
 
-                edges_ref[axis][2*i] = BoundEdge::new(bbox.m_vertex_0[axis as usize], _prim_num, true);
-                edges_ref[axis][2*i + 1] = BoundEdge::new(bbox.m_vertex_1[axis as usize], _prim_num, false);
+                unsafe
+                    {
+                        edges_ref[axis][2*i] = BoundEdge::new(bbox.m_vertex_0[axis as usize], _prim_num, true);
+                        edges_ref[axis][2*i + 1] = BoundEdge::new(bbox.m_vertex_1[axis as usize], _prim_num, false);
+                    }
             }
 
             // Sort the edges.
-            edges_ref[axis].sort_by(KDTree::<T>::edge_sort);
+            edges_ref[axis].sort_by(KDTree_R::<T>::edge_sort);
 
             // Compute costs of all splits for axis to find the best cost.
-            let mut n_below = 0_u32;
+            let mut n_below = 0 as usize;
             let mut n_above = n_primitives;
 
             for i in 0..(2 * n_primitives) as usize
@@ -184,9 +176,9 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
                 {
                     n_above -= 1;
                 }
-                let edge_t = edges_ref[axis][i].m_t;
-                if edge_t > KDTree::<T>::vector3_index_get(&node_bbox.m_vertex_0, axis as u8)
-                    && edge_t < KDTree::<T>::vector3_index_get(&node_bbox.m_vertex_1, axis as u8)
+                let edgeT = edges_ref[axis][i].m_t;
+                if edgeT > KDTree_R::<T>::vector3_index_get(&node_bbox.m_vertex_0, axis as u8)
+                    && edgeT < KDTree_R::<T>::vector3_index_get(&node_bbox.m_vertex_1, axis as u8)
                 {
                     // Compute cost for aplit at this edge.
                     // 1. Compute child surface areas.
@@ -194,9 +186,9 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
                     let axis1 = (axis + 2) % 3;
 
                     let below_surfacearea = 2.0 * (diff[axis0] * diff[axis1]
-                        + (edge_t - node_bbox.m_vertex_0[axis]) * (diff[axis0] + diff[axis1]));
+                        + (edgeT - node_bbox.m_vertex_0[axis]) * (diff[axis0] + diff[axis1]));
                     let above_surfacearea = 2.0 * (diff[axis0] * diff[axis1]
-                        + (node_bbox.m_vertex_1[axis] - edge_t) * (diff[axis0] + diff[axis1]));
+                        + (node_bbox.m_vertex_1[axis] - edgeT) * (diff[axis0] + diff[axis1]));
 
                     let percentage_below = below_surfacearea * inv_total_SA;
                     let percentage_above = above_surfacearea * inv_total_SA;
@@ -223,27 +215,26 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
             {
                 axis = (axis + 1) % 3;
                 retries += 1;
+                // TODO a goto statement in c++ code!!!
             }
-            else
-            { break; }
+            else { break; }
         }
+
 
         bad_refine += if best_cost > old_cost { 1 } else { 0 };
         if (best_cost > 4.0 * old_cost && n_primitives < 16) || best_axis == 4 || bad_refine == 3
         {
-            self.m_nodes[node_num].create_leaf(prim_nums,
-                                               n_primitives as usize,
-                                               &mut self.m_sorted_indices);
+            self.m_nodes[node_num as usize].create_leaf(prim_nums, n_primitives as usize, &mut self.m_sorted_indices);
         }
 
         // Classify primitives wrt the split.else
-        let mut n0 = prims0_offset as usize;
-        let mut n1 = prims1_offset as usize;
+        let mut n0 = 0;
+        let mut n1 = 0;
         for i in 0..best_offset
         {
             if edges_ref[best_axis][i].m_type == EdgeType::ET_start
             {
-                prims0[n0] = edges_ref[best_axis][i].m_prim_num;
+                prims0[n0] = edges_ref[best_axis][i].m_prim_num as u16;
                 n0 += 1;
             }
         }
@@ -251,31 +242,27 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
         {
             if edges_ref[best_axis][i].m_type == EdgeType::ET_start
             {
-                prims0[n1] = edges_ref[best_axis][i].m_prim_num;
+                prims0[n1] = edges_ref[best_axis][i].m_prim_num as u16;
                 n1 += 1;
             }
         }
 
-        let t_split = edges_ref[best_axis][best_offset].m_t;
+        let t_split = edges_ref[best_axis as usize][best_offset].m_t;
         let mut bbox0 = (*node_bbox).clone();
         let mut bbox1 = (*node_bbox).clone();
-        KDTree::<T>::vector3_index_set(&mut bbox0.m_vertex_1, best_axis as u8, t_split);
-        KDTree::<T>::vector3_index_set(&mut bbox1.m_vertex_0, best_axis as u8, t_split);
+        KDTree_R::<T>::vector3_index_set(&mut bbox0.m_vertex_1, best_axis as u8, t_split);
+        KDTree_R::<T>::vector3_index_set(&mut bbox1.m_vertex_0, best_axis as u8, t_split);
 
         self.built_tree(node_num + 1, &bbox0, all_prim_bbox,
                         prim_nums, n0 as u32, depth - 1, edges_ref,
-                        prims0, prims0_offset,
-                        prims1, prims1_offset + n_primitives,
-                        bad_refine);
+                        prims0, &mut prims1[n_primitives as usize..], bad_refine);
 
         let above_child = self.m_next_free_node_slot as usize;
         self.m_nodes[node_num].create_interior(best_axis as u8, above_child as u32, t_split);
 
         self.built_tree(above_child, &bbox1, all_prim_bbox,
-                        prim_nums, n1 as u32, depth - 1, edges_ref,
-                        prims0, prims0_offset,
-                        prims1, prims1_offset + n_primitives,
-                        bad_refine);
+                        prim_nums, n1 as u32, depth + 1, edges_ref,
+                        prims0, &mut prims1[n_primitives as usize..], bad_refine);
 
     }
 
@@ -328,8 +315,7 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
 
         let mut tasks = vec![KDTasks::default(); 64];
         let mut task_offset = 0;
-
-        let mut hit: (bool, u32) = (false, 0);
+        let mut result: (bool, u32) = (false, 0);
         let mut node = self.m_nodes.as_ptr();
         unsafe
             {
@@ -344,7 +330,7 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
                                     let index = node_ref.m_pub_union.m_one_primitive;
                                     if self.m_primitives[index as usize].shadow_hit(shadowray, time)
                                     {
-                                        hit = (true, index as u32);
+                                        result = (true, index as u32);
                                     }
                                 }
                             _ =>
@@ -355,7 +341,7 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
                                         let index = self.m_sorted_indices[i];
                                         if self.m_primitives[index as usize].shadow_hit(shadowray, &mut time_temp)
                                         {
-                                            hit = (true, index);
+                                            result = (true, index);
                                         }
                                     }
                                 }
@@ -372,13 +358,14 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
                     else
                     {
                         let axis = node_ref.get_split_axis();
-                        let t_plane = KDTree::<T>::vector3_index_get(&inv_dir,axis) * (node_ref.get_split_position() - KDTree::<T>::vector3_index_get(&shadowray.m_origin, axis));
+                        let t_plane = KDTree_R::<T>::vector3_index_get(&inv_dir,axis)
+                            * (node_ref.get_split_position() - KDTree_R::<T>::vector3_index_get(&shadowray.m_origin, axis));
 
                         let mut first_child = null();
                         let mut second_child = null();
-                        match KDTree::<T>::vector3_index_get(&shadowray.m_direction, axis) < node_ref.get_split_position()
-                            || (KDTree::<T>::vector3_index_get(&shadowray.m_direction, axis) == node_ref.get_split_position()
-                            && KDTree::<T>::vector3_index_get(&shadowray.m_direction, axis) < 0.0)
+                        match KDTree_R::<T>::vector3_index_get(&shadowray.m_direction, axis) < node_ref.get_split_position()
+                            || (KDTree_R::<T>::vector3_index_get(&shadowray.m_direction, axis) == node_ref.get_split_position()
+                            && KDTree_R::<T>::vector3_index_get(&shadowray.m_direction, axis) < 0.0)
                         {
                             true =>
                                 unsafe {
@@ -411,15 +398,15 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
     }
 }
 
-impl<T> fmt::Debug for KDTree<T> where T: BoundedConcrete + Clone
+impl<T> Debug for KDTree_R<T> where T: BoundedConcrete + Clone
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         f.debug_struct("KDTree")
             .finish()
     }
 }
 
-impl<T> Geometry for KDTree<T> where T: BoundedConcrete + Clone
+impl<T> Geometry for KDTree_R<T> where T: BoundedConcrete + Clone
 {
     fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
     {
@@ -434,7 +421,7 @@ impl<T> Geometry for KDTree<T> where T: BoundedConcrete + Clone
     }
 }
 
-impl<T> Shadable for KDTree<T> where T: BoundedConcrete + Clone
+impl<T> Shadable for KDTree_R<T> where T: BoundedConcrete + Clone
 {
     fn get_material(&self) -> Arc<dyn Material>
     {
@@ -450,8 +437,8 @@ impl<T> Shadable for KDTree<T> where T: BoundedConcrete + Clone
     /// Return a tuple (does_hit: bool, triangle_index: usize)
     fn shadow_hit(&self, shadowray: &Ray, tmin: &mut f32) -> bool
     {
-        let mut dummy_sr = ShadeRec::get_dummy();
-        match self.custom_shadow_hit(shadowray, tmin, &mut dummy_sr)
+        let mut dummy = ShadeRec::get_dummy();
+        match self.custom_shadow_hit(shadowray, tmin, &mut dummy)
         {
             (true, index) => true,
             (false, index) => false,
@@ -517,7 +504,7 @@ impl KDTreeNode
         }
     }
 
-    fn create_leaf(&mut self, prim_nums: &mut Vec<u32>, np: usize, primitive_indices: &mut Vec<u32>)
+    fn create_leaf(&mut self, prim_nums: &mut [u32], np: usize, primitive_indices: &mut Vec<u32>)
     {
         unsafe // Modify unions
             {
@@ -558,7 +545,7 @@ union KDTreeNode_pub_union
 {
     m_split: f32,                 // Interior
     m_one_primitive: u8,          // Leaf
-    m_prim_indices_offset: u32, // Leaf
+    m_prim_indices_offset: u32,   // Leaf
 }
 
 #[derive(Copy, Clone)]

@@ -69,14 +69,11 @@ fn main()
 
 
     let mut sphereA = Arc::new(Mutex::new(Sphere::new(10.0,
-                                                      Vector3::new(-12.0, 20.0, 10.0),
-                                                      Colorf::new(1.0, 1.0, 0.0))));
+                                                      Vector3::new(-12.0, 20.0, 10.0))));
     let mut sphereB = Arc::new(Mutex::new(Sphere::new(15.0,
-                                                      Vector3::new(30.0, 10.0, 15.0),
-                                                      Colorf::new(1.0, 0.0, 1.0))));
+                                                      Vector3::new(30.0, 10.0, 15.0))));
     let mut sphereC = Arc::new(Mutex::new(Sphere::new(50.0,
-                                                      Vector3::new(30.0, 70.0, 50.0),
-                                                      Colorf::new(0.9, 0.2, 0.3))));
+                                                      Vector3::new(30.0, 70.0, 50.0))));
     let mut triangle = Arc::new(Mutex::new(Triangle::new(Vector3::new(-400.0, 0.0, 0.0),
                                                          Vector3::new(400.0, 0.0, 0.0),
                                                          Vector3::new(0.0, 800.0, 0.0))));

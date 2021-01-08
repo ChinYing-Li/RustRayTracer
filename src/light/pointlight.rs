@@ -1,11 +1,11 @@
 use cgmath::{Vector3, MetricSpace};
+use std::f32::INFINITY;
+
 use crate::light::Light;
 use crate::utils::color::Colorf;
 use crate::world::shaderec::ShadeRec;
 use crate::cgmath::InnerSpace;
 use crate::ray::Ray;
-use crate::geometry::Shadable;
-use std::f32::INFINITY;
 
 #[derive(Debug)]
 pub struct PointLight

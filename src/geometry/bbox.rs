@@ -39,7 +39,7 @@ impl BBox
     }
 
     /// Find the axis of which the bbox' dimension is largest.
-    pub fn maximum_extent(&self) -> u8
+    pub fn maximum_extent(&self) -> usize
     {
         let diag = self.get_diagonal();
         return if diag.x > diag.y && diag.x > diag.z { 0 } // axis x
@@ -62,39 +62,39 @@ impl BBox
     {
         let mut t_min = Vector3::zero();
         let mut t_max =  Vector3::zero();
-        let INV_VEL = Vector3::new(1.0, 1.0, 1.0).div_element_wise(incomeray.m_direction);
+        let inv_vel = Vector3::new(1.0, 1.0, 1.0).div_element_wise(incomeray.m_direction);
 
-        if INV_VEL.x >= 0.0
+        if inv_vel.x >= 0.0
         {
-            t_min.x = (self.m_vertex_0.x - incomeray.m_origin.x) * INV_VEL.x;
-            t_max.x = (self.m_vertex_1.x - incomeray.m_origin.x) * INV_VEL.x;
+            t_min.x = (self.m_vertex_0.x - incomeray.m_origin.x) * inv_vel.x;
+            t_max.x = (self.m_vertex_1.x - incomeray.m_origin.x) * inv_vel.x;
         }
         else
         {
-            t_min.x = (self.m_vertex_1.x - incomeray.m_origin.x) * INV_VEL.x;
-            t_max.x = (self.m_vertex_0.x - incomeray.m_origin.x) * INV_VEL.x;
+            t_min.x = (self.m_vertex_1.x - incomeray.m_origin.x) * inv_vel.x;
+            t_max.x = (self.m_vertex_0.x - incomeray.m_origin.x) * inv_vel.x;
         }
 
-        if INV_VEL.y >= 0.0
+        if inv_vel.y >= 0.0
         {
-            t_min.y = (self.m_vertex_0.y - incomeray.m_origin.y) * INV_VEL.y;
-            t_max.y = (self.m_vertex_1.y - incomeray.m_origin.y) * INV_VEL.y;
+            t_min.y = (self.m_vertex_0.y - incomeray.m_origin.y) * inv_vel.y;
+            t_max.y = (self.m_vertex_1.y - incomeray.m_origin.y) * inv_vel.y;
         }
         else
         {
-            t_min.y = (self.m_vertex_1.y - incomeray.m_origin.y) * INV_VEL.y;
-            t_max.y = (self.m_vertex_0.y - incomeray.m_origin.y) * INV_VEL.y;
+            t_min.y = (self.m_vertex_1.y - incomeray.m_origin.y) * inv_vel.y;
+            t_max.y = (self.m_vertex_0.y - incomeray.m_origin.y) * inv_vel.y;
         }
 
-        if INV_VEL.z >= 0.0
+        if inv_vel.z >= 0.0
         {
-            t_min.z = (self.m_vertex_0.z - incomeray.m_origin.z) * INV_VEL.z;
-            t_max.z = (self.m_vertex_1.z - incomeray.m_origin.z) * INV_VEL.z;
+            t_min.z = (self.m_vertex_0.z - incomeray.m_origin.z) * inv_vel.z;
+            t_max.z = (self.m_vertex_1.z - incomeray.m_origin.z) * inv_vel.z;
         }
         else
         {
-            t_min.z = (self.m_vertex_1.z - incomeray.m_origin.z) * INV_VEL.z;
-            t_max.z = (self.m_vertex_0.z - incomeray.m_origin.z) * INV_VEL.z;
+            t_min.z = (self.m_vertex_1.z - incomeray.m_origin.z) * inv_vel.z;
+            t_max.z = (self.m_vertex_0.z - incomeray.m_origin.z) * inv_vel.z;
         }
 
         let mut t_min_max_component = max( t_min.x, max( t_min.y, t_min.z));
@@ -144,6 +144,7 @@ mod BBoxTest
     use crate::world::viewplane::ViewPlane;
     use crate::tracer::whitted::Whitted;
     use crate::sampler::mutijittered::MultiJittered;
+    use std::sync::Arc;
 
     #[test]
     fn check_hit_small_x()
@@ -154,7 +155,7 @@ mod BBoxTest
 
         let mut sampler = MultiJittered::new(256, 1);
         let vp = Box::new(ViewPlane::new(Arc::new(sampler)));
-        let mut sr = ShadeRec::new(Arc::new(World::new(vp)));
+        let mut sr = ShadeRec::new(Arc::new(World::new(vp, "whitted")));
 
         let ray = Ray::new(Vector3::new(-10.0, -10.0, 0.0),
                                 Vector3::new(5.0, 3.5, 4.0));

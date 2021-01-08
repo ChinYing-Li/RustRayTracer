@@ -181,7 +181,7 @@ mod WorldSphereTest
         let matte = Matte::new(
                             Arc::new(Lambertian::new(2.0, COLOR_RED)),
                             Arc::new(Lambertian::new(1.0, COLOR_RED)), );
-        let mut sphere = Sphere::new(5.0, Vector3::new(0.0, 0.0, 0.0), COLOR_RED);
+        let mut sphere = Sphere::new(5.0, Vector3::new(0.0, 0.0, 0.0));
         sphere.set_material(Arc::new(matte));
         sphere
     }
