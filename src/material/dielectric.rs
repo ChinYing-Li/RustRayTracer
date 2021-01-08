@@ -1,16 +1,18 @@
-use crate::utils::color::Colorf;
-use std::sync::Arc;
-use crate::material::Material;
-use crate::world::shaderec::ShadeRec;
-use crate::material::phong::Phong;
-use crate::brdf::fresnelreflector::FresnelReflector;
-use crate::brdf::fresneltransmitter::FresnelTransmitter;
 use cgmath::{Vector3, Zero, InnerSpace};
-use crate::brdf::{BRDF, Transmitter};
-use crate::ray::Ray;
 use std::f32::INFINITY;
-use crate::utils::colorconstant::COLOR_BLACK;
 use std::ops::Deref;
+use std::sync::Arc;
+
+use crate::utils::colorconstant::COLOR_BLACK;
+use crate::utils::color::Colorf;
+use crate::world::shaderec::ShadeRec;
+use crate::ray::Ray;
+use crate::material::{Material,
+                      phong::Phong};
+use crate::brdf::{BRDF,
+                  fresnelreflector::FresnelReflector,
+                  fresneltransmitter::FresnelTransmitter,
+                  Transmitter};
 
 /// Calls FresnelReflector::sampleFunc, FresnelTransmitter::total_internal_reflection
 /// and FresnelTransmitter::sampleFunc

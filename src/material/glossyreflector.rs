@@ -1,13 +1,16 @@
-use crate::material::phong::Phong;
-use crate::brdf::glossyspec::GlossySpecular;
+use cgmath::{Vector3, Zero, InnerSpace};
 use std::sync::Arc;
-use crate::material::Material;
+
 use crate::utils::color::Colorf;
 use crate::world::shaderec::ShadeRec;
 use crate::ray::Ray;
-use crate::brdf::BRDF;
-use cgmath::{Vector3, Zero, InnerSpace};
-use std::borrow::BorrowMut;
+use crate::material::Material;
+use crate::material::phong::Phong;
+use crate::tracer::Tracer;
+use crate::brdf::{BRDF,
+                  perfectspec::PerfectSpecular,
+                  lambertian::Lambertian,
+                  glossyspec::GlossySpecular};
 
 pub struct GlossyReflector
 {

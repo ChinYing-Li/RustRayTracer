@@ -18,7 +18,6 @@ use raytracer::world::{shaderec::ShadeRec,
 
 use raytracer::ray::Ray;
 use raytracer::output::{imagewriter::ImageWriter, OutputManager};
-
 use raytracer::camera::{Camera,
                         pinhole::Pinhole};
 use raytracer::brdf::lambertian::Lambertian;
@@ -31,24 +30,20 @@ use raytracer::utils::colorconstant::{COLOR_BLUE,
 use raytracer::light::{pointlight::PointLight,
                        ambient::Ambient,
                        ambientocc::AmbientOccluder};
-
 use raytracer::material::{glossyreflector::GlossyReflector,
                           Material,
                           matte::Matte,
                           phong::Phong,
                           reflector::Reflective};
-
-use raytracer::geometry::triangle::Triangle;
-
 use raytracer::sampler::{Sampler,
                          mutijittered::MultiJittered};
 use raytracer::geometry::{cuboid::Cuboid,
                           kdtree::KDTree,
                           instance::Instance,
+                          triangle::Triangle,
                           trimesh::{TriMesh, MeshTriangle, create_meshtriangles},
+                          Shadable,
                           sphere::Sphere};
-use raytracer::geometry::Shadable;
-
 
 fn main()
 {
@@ -70,7 +65,7 @@ fn main()
 
     let mut sphereA = Arc::new(Mutex::new(Sphere::new(10.0,
                                                       Vector3::new(-12.0, 20.0, 10.0),
-                                                      Colorf::new(1.0, 1.0, 0.0))));
+                                                      Colorf::new(0.3, 0.3, 0.0))));
     let mut sphereB = Arc::new(Mutex::new(Sphere::new(15.0,
                                                       Vector3::new(30.0, 10.0, 15.0),
                                                       Colorf::new(1.0, 0.0, 1.0))));
@@ -107,7 +102,7 @@ fn main()
     let mut ph = setUpCamera();
     ph.m_distance_from_vp = 100.0;
     ph.m_zoom = 1.0;
-    ph.m_core.m_exposure_time = 0.05;
+    ph.m_core.m_exposure_time = 0.2;
     let worldptr = Arc::new(world);
     ph.render_scene(worldptr, &tracer, &mut imgwriter,1.0);
     imgwriter.output();
@@ -118,8 +113,6 @@ fn set_up_lights(world: &mut World)
     let point = PointLight::new(0.2, COLOR_WHITE, Vector3::new(-30.0, 20.0, -20.0));
     // let point1 = PointLight::new(0.5, COLOR_RED, Vector3::new(30.0, 10.0, -5.0));
     // let point2 = PointLight::new(0.6, COLOR_YELLOW, Vector3::new(70.0, 40.0, 5.0));
-    let mut ambient = Ambient::new(COLOR_WHITE);
-    ambient.set_radiance_scaling_factor(0.02);
     world.add_light(Arc::new(point));
     // world.add_light(Arc::new(point1));
     // world.add_light(Arc::new(point2));
@@ -132,12 +125,11 @@ fn set_up_ambient_occluder(world: &mut World)
     mj.set_map_to_hemisphere(true, 1.0);
     mj.generate_sample_pattern();
 
-    let mut ambocc = AmbientOccluder::new(Colorf::new(0.0, 0.0, 0.0), 0.3, Arc::new(mj));
-    ambocc.set_color(COLOR_WHITE);
+    let mut ambocc = AmbientOccluder::new(COLOR_WHITE, 0.8, Arc::new(mj));
     world.add_light(Arc::new(ambocc));
 
     let mut ambient = Ambient::new(COLOR_WHITE);
-    ambient.set_radiance_scaling_factor(0.05);
+    ambient.set_radiance_scaling_factor(0.02);
     world.set_ambient(Arc::new(ambient));
 }
 
@@ -153,8 +145,8 @@ fn setUpMaterial(r: f32, g: f32, b: f32, material_type: &str) -> Reflective
 
 fn setUpCamera() -> Pinhole
 {
-    let eye = Vector3::new(0.0, -30.0, 30.0);
-    let lookat = Vector3::new(20.0, 40.0, 0.0);
+    let eye = Vector3::new(0.0, -30.0, 40.0);
+    let lookat = Vector3::new(20.0, 10.0, 10.0);
     let up = Vector3::new(0.0, 1.0, 0.0);
     Pinhole::new(eye, lookat, up)
 }

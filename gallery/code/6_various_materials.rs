@@ -203,20 +203,3 @@ fn setUpCamera() -> Pinhole
     let up = Vector3::new(0.0, 1.0, 0.0);
     Pinhole::new(eye, lookat, up)
 }
-/*
-fn create_from_obj(path_to_obj: &str, material_ptr: Arc<dyn Material>) -> KDTree<MeshTriangle>
-{
-    let path = Path::new(path_to_obj);
-    let objdata = Obj::load(path).unwrap().data;
-    let mesh = TriMesh::new(&objdata, material_ptr.clone());
-    let triangles = mesh.create_meshtriangles(&objdata);
-    let mut kdtree_temp = KDTree::<MeshTriangle>::new(triangles,
-                                                 20.0,
-                                                 10.0,
-                                                 10.0,
-                                                 3,
-                                                 0);
-    kdtree_temp.init();
-    drop(mesh);
-    kdtree_temp
-}*/

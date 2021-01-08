@@ -53,7 +53,7 @@ use raytracer::geometry::Shadable;
 
 fn main()
 {
-    let tracer = Whitted::new();
+    let tracer = RayCast::new();
 
     let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(MultiJittered::new(32, 3))));
     let vp_hres = 800;
@@ -85,7 +85,7 @@ fn main()
     let materials: Vec<Matte> = (0..objlen)
         .collect::<Vec<_>>()
         .iter()
-        .map(|x| setUpMaterial(c[*x].m_r, c[*x].m_g, c[*x].m_b, "reflective"))
+        .map(|x| setUpMaterial(c[*x].m_r, c[*x].m_g, c[*x].m_b))
         .collect::<Vec<Matte>>();
 
     for i in 0..objlen
@@ -94,78 +94,20 @@ fn main()
         obj.set_material(Arc::new(materials[i].clone()));
     }
 
-    let glossy_materials: Vec<Arc<dyn Material>> = (0..4).collect::<Vec<_>>().iter()
-        .map(|x| setUpMaterial(rng.gen_range(0.0, 1.0)* (*x) as f32,
-                               rng.gen_range(0.0, 1.0) * (*x) as f32,
-                               rng.gen_range(0.0, 1.0)* (*x) as f32,
-                               "glossy"))
-        .collect::<Vec<Arc<dyn Material>>>();
-
-    let mut rand_uint = 0 as u8;
-    for i in 0..4
-    {
-        rand_uint = thread_rng().gen();
-        let mut obj = world.m_objects[i].lock().unwrap();
-        let index = (rand_uint % 4) as usize;
-        match rand_uint % 3
-        {
-            1 => obj.set_material(matte_materials[index].clone()),
-            2 => obj.set_material(phong_materials[index].clone()),
-            _ => obj.set_material(glossy_materials[index].clone()),
-        }
-    }
-
-    setUpLights(&mut world);
+    setUpAmbientOccluder(&mut world);
     let mut ph = setUpCamera();
     ph.m_distance_from_vp = 100.0;
     ph.m_zoom = 1.0;
-    ph.m_core.m_exposure_time = 0.05;
+    ph.m_core.m_exposure_time = 0.005;
     let worldptr = Arc::new(world);
     ph.render_scene(worldptr, &tracer, &mut imgwriter,1.0);
     imgwriter.output();
 }
 
-fn setUpMaterial(r: f32, g: f32, b: f32, material_type: &str) -> Arc<dyn Material>
+fn setUpMaterial(r: f32, g: f32, b: f32) -> Matte
 {
-    let color = Colorf::new(r, g, b);
-    let random_lambertian = Arc::new(Lambertian::new(0.5*g, color.clone()));
-    let glossy = Arc::new(GlossySpecular::new(r, color.clone()));
-    let phong = Arc::new(Phong::new(random_lambertian.clone(), random_lambertian.clone(),
-                                    glossy.clone()));
-
-    return match material_type
-    {
-        "matte" => // Matte
-            {
-                Arc::new(Matte::new(random_lambertian.clone(), random_lambertian.clone()))
-            }
-        "phong" => // Phong
-            {
-                phong
-            }
-        "glossy" => // GlossyReflector
-            {
-                Arc::new(GlossyReflector::new(phong.clone(), glossy.clone()))
-            }
-        _ =>
-            {
-                Arc::new(Reflective::new(phong.clone(), 0.4, color))
-            }
-    }
-
-}
-
-fn setUpLights(world: &mut World)
-{
-    let point = PointLight::new(0.2, COLOR_WHITE, Vector3::new(-30.0, 20.0, -20.0));
-    let point1 = PointLight::new(0.5, COLOR_RED, Vector3::new(30.0, 10.0, -5.0));
-    let point2 = PointLight::new(0.6, COLOR_YELLOW, Vector3::new(70.0, 40.0, 5.0));
-    let mut ambient = Ambient::new(COLOR_WHITE);
-    ambient.set_radiance_scaling_factor(0.02);
-    world.add_light(Arc::new(point));
-    world.add_light(Arc::new(point1));
-    world.add_light(Arc::new(point2));
-    world.set_ambient(Arc::new(ambient));
+    Matte::new(Arc::new(Lambertian::new(0.5*g, Colorf::new(r, g, b))),
+               Arc::new(Lambertian::new(0.3, Colorf::new(0.5*r, g, 0.5*b))))
 }
 
 fn setUpAmbientOccluder(world: &mut World)
@@ -174,13 +116,9 @@ fn setUpAmbientOccluder(world: &mut World)
     mj.set_map_to_hemisphere(true, 1.0);
     mj.generate_sample_pattern();
 
-    let mut ambocc = AmbientOccluder::new(Colorf::new(0.0, 0.0, 0.0), 0.3, Arc::new(mj));
-    ambocc.set_color(COLOR_BLUE);
-    world.add_light(Arc::new(ambocc));
-
-    let mut ambient = Ambient::new(COLOR_WHITE);
-    ambient.set_radiance_scaling_factor(0.1);
-    world.set_ambient(Arc::new(ambient));
+    let mut ambocc = AmbientOccluder::new(Colorf::new(0.0, 0.1, 0.0), 0.5, Arc::new(mj));
+    ambocc.set_color(COLOR_WHITE);
+    world.set_ambient(Arc::new(ambocc));
 }
 
 fn setUpCamera() -> Pinhole

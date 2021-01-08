@@ -20,6 +20,7 @@ use crate::utils::color::Colorf;
 use crate::geometry::{Boundable, Geometry, GeomError, BoundedConcrete, Shadable};
 use crate::geometry::bbox::BBox;
 
+// TODO: Fix fatal bugs in this implementation
 /// KDTree is implemented for accelerating ray tracing. The implementation takes reference from
 /// "Physically Based Rendering: From Theory To Implementation" by Matt Pharr, Wenzel Jakob, and Greg Humphreys.
 pub struct KDTree<T> where T: BoundedConcrete + Clone

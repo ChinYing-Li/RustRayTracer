@@ -1,7 +1,8 @@
+use cgmath::InnerSpace;
+
 use crate::material::Material;
 use crate::world::shaderec::ShadeRec;
 use crate::utils::color::Colorf;
-use cgmath::InnerSpace;
 use crate::utils::colorconstant::COLOR_BLACK;
 
 pub struct Emissive
