@@ -59,7 +59,7 @@ fn main()
     boxed_vp.set_gamma(1.8);
     boxed_vp.m_maxdepth = 3;
 
-    let mut imgwriter = ImageWriter::new("2_sphere_and_triangle_ambientoccluder.jpg", vp_hres, vp_vres);
+    let mut imgwriter = ImageWriter::new("7_reflective.jpg", vp_hres, vp_vres);
     let mut world = World::new(boxed_vp, "whitted");
 
 
@@ -110,26 +110,13 @@ fn main()
 
 fn set_up_lights(world: &mut World)
 {
-    let point = PointLight::new(0.2, COLOR_WHITE, Vector3::new(-30.0, 20.0, -20.0));
-    // let point1 = PointLight::new(0.5, COLOR_RED, Vector3::new(30.0, 10.0, -5.0));
-    // let point2 = PointLight::new(0.6, COLOR_YELLOW, Vector3::new(70.0, 40.0, 5.0));
-    world.add_light(Arc::new(point));
-    // world.add_light(Arc::new(point1));
-    // world.add_light(Arc::new(point2));
     set_up_ambient_occluder(world);
 }
 
 fn set_up_ambient_occluder(world: &mut World)
 {
-    let mut mj= MultiJittered::new(32, 3);
-    mj.set_map_to_hemisphere(true, 1.0);
-    mj.generate_sample_pattern();
-
-    let mut ambocc = AmbientOccluder::new(COLOR_WHITE, 0.8, Arc::new(mj));
-    world.add_light(Arc::new(ambocc));
-
     let mut ambient = Ambient::new(COLOR_WHITE);
-    ambient.set_radiance_scaling_factor(0.02);
+    ambient.set_radiance_scaling_factor(0.01);
     world.set_ambient(Arc::new(ambient));
 }
 

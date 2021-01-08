@@ -19,19 +19,17 @@ pub struct Sphere
 {
     pub m_radius: f32,
     pub m_center: Vector3<f32>,
-    pub m_color: Colorf,
     pub m_material: Option<Arc<dyn Material>>,
 }
 
 impl Sphere
 {
-    pub fn new(radius: f32, center: Vector3<f32>, color: Colorf) -> Sphere
+    pub fn new(radius: f32, center: Vector3<f32>) -> Sphere
     {
         Sphere
         {
             m_radius: radius,
             m_center: center,
-            m_color: color,
             m_material: None
         }
     }
@@ -98,15 +96,12 @@ impl Boundable for Sphere
 
 impl Shadable for Sphere
 {
-    fn get_color(&self) -> Colorf { self.m_color }
-
-    fn set_color(&mut self, newcolor: Colorf) { self.m_color = newcolor; }
-
     fn get_material(&self) -> Arc<dyn Material>
     {
         if let Some(x) = self.m_material.clone() { x }
         else { panic!("The material for sphere is Not set") }
     }
+
     fn set_material(&mut self, material: Arc<dyn Material>)
     {
         self.m_material = Some(material);

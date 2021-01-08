@@ -422,10 +422,6 @@ impl<T> Geometry for KDTree<T> where T: BoundedConcrete + Clone
 
 impl<T> Shadable for KDTree<T> where T: BoundedConcrete + Clone
 {
-    fn get_color(&self) -> Colorf { unimplemented!() }
-
-    fn set_color(&mut self, newcolor: Colorf) { unimplemented!() }
-
     fn get_material(&self) -> Arc<dyn Material>
     {
         if let Some(x) = self.m_material.clone() { x }

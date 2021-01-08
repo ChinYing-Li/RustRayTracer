@@ -18,7 +18,6 @@ pub struct Cuboid
 {
     pub m_vec0: Vector3<f32>,
     pub m_vec1: Vector3<f32>,
-    pub m_color: Colorf,
     pub m_material: Option<Arc<dyn Material>>,
 }
 
@@ -40,7 +39,6 @@ impl Cuboid
         {
             m_vec0: vec0,
             m_vec1: vec1,
-            m_color: COLOR_WHITE,
             m_material: None
         }
     }
@@ -186,16 +184,6 @@ impl Boundable for Cuboid
 
 impl Shadable for Cuboid
 {
-    fn get_color(&self) -> Colorf
-    {
-        self.m_color
-    }
-
-    fn set_color(&mut self, newcolor: Colorf)
-    {
-        self.m_color = newcolor;
-    }
-
     fn get_material(&self) -> Arc<dyn Material>
     {
         if let Some(x) = self.m_material.clone() { x }
@@ -230,11 +218,11 @@ mod CuboidTest
     {
         let v0 = Vector3::new(0.0, -5.0, 6.0);
         let v1 = Vector3::new(5.0, 0.0, 10.0);
-        let cuboid = Cuboid::new(v0, v1, COLOR_BLACK);
+        let cuboid = Cuboid::new(v0, v1);
 
         let mut sampler = MultiJittered::new(256, 1);
         let vp = Box::new(ViewPlane::new(Arc::new(sampler)));
-        let mut sr = ShadeRec::new(Arc::new(World::new(vp)));
+        let mut sr = ShadeRec::new(Arc::new(World::new(vp, "whitted")));
 
         let ray = Ray::new(Vector3::new(-10.0, -2.0, 8.0),
                            Vector3::new(1.0, 0.0, 0.0));

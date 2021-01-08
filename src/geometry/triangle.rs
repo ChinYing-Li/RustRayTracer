@@ -201,7 +201,7 @@ mod TriangleTest
 
         let mut sampler = MultiJittered::new(256, 1);
         let vp = Box::new(ViewPlane::new(Arc::new(sampler)));
-        let mut sr = ShadeRec::new(Arc::new(World::new(vp)));
+        let mut sr = ShadeRec::new(Arc::new(World::new(vp, "whitted")));
 
         let ray = Ray::new(Vector3::new(0.3, 0.5, -1.0),
                                 Vector3::new(0.01, 0.1, 1.2));
