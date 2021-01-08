@@ -66,9 +66,9 @@ impl Camera for Pinhole
                     clr += tracer.trace_ray(worldptr.clone(), &ray, 0);
                 }
                 let r_before = clr.m_g;
-                print!("r_before {}", r_before.to_string());
+                // print!("r_before {}", r_before.to_string());
                 clr /= (vp.m_sampler.get_sample_per_pattern() as f32);
-                print!("r_after {}", clr.m_g.to_string());
+                // print!("r_after {}", clr.m_g.to_string());
                 clr *= self.m_core.m_exposure_time;
                 clr.clamp();
                 outmgr.write_pixel(x.into(), y.into(), clr, vp.get_inv_gamma());

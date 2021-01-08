@@ -1,30 +1,55 @@
 use cgmath::{Vector3, Zero};
+use cgmath::num_traits::zero;
 use std::sync::{Arc, Mutex};
+use std::rc::Rc;
 use std::f32::INFINITY;
+use std::fs::File;
+use std::io::BufReader;
+use obj::{Obj};
+use std::path::Path;
+use rand::rngs::ThreadRng;
+use rand::{thread_rng, Rng};
 
 use raytracer::utils::color::Colorf;
 use raytracer::tracer::whitted::Whitted;
-use raytracer::world::viewplane::ViewPlane;
-use raytracer::world::world::World;
+use raytracer::world::{shaderec::ShadeRec,
+                       viewplane::ViewPlane,
+                       world::World};
 
-use raytracer::geometry::sphere::Sphere;
 use raytracer::ray::Ray;
-use raytracer::world::shaderec::ShadeRec;
 use raytracer::output::imagewriter::ImageWriter;
 use raytracer::output::OutputManager;
-use raytracer::camera::pinhole::Pinhole;
-use raytracer::camera::Camera;
-use raytracer::material::phong::Phong;
+
+use raytracer::camera::{Camera,
+                        pinhole::Pinhole};
 use raytracer::brdf::lambertian::Lambertian;
 use raytracer::brdf::glossyspec::GlossySpecular;
-use raytracer::utils::colorconstant::{COLOR_BLUE, COLOR_RED, COLOR_WHITE};
-use raytracer::light::pointlight::PointLight;
+
+use raytracer::utils::colorconstant::{COLOR_BLUE,
+                                      COLOR_RED,
+                                      COLOR_WHITE,
+                                      COLOR_YELLOW};
+use raytracer::light::{ambient::Ambient,
+                       pointlight::PointLight};
+
+use raytracer::material::{glossyreflector::GlossyReflector,
+                          Material,
+                          matte::Matte,
+                          phong::Phong,
+                          reflector::Reflective};
+
 use raytracer::geometry::triangle::Triangle;
-use raytracer::material::matte::Matte;
+
 use raytracer::light::ambientocc::AmbientOccluder;
-use raytracer::sampler::mutijittered::MultiJittered;
-use raytracer::sampler::Sampler;
-use raytracer::tracer::raycast::RayCast;
+use raytracer::sampler::{Sampler,
+                         mutijittered::MultiJittered};
+use raytracer::geometry::{cuboid::Cuboid,
+                          kdtree::KDTree,
+                          instance::Instance,
+                          trimesh::{TriMesh, MeshTriangle, create_meshtriangles},
+                          sphere::Sphere};
+use raytracer::geometry::Shadable;
+
 
 fn main()
 {

@@ -1,13 +1,17 @@
-use crate::utils::color::Colorf;
-use cgmath::{Vector3, InnerSpace, ElementWise};
-use crate::brdf::BRDF;
-use crate::world::shaderec::ShadeRec;
+use cgmath::{Vector3,
+             InnerSpace,
+             ElementWise};
 use std::f32::consts::PI;
-use crate::utils::colorconstant::COLOR_BLACK;
-use crate::sampler::mutijittered::MultiJittered;
-use crate::sampler::Sampler;
 use std::ops::Mul;
 use std::sync::Arc;
+
+use crate::brdf::BRDF;
+use crate::world::shaderec::ShadeRec;
+use crate::sampler::{mutijittered::MultiJittered,
+                     Sampler};
+use crate::utils::color::Colorf;
+use crate::utils::colorconstant::{COLOR_BLACK,
+                                  COLOR_RED};
 
 const INV_PI: f32 = 1.0 / PI;
 
@@ -31,7 +35,7 @@ impl GlossySpecular
             m_kd: kd,
             m_colord: colord,
             m_ks: 0.0,
-            m_colors: COLOR_BLACK,
+            m_colors: COLOR_RED,
             m_exp: 1.0,
             m_samplerptr: None,
         }
@@ -87,9 +91,9 @@ impl BRDF for GlossySpecular
     fn sampleFunc(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>, pdf: &mut f32) -> Colorf
     {
         let n_dot_w_o = sr.m_normal.normalize().dot(*w_o);
-        let reflection_direction: Vector3<f32> = sr.m_normal * (2.0 * n_dot_w_o) - *w_o;
+        let reflection_direction: Vector3<f32> = sr.m_normal.mul_element_wise(2.0 * n_dot_w_o) - *w_o;
         let w = reflection_direction.normalize();
-        let u = Vector3::new(0.00045, 0.00053, 1.0).cross(w).normalize();
+        let u = Vector3::new(0.00045, 1.0, 0.00045).cross(w).normalize();
         let v = u.cross(w);
 
         let sample_point = self.m_samplerptr.as_ref().unwrap().get_hemisphere_sample();
@@ -99,7 +103,9 @@ impl BRDF for GlossySpecular
 
         if sr.m_normal.dot(*w_i) < 0.0
         {
-            *w_i -= 2.0 * (u.mul_element_wise(sample_point.x ) + v.mul_element_wise(sample_point.y));
+            *w_i = -(u.mul_element_wise(sample_point.x )
+                - v.mul_element_wise(sample_point.y))
+                + w.mul_element_wise(sample_point.z);
         }
 
         let phong_lobe = reflection_direction.dot(*w_i).powf(self.m_exp);

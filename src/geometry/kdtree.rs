@@ -20,6 +20,7 @@ use crate::utils::color::Colorf;
 use crate::geometry::{Boundable, Geometry, GeomError, BoundedConcrete, Shadable};
 use crate::geometry::bbox::BBox;
 
+// TODO: Fix fatal bugs in this implementation
 /// KDTree is implemented for accelerating ray tracing. The implementation takes reference from
 /// "Physically Based Rendering: From Theory To Implementation" by Matt Pharr, Wenzel Jakob, and Greg Humphreys.
 pub struct KDTree<T> where T: BoundedConcrete + Clone
@@ -421,10 +422,6 @@ impl<T> Geometry for KDTree<T> where T: BoundedConcrete + Clone
 
 impl<T> Shadable for KDTree<T> where T: BoundedConcrete + Clone
 {
-    fn get_color(&self) -> Colorf { unimplemented!() }
-
-    fn set_color(&mut self, newcolor: Colorf) { unimplemented!() }
-
     fn get_material(&self) -> Arc<dyn Material>
     {
         if let Some(x) = self.m_material.clone() { x }

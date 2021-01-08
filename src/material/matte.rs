@@ -1,6 +1,5 @@
 use cgmath::{InnerSpace, Vector3, Zero};
 use std::sync::Arc;
-// use std::any::type_name;
 
 use crate::brdf::lambertian::Lambertian;
 use crate::world::shaderec::ShadeRec;

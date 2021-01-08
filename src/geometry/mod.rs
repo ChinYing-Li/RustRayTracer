@@ -54,8 +54,6 @@ pub trait Boundable
 
 pub trait Shadable
 {
-    fn get_color(&self) -> Colorf { COLOR_BLACK }
-    fn set_color(&mut self, newcolor: Colorf) {}
     fn get_material(&self) -> Arc<dyn Material>;
     fn set_material(&mut self, material: Arc<dyn Material>) {}
     fn shadow_hit(&self, ray: &Ray, tmin: &mut f32) -> bool;

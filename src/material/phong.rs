@@ -1,12 +1,13 @@
-use crate::brdf::lambertian::Lambertian;
+use cgmath::{Vector3, Zero, InnerSpace};
 use std::sync::Arc;
-use crate::brdf::glossyspec::GlossySpecular;
-use crate::material::Material;
+
 use crate::utils::color::Colorf;
 use crate::world::shaderec::ShadeRec;
-use crate::brdf::BRDF;
-use cgmath::{InnerSpace, Vector3, Zero};
 use crate::ray::Ray;
+use crate::material::Material;
+use crate::brdf::{BRDF,
+                  lambertian::Lambertian,
+                  glossyspec::GlossySpecular};
 
 #[derive(Clone, Debug)]
 pub struct Phong

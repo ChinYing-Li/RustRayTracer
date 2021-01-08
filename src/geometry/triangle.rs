@@ -16,7 +16,6 @@ pub struct Triangle
     pub m_vertex_0: Vector3<f32>,
     pub m_vertex_1: Vector3<f32>,
     pub m_vertex_2: Vector3<f32>,
-    pub m_color: Colorf,
     pub m_material: Option<Arc<dyn Material>>,
     m_normals: Vec<Vector3<f32>>, // the size of m_normals is either 1 or 3
 }
@@ -36,7 +35,6 @@ impl Triangle
             m_vertex_0: vertex_0,
             m_vertex_1: vertex_1,
             m_vertex_2: vertex_2,
-            m_color: COLOR_BLACK,
             m_material: None,
             m_normals: normal_vec,
         }
@@ -146,14 +144,6 @@ impl Boundable for Triangle
 
 impl Shadable for Triangle
 {
-    fn get_color(&self) -> Colorf {
-        self.m_color
-    }
-
-    fn set_color(&mut self, newcolor: Colorf) {
-        self.m_color = newcolor;
-    }
-
     fn get_material(&self) -> Arc<dyn Material> {
         if let Some(x) = self.m_material.clone() { x }
         else { panic!("The material for triangle is Not set") }
@@ -211,7 +201,7 @@ mod TriangleTest
 
         let mut sampler = MultiJittered::new(256, 1);
         let vp = Box::new(ViewPlane::new(Arc::new(sampler)));
-        let mut sr = ShadeRec::new(Arc::new(World::new(vp)));
+        let mut sr = ShadeRec::new(Arc::new(World::new(vp, "whitted")));
 
         let ray = Ray::new(Vector3::new(0.3, 0.5, -1.0),
                                 Vector3::new(0.01, 0.1, 1.2));
@@ -232,7 +222,7 @@ mod TriangleTest
         let triangle = Triangle::new(v0, v1, v2);
         let mut sampler = MultiJittered::new(256, 1);
         let vp = Box::new(ViewPlane::new(Arc::new(sampler)));
-        let mut sr = ShadeRec::new(Arc::new(World::new(vp)));
+        let mut sr = ShadeRec::new(Arc::new(World::new(vp, "whitted")));
 
         let ray = Ray::new(Vector3::new(-1.0, 0.0, 0.0),
                            Vector3::new(-0.5, 1.0, 1.0));
