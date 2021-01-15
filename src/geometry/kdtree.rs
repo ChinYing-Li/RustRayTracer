@@ -63,8 +63,9 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
             m_max_prim_per_node: max_prim_per_node,
             m_max_depth: if max_depth == 0 { (8.0 + (1.3 * prim_vec_len as f32).floor()) as u32 }
                         else { max_depth },
-            m_bounds: BBox::new(Vector3::zero(), Vector3::zero()),
-
+            m_bounds: BBox::new(Vector3::zero(),
+                                Vector3::zero()),
+            // Need to initialize the bounding box properly
             m_empty_bonus: empty_bonus,
             m_intersect_cost: intersect_cost,
             m_traversal_cost: traversal_cost,
@@ -97,7 +98,7 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
         let mut prims1_vec = vec![0_u32; (self.m_max_depth + 1) as usize * self.m_primitives.len()];
         // let prims1 = prims1_vec.as_mut_slice();
 
-        let mut vec_prim_nums: Vec<u32> = (0..self.m_primitives.len() as u32).collect();
+        let mut vec_prim_nums: Vec<u32> = (0..(self.m_primitives.len()+1) as u32).collect();
         // let prim_nums = vec_prim_nums.as_mut_slice();
 
         let bounds = self.m_bounds.clone();
@@ -149,7 +150,7 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
         }
 
         // Else, initialize interior node and continue
-        let mut best_axis = 4;
+        let mut best_axis = 3;
         let mut best_offset = 0;
         let mut best_cost = INFINITY;
         let old_cost = self.m_intersect_cost * n_primitives as f32;
@@ -185,8 +186,12 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
                     n_above -= 1;
                 }
                 let edge_t = edges_ref[axis][i].m_t;
-                if edge_t > KDTree::<T>::vector3_index_get(&node_bbox.m_vertex_0, axis as u8)
-                    && edge_t < KDTree::<T>::vector3_index_get(&node_bbox.m_vertex_1, axis as u8)
+                print!("edge_t {}\n", edge_t);
+                print!("vertex 0 {}\n", node_bbox.m_vertex_0[axis]);
+                print!("vertex 1 {}\n", node_bbox.m_vertex_1[axis]);
+
+                if edge_t > node_bbox.m_vertex_0[axis]
+                    && edge_t < node_bbox.m_vertex_1[axis]
                 {
                     // Compute cost for aplit at this edge.
                     // 1. Compute child surface areas.
@@ -205,6 +210,7 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
                     let cost = self.m_traversal_cost +
                         self.m_intersect_cost * (1.0 - empty_bonus) * (n_below as f32 * percentage_below + n_above as f32 * percentage_above);
 
+                    print!("cost {}\n", cost);
                     if cost < best_cost
                     {
                         best_axis = axis;
@@ -219,7 +225,8 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
             }
 
             // If we can't find a good split on this axis, try another axis.
-            if best_axis == 4 && retries < 2
+            print!("best axis {}, retries {}", best_axis, retries);
+            if best_axis == 3 && retries < 2
             {
                 axis = (axis + 1) % 3;
                 retries += 1;
@@ -236,7 +243,7 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
                                                &mut self.m_sorted_indices);
         }
 
-        // Classify primitives wrt the split.else
+        // Classify primitives wrt the split
         let mut n0 = prims0_offset as usize;
         let mut n1 = prims1_offset as usize;
         for i in 0..best_offset
@@ -330,83 +337,84 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
         let mut task_offset = 0;
 
         let mut hit: (bool, u32) = (false, 0);
-        let mut node = self.m_nodes.as_ptr();
-        unsafe
+        let mut current_offset = 0_usize;
+        let mut first_child_offset = 0_usize;
+        let mut second_child_offset = 0_usize;
+
+        while current_offset < self.m_nodes.len()
+        {
+            if self.m_nodes[current_offset].is_leaf()
             {
-                while let node_ref = node.as_ref().unwrap()
+                match self.m_nodes[current_offset].get_n_primitives()
                 {
-                    if node_ref.is_leaf()
-                    {
-                        match node_ref.get_n_primitives()
+                    1 =>
+                        unsafe {
+                            let index = self.m_nodes[current_offset].m_pub_union.m_one_primitive;
+                            if self.m_primitives[index as usize].shadow_hit(shadowray, time)
+                            {
+                                hit = (true, index as u32);
+                            }
+                        }
+                    _ =>
                         {
-                            1 =>
+                            let mut time_temp = INFINITY;
+                            for i in
+                                self.m_nodes[current_offset].get_primitives_indices_offset() as usize
+                                    ..min(self.m_nodes[current_offset].get_n_primitives() as usize, self.m_sorted_indices.len())
+                            {
+                                let index = self.m_sorted_indices[i];
+                                if self.m_primitives[index as usize].shadow_hit(shadowray, &mut time_temp)
                                 {
-                                    let index = node_ref.m_pub_union.m_one_primitive;
-                                    if self.m_primitives[index as usize].shadow_hit(shadowray, time)
-                                    {
-                                        hit = (true, index as u32);
-                                    }
+                                    hit = (true, index);
                                 }
-                            _ =>
-                                {
-                                    let mut time_temp = INFINITY;
-                                    for i in node_ref.get_primitives_indices_offset() as usize..min(node_ref.get_n_primitives() as usize, self.m_sorted_indices.len())
-                                    {
-                                        let index = self.m_sorted_indices[i];
-                                        if self.m_primitives[index as usize].shadow_hit(shadowray, &mut time_temp)
-                                        {
-                                            hit = (true, index);
-                                        }
-                                    }
-                                }
+                            }
                         }
+                }
 
-                        if task_offset > 0
-                        {
-                            task_offset -= 1;
-                            node = tasks[task_offset].m_node;
-                            tmin = tasks[task_offset].m_tmin;
-                            tmax = tasks[task_offset].m_tmax;
-                        } else { break; }
-                    }
-                    else
-                    {
-                        let axis = node_ref.get_split_axis();
-                        let t_plane = KDTree::<T>::vector3_index_get(&inv_dir,axis) * (node_ref.get_split_position() - KDTree::<T>::vector3_index_get(&shadowray.m_origin, axis));
+                if task_offset > 0
+                {
+                    task_offset -= 1;
+                    current_offset = tasks[task_offset].m_node_offset;
+                    tmin = tasks[task_offset].m_tmin;
+                    tmax = tasks[task_offset].m_tmax;
+                } else { break; }
+            }
+            else
+            {
+                let split_axis = self.m_nodes[current_offset].get_split_axis();
+                let split_position = self.m_nodes[current_offset].get_split_position();
+                let t_plane = KDTree::<T>::vector3_index_get(&inv_dir, split_axis) *
+                    (split_position - KDTree::<T>::vector3_index_get(&shadowray.m_origin, split_axis));
 
-                        let mut first_child = null();
-                        let mut second_child = null();
-                        match KDTree::<T>::vector3_index_get(&shadowray.m_direction, axis) < node_ref.get_split_position()
-                            || (KDTree::<T>::vector3_index_get(&shadowray.m_direction, axis) == node_ref.get_split_position()
-                            && KDTree::<T>::vector3_index_get(&shadowray.m_direction, axis) < 0.0)
-                        {
-                            true =>
-                                unsafe {
-                                    first_child = node.offset(1);
-                                    second_child = self.m_nodes.as_ptr().offset((*node).m_priv_union.m_above_child as isize);
-                                }
-                            false =>
-                                unsafe
-                                    {
-                                        first_child = self.m_nodes.as_ptr().offset((*node).m_priv_union.m_above_child as isize);
-                                        second_child = node.offset(1);
-                                    }
+                match KDTree::<T>::vector3_index_get(&shadowray.m_direction, split_axis) < split_position
+                    || (KDTree::<T>::vector3_index_get(&shadowray.m_direction, split_axis) == split_position
+                    && KDTree::<T>::vector3_index_get(&shadowray.m_direction, split_axis) < 0.0)
+                {
+                    true =>
+                        unsafe {
+                            first_child_offset += 1;
+                            second_child_offset = self.m_nodes[current_offset].m_priv_union.m_above_child as usize;
                         }
-                        // Advance to next child node, possibly enqueue another children
-                        if t_plane > tmax || t_plane <= 0.0 { node = first_child; }
-                        else if t_plane < tmin { node = second_child; }
-                        else
-                        {
-                            tasks[task_offset].m_node = second_child;
-                            tasks[task_offset].m_tmin = t_plane;
-                            tasks[task_offset].m_tmax = tmax;
-                            task_offset += 1;
-                            node = first_child;
-                            tmax = t_plane;
+                    false =>
+                        unsafe {
+                            first_child_offset = self.m_nodes[current_offset].m_priv_union.m_above_child as usize;
+                            second_child_offset += 1;
                         }
-                    }
+                }
+                // Advance to next child node, possibly enqueue another children
+                if t_plane > tmax || t_plane <= 0.0 { current_offset = first_child_offset; }
+                else if t_plane < tmin { current_offset = second_child_offset; }
+                else
+                {
+                    tasks[task_offset].m_node_offset = second_child_offset;
+                    tasks[task_offset].m_tmin = t_plane;
+                    tasks[task_offset].m_tmax = tmax;
+                    task_offset += 1;
+                    current_offset = first_child_offset;
+                    tmax = t_plane;
                 }
             }
+        }
         (false, 0)
     }
 }
@@ -521,8 +529,10 @@ impl KDTreeNode
     {
         unsafe // Modify unions
             {
+                print!("np {}", np);
                 self.m_priv_union.m_flags = 3;
-                self.m_priv_union.m_n_prims |= prim_nums[np] << 2;
+                print!("prim_num_vec {}", prim_nums.len());
+                self.m_priv_union.m_num_prims_overlapped |= prim_nums[np] << 2;
 
                 match np
                 {
@@ -536,17 +546,17 @@ impl KDTreeNode
             }
     }
 
-    fn create_interior(&mut self, axis: u8, ac: u32, s: f32)
+    fn create_interior(&mut self, axis: u8, child_above: u32, s: f32)
     {
         unsafe {
             self.m_pub_union.m_split = s;
             self.m_priv_union.m_flags = axis;
-            self.m_priv_union.m_above_child |= ac << 2;
+            self.m_priv_union.m_above_child |= child_above << 2;
         }
     }
 
     pub fn get_split_position(&self) -> f32 { unsafe { self.m_pub_union.m_split } }
-    pub fn get_n_primitives(&self) -> u32 { unsafe { self.m_priv_union.m_n_prims >> 2 } }
+    pub fn get_n_primitives(&self) -> u32 { unsafe { self.m_priv_union.m_num_prims_overlapped >> 2 } }
     pub fn get_split_axis(&self) -> u8 { unsafe { self.m_priv_union.m_flags & 3 } }
     pub fn is_leaf(&self) -> bool { unsafe { self.m_priv_union.m_flags & 3 == 3 } }
     pub fn get_above_child(&self) -> u32 { unsafe { self.m_priv_union.m_above_child >> 2 } }
@@ -565,14 +575,14 @@ union KDTreeNode_pub_union
 union KDTreeNode_priv_union
 {
     m_flags: u8,
-    m_n_prims: u32,
+    m_num_prims_overlapped: u32,
     m_above_child: u32,
 }
 
 #[derive(Clone, Debug)]
 struct KDTasks
 {
-    m_node: *const  KDTreeNode,
+    m_node_offset: usize,
     m_tmin: f32,
     m_tmax: f32,
 }
@@ -583,10 +593,15 @@ impl KDTasks
     {
         KDTasks
         {
-            m_node: null(),
+            m_node_offset: 0,
             m_tmin: INFINITY,
-            m_tmax: -0.0,
+            m_tmax: 0.0,
         }
+    }
+
+    pub fn is_initialized(&self) -> bool
+    {
+        unimplemented!()
     }
 }
 

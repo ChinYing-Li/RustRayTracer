@@ -99,7 +99,7 @@ impl Shadable for Sphere
     fn get_material(&self) -> Arc<dyn Material>
     {
         if let Some(x) = self.m_material.clone() { x }
-        else { panic!("The material for sphere is Not set") }
+        else { panic!("The material for sphere is not set") }
     }
 
     fn set_material(&mut self, material: Arc<dyn Material>)
@@ -144,7 +144,7 @@ mod TestSphere
     #[test]
     pub fn TestSphereBBox()
     {
-        let sphere = Sphere::new(10.0, Vector3::new(20.0, 10.0, 30.0), COLOR_RED);
+        let sphere = Sphere::new(10.0, Vector3::new(20.0, 10.0, 30.0));
         let bbox = sphere.get_bbox();
         assert_relative_eq!(bbox.m_vertex_0.x, 5.85786437626);
         assert_relative_eq!(bbox.m_vertex_0.y, -4.1421356237);

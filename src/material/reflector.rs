@@ -8,9 +8,7 @@ use crate::material::Material;
 use crate::material::phong::Phong;
 use crate::tracer::Tracer;
 use crate::brdf::{BRDF,
-                  perfectspec::PerfectSpecular,
-                  lambertian::Lambertian,
-                  glossyspec::GlossySpecular};
+                  perfectspec::PerfectSpecular};
 
 #[derive(Clone, Debug)]
 pub struct Reflective

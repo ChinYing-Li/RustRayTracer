@@ -27,23 +27,23 @@ impl BBox
 
     pub fn union(&self, rhs: &BBox) -> BBox
     {
-        let min_x = if self.m_vertex_0.x < rhs.m_vertex_0.x { self.m_vertex_0.x } else { self.m_vertex_1.x };
-        let min_y = if self.m_vertex_0.y < rhs.m_vertex_0.y { self.m_vertex_0.y } else { self.m_vertex_1.y };
-        let min_z = if self.m_vertex_0.z < rhs.m_vertex_0.x{ self.m_vertex_0.x } else { self.m_vertex_1.x};
-
-        let max_x = if self.m_vertex_0.x > rhs.m_vertex_0.x{ self.m_vertex_0.x } else { self.m_vertex_1.x};
-        let max_y = if self.m_vertex_0.y > rhs.m_vertex_0.y { self.m_vertex_0.y } else { self.m_vertex_1.y };
-        let max_z = if self.m_vertex_0.z > rhs.m_vertex_0.x{ self.m_vertex_0.x } else { self.m_vertex_1.x};
-
-        BBox::new(Vector3::new(min_x, min_y, min_z), Vector3::new(max_x, max_y, max_z))
+        // Use loop...
+        let mut min_vert = Vector3::zero();
+        let mut max_vert = Vector3::zero();
+        for i in 0..3
+        {
+            min_vert[i] = if self.m_vertex_0[i] < rhs.m_vertex_0[i] { self.m_vertex_0[i] } else { rhs.m_vertex_0[i] };
+            max_vert[i] = if self.m_vertex_1[i] > rhs.m_vertex_1[i] { self.m_vertex_1[i] } else { rhs.m_vertex_1[i] };
+        }
+        BBox::new(min_vert, max_vert)
     }
 
     /// Find the axis of which the bbox' dimension is largest.
     pub fn maximum_extent(&self) -> usize
     {
         let diag = self.get_diagonal();
-        return if diag.x > diag.y && diag.x > diag.z { 0 } // axis x
-                else if diag.y > diag.z { 1 } // axis y
+        return if diag.x >= diag.y && diag.x >= diag.z { 0 } // axis x
+                else if diag.y >= diag.z { 1 } // axis y
                 else { 2 } // axis z
     }
 

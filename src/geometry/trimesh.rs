@@ -12,6 +12,7 @@ use crate::material::Material;
 use crate::ray::Ray;
 use crate::geometry::triangle::Triangle;
 use crate::geometry::bbox::BBox;
+use std::f32::INFINITY;
 
 
 // Stores the indices of the face only
@@ -30,7 +31,7 @@ impl MeshTriangle
     {
         MeshTriangle
         {
-            m_vertex0_index: vertex0_index,
+            m_vertex0_index: vertex0_index, // TODO: store the three indices in a vector
             m_vertex1_index: vertex1_index,
             m_vertex2_index: vertex2_index,
             m_mesh_ptr: mesh_ptr,
@@ -149,7 +150,7 @@ impl Shadable for MeshTriangle
 {
     fn get_material(&self) -> Arc<dyn Material>
     {
-        self.m_mesh_ptr.m_material.clone()
+        unimplemented!()
     }
 
     fn shadow_hit(&self, shadow_ray: &Ray, tmin: &mut f32) -> bool
@@ -201,27 +202,40 @@ pub struct TriMesh
     m_mtl: Vec<obj::Mtl>, // Currently not supporting rendering materials defined in Mtl
     m_normals: Vec<Vector3<f32>>,
     m_texture: Vec<Vector2<f32>>,
-    pub m_material: Arc<dyn Material>,
+    m_material: Option<Arc<dyn Material>>,
+    pub m_bbox: BBox,
 }
 
 impl TriMesh
 {
-    pub fn new(objdata: &ObjData, material_ptr: Arc<dyn Material>) -> TriMesh
+    pub fn new(objdata: &ObjData) -> TriMesh
     {
-        let test = objdata.objects[0].groups[0].polys[0].0.clone();
+        let bbox_vert_0 = Vector3::new(objdata.position[0].iter()
+                                           .fold(INFINITY, |max, &val| if val < max{ val } else{ max }),
+                                       objdata.position[1].iter()
+                                           .fold(INFINITY, |max, &val| if val < max{ val } else{ max }),
+                                       objdata.position[2].iter()
+                                           .fold(INFINITY, |max, &val| if val < max{ val } else{ max }));
+        let bbox_vert_1 = Vector3::new(objdata.position[0].iter()
+                                           .fold(-INFINITY, |max, &val| if val > max { val } else { max }),
+                                       objdata.position[1].iter()
+                                           .fold(-INFINITY, |max, &val| if val > max { val } else { max }),
+                                       objdata.position[2].iter()
+                                           .fold(-INFINITY, |max, &val| if val > max { val } else { max }));
         TriMesh
         {
             m_vertex_position: TriMesh::convert_to_vector3(&objdata.position),
             m_mtl: (*objdata).material_libs.clone(),
             m_normals: TriMesh::convert_to_vector3(&objdata.normal),
-            m_texture: TriMesh::convert_t0_vector2(&objdata.texture),
-            m_material: material_ptr.clone(),
+            m_texture: TriMesh::convert_to_vector2(&objdata.texture),
+            m_material: None,
+            m_bbox: BBox::new(bbox_vert_0, bbox_vert_1),
         }
     }
 
     pub fn set_material(&mut self, material_ptr: Arc<dyn Material>)
     {
-        self.m_material = material_ptr.clone();
+        self.m_material = Some(material_ptr);
     }
 
     fn convert_to_vector3(v: &Vec<[f32; 3]>) -> Vec<Vector3<f32>>
@@ -229,7 +243,7 @@ impl TriMesh
         v.iter().map(| position| Vector3::new(position[0], position[1], position[2])).collect()
     }
 
-    fn convert_t0_vector2(v: &Vec<[f32; 2]>) -> Vec<Vector2<f32>>
+    fn convert_to_vector2(v: &Vec<[f32; 2]>) -> Vec<Vector2<f32>>
     {
         v.iter().map(| position| Vector2::new(position[0], position[1])).collect()
     }
@@ -244,10 +258,18 @@ pub fn create_meshtriangles(mesh_ptr: Arc<TriMesh>, objdata: &ObjData) -> Vec<Me
         {
             for poly in group.polys.iter()
             {
-                v.push(MeshTriangle::new(poly.0[0].0 as u32, poly.0[1].0 as u32, poly.0[2].0 as u32, mesh_ptr.clone()));
+                v.push(MeshTriangle::new(
+                    poly.0[0].0 as u32,
+                    poly.0[1].0 as u32,
+                    poly.0[2].0 as u32,
+                    mesh_ptr.clone()));
+
                 if poly.0.len() == 4
                 {
-                    v.push(MeshTriangle::new(poly.0[0].0 as u32, poly.0[2].0 as u32, poly.0[3].0 as u32, mesh_ptr.clone()));
+                    v.push(MeshTriangle::new(poly.0[0].0 as u32,
+                                             poly.0[2].0 as u32,
+                                             poly.0[3].0 as u32,
+                                             mesh_ptr.clone()));
                 }
             }
         }
