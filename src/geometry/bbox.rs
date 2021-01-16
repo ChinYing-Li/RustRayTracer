@@ -164,4 +164,17 @@ mod BBoxTest
 
         assert_eq!(res.unwrap(), true);
     }
+
+    #[test]
+    fn check_union()
+    {
+        let bbox1 = BBox::new(Vector3::new(-1.0, -1.0, -1.0),
+                                Vector3::new(1.0, 1.0, 1.0));
+        let bbox2 = BBox::new(Vector3::new(-0.5, -2.0, -0.0),
+                              Vector3::new(1.5, 0.0, 1.0));
+        let bbox_union = bbox1.union(&bbox2);
+        assert_relative_eq!(bbox_union.m_vertex_0.x, -1.0);
+        assert_relative_eq!(bbox_union.m_vertex_0.y, -2.0);
+        assert_relative_eq!(bbox_union.m_vertex_1.z, 1.0);
+    }
 }

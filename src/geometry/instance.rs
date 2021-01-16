@@ -229,7 +229,7 @@ mod InstanceTest
 
     fn setup_sphere() -> Sphere
     {
-        let mut sphere = Sphere::new(10.0, Vector3::new(20.0, 10.0, 30.0), COLOR_RED);
+        let mut sphere = Sphere::new(10.0, Vector3::new(20.0, 10.0, 30.0));
         let material = Matte::new(Arc::new(Lambertian::new(0.5, Colorf::new(0.3, 0.3, 0.3))),
                    Arc::new(Lambertian::new(0.3, Colorf::new(0.5, 0.2, 0.5))));
         sphere.set_material(Arc::new(material));

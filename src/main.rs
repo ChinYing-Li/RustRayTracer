@@ -77,12 +77,11 @@ fn main()
     let mesh_bbox = mesh.m_bbox.clone();
     let mut kdtree = KDTree::<MeshTriangle>::new(
         create_meshtriangles(Arc::new(mesh), &objdata),
-                                                 20.0,
-                                                 10.0,
-                                                 10.0,
+                                                 80.0,
+                                                 1.0,
+                                                 0.5,
                                                  3,
                                                  0);
-    kdtree.m_bounds = mesh_bbox;
     kdtree.init();
 
     let kdtree_ptr = Arc::new(Mutex::new(kdtree));
@@ -159,7 +158,7 @@ fn setUpMaterial(r: f32, g: f32, b: f32, material_type: &str) -> Arc<dyn Materia
 fn setUpCamera() -> Pinhole
 {
     let eye = Vector3::new(0.0, -30.0, 30.0);
-    let lookat = Vector3::new(20.0, 40.0, 0.0);
+    let lookat = Vector3::new(0.0, 0.0, 0.0);
     let up = Vector3::new(0.0, 1.0, 0.0);
     Pinhole::new(eye, lookat, up)
 }

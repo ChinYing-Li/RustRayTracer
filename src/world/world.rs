@@ -196,7 +196,7 @@ mod WorldSphereTest
                                 Vector3::new(-1.0, 0.0, 0.0));
         let mut shaderecord = World::hit_objects( Arc::new(world), &ray, INFINITY);
 
-        assert!(shaderecord.m_ishitting);
+        assert!(shaderecord.m_hit);
         assert_eq!(shaderecord.m_time, 6.0);
         assert_eq!(shaderecord.m_hitpoint, Vector3::new(4.0, 3.0, 0.0));
     }
