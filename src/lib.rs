@@ -18,6 +18,7 @@ extern crate enum_set as enum_set;
 extern crate rand;
 extern crate obj;
 extern crate arrayvec;
+extern crate scoped_threadpool;
 #[macro_use]
 extern crate image;
 extern crate cgmath;

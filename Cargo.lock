@@ -526,6 +526,7 @@ dependencies = [
  "image",
  "obj",
  "rand 0.7.3",
+ "scoped_threadpool",
 ]
 
 [[package]]

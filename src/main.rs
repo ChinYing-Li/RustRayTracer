@@ -77,7 +77,7 @@ fn main()
     let mesh_bbox = mesh.m_bbox.clone();
     let mut kdtree = KDTree::<MeshTriangle>::new(
         create_meshtriangles(Arc::new(mesh), &objdata),
-                                                 80.0,
+                                                 40.0,
                                                  1.0,
                                                  0.5,
                                                  3,

@@ -522,7 +522,7 @@ impl<T> KDTree<T> where T: BoundedConcrete + Clone
         let mut first_child_offset = 0_usize;
         let mut second_child_offset = 0_usize;
 
-        while current_offset < self.m_nodes.len() || task_offset < 64
+        while current_offset < self.m_nodes.len() && task_offset < 64
         {
             if self.m_nodes[current_offset].is_leaf()
             {
