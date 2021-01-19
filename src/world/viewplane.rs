@@ -11,6 +11,7 @@ pub struct ViewPlane
     pub m_hres: u16,
     pub m_vres: u16,
     pub m_pixsize: f32,
+    m_pixsize_adjusted: f32,
     m_gamma: f32,
     m_invgamma: f32,
 
@@ -28,6 +29,7 @@ impl ViewPlane
             m_hres: 200,
             m_vres: 200,
             m_pixsize: 0.2,
+            m_pixsize_adjusted: 0.2,
             m_gamma: 1.0,
             m_invgamma: 1.0,
             m_maxdepth: 5,
@@ -46,15 +48,19 @@ impl ViewPlane
         self.m_invgamma
     }
 
-    //
+    pub fn set_zoom(&mut self, zoom: &f32)
+    {
+        self.m_pixsize_adjusted = self.m_pixsize / zoom;
+    }
+
     pub fn get_coordinate_from_index(&self, i: u16, j: u16) -> Result<Vector2<f32>, &str>
     {
         match self.is_coordinates_valid(i, j)
         {
             false => Err("Invalid coordinates "),
             _ => {
-                Ok(Vector2::new(self.m_pixsize * (i as f32 - 0.5 * (self.m_hres as f32 - 1.0)),
-                                self.m_pixsize * (j as f32 - 0.5 * (self.m_vres as f32 - 1.0))))
+                Ok(Vector2::new(self.m_pixsize_adjusted * (i as f32 - 0.5 * (self.m_hres as f32 - 1.0)),
+                                self.m_pixsize_adjusted * (j as f32 - 0.5 * (self.m_vres as f32 - 1.0))))
             }
         }
     }

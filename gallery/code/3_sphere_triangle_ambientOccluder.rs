@@ -53,8 +53,6 @@ use raytracer::geometry::Shadable;
 
 fn main()
 {
-    let tracer = RayCast::new();
-
     let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(MultiJittered::new(32, 3))));
     let vp_hres = 800;
     let vp_vres = 600;
@@ -64,7 +62,7 @@ fn main()
     boxed_vp.set_gamma(1.8);
 
     let mut imgwriter = ImageWriter::new("2_sphere_and_triangle_ambientoccluder.jpg", vp_hres, vp_vres);
-    let mut world = World::new(boxed_vp);
+    let mut world = World::new(boxed_vp, "raycast");
 
 
     let mut sphereA = Arc::new(Mutex::new(Sphere::new(10.0,
@@ -100,7 +98,7 @@ fn main()
     ph.m_zoom = 1.0;
     ph.m_core.m_exposure_time = 0.005;
     let worldptr = Arc::new(world);
-    ph.render_scene(worldptr, &tracer, &mut imgwriter,1.0);
+    ph.render_scene(worldptr, &mut imgwriter,1.0);
     imgwriter.output();
 }
 

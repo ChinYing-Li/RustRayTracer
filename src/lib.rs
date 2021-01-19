@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 pub mod brdf;
-pub mod camera;
+pub mod render;
 //pub mod gallery;
 pub mod geometry;
 pub mod light;
@@ -18,6 +18,7 @@ extern crate enum_set as enum_set;
 extern crate rand;
 extern crate obj;
 extern crate arrayvec;
+extern crate scoped_threadpool;
 #[macro_use]
 extern crate image;
 extern crate cgmath;

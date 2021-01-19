@@ -12,27 +12,24 @@ use crate::material::Material;
 use crate::ray::Ray;
 use crate::geometry::triangle::Triangle;
 use crate::geometry::bbox::BBox;
+use std::f32::INFINITY;
 
 
 // Stores the indices of the face only
 #[derive(Clone)]
 pub struct MeshTriangle
 {
-    m_vertex0_index: u32,
-    m_vertex1_index: u32,
-    m_vertex2_index: u32,
+    m_vertex_index: Vector3<usize>,
     m_mesh_ptr: Arc<TriMesh>,
 }
 
 impl MeshTriangle
 {
-    pub fn new(vertex0_index: u32, vertex1_index: u32, vertex2_index: u32, mesh_ptr: Arc<TriMesh>) -> MeshTriangle
+    pub fn new(vertex0_index: usize, vertex1_index: usize, vertex2_index: usize, mesh_ptr: Arc<TriMesh>) -> MeshTriangle
     {
         MeshTriangle
         {
-            m_vertex0_index: vertex0_index,
-            m_vertex1_index: vertex1_index,
-            m_vertex2_index: vertex2_index,
+            m_vertex_index: Vector3::new(vertex0_index, vertex1_index, vertex2_index),
             m_mesh_ptr: mesh_ptr,
         }
     }
@@ -47,48 +44,17 @@ impl MeshTriangle
 
     fn min_coordinate_on_axis(&self, axis: u8) -> f32
     {
-        match axis
-        {
-            0 => {
-                let temp = float_cmp::min(self.m_mesh_ptr.m_vertex_position[self.m_vertex0_index as usize].x,
-                                          self.m_mesh_ptr.m_vertex_position[self.m_vertex1_index as usize].x);
-                return float_cmp::min(temp, self.m_mesh_ptr.m_vertex_position[self.m_vertex2_index as usize].x).clone()
-            },
-            1 => {
-                let temp = float_cmp::min(self.m_mesh_ptr.m_vertex_position[self.m_vertex0_index as usize].y,
-                                          self.m_mesh_ptr.m_vertex_position[self.m_vertex1_index as usize].y);
-                return float_cmp::min(temp, self.m_mesh_ptr.m_vertex_position[self.m_vertex2_index as usize].y).clone()
-            },
-            2 => {
-                let temp = float_cmp::min(self.m_mesh_ptr.m_vertex_position[self.m_vertex0_index as usize].z,
-                                          self.m_mesh_ptr.m_vertex_position[self.m_vertex1_index as usize].z);
-                return float_cmp::min(temp, self.m_mesh_ptr.m_vertex_position[self.m_vertex2_index as usize].z).clone()
-            },
-            _ => panic!("fsdasfd")
-        }
+        let temp = float_cmp::min(self.m_mesh_ptr.m_vertex_position[self.m_vertex_index[0]][axis as usize],
+                                  self.m_mesh_ptr.m_vertex_position[self.m_vertex_index[1]][axis as usize]);
+        return float_cmp::min(temp, self.m_mesh_ptr.m_vertex_position[self.m_vertex_index[2]][axis as usize]);
     }
 
     fn max_coordinate_on_axis(&self, axis: u8) -> f32
     {
-        match axis
-        {
-            0 => {
-                let temp = float_cmp::max(self.m_mesh_ptr.m_vertex_position[self.m_vertex0_index as usize].x,
-                                          self.m_mesh_ptr.m_vertex_position[self.m_vertex1_index as usize].x);
-                return float_cmp::max(temp, self.m_mesh_ptr.m_vertex_position[self.m_vertex2_index as usize].x)
-            },
-            1 => {
-                let temp = float_cmp::max(self.m_mesh_ptr.m_vertex_position[self.m_vertex0_index as usize].y,
-                                          self.m_mesh_ptr.m_vertex_position[self.m_vertex1_index as usize].y);
-                return float_cmp::max(temp, self.m_mesh_ptr.m_vertex_position[self.m_vertex2_index as usize].y)
-            },
-            2 => {
-                let temp = float_cmp::max(self.m_mesh_ptr.m_vertex_position[self.m_vertex0_index as usize].z,
-                                          self.m_mesh_ptr.m_vertex_position[self.m_vertex1_index as usize].z);
-                return float_cmp::max(temp, self.m_mesh_ptr.m_vertex_position[self.m_vertex2_index as usize].z)
-            },
-            _ => panic!("fsdasfd")
-        }
+        assert!(axis < 3);
+        let temp = float_cmp::max(self.m_mesh_ptr.m_vertex_position[self.m_vertex_index[0]][axis as usize],
+                                          self.m_mesh_ptr.m_vertex_position[self.m_vertex_index[1]][axis as usize]);
+        return float_cmp::max(temp, self.m_mesh_ptr.m_vertex_position[self.m_vertex_index[2]][axis as usize]);
     }
 }
 
@@ -97,9 +63,9 @@ impl fmt::Debug for MeshTriangle
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
     {
         f.debug_struct("Mesh triangle")
-            .field("vertex 0 index", &self.m_vertex0_index)
-            .field("vertex 1 index", &self.m_vertex1_index)
-            .field("vertex 2 index", &self.m_vertex2_index)
+            .field("vertex 0 index", &self.m_vertex_index[0])
+            .field("vertex 1 index", &self.m_vertex_index[1])
+            .field("vertex 2 index", &self.m_vertex_index[2])
             .finish()
     }
 }
@@ -108,13 +74,9 @@ impl Geometry for MeshTriangle
 {
     fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>
     {
-        let vertex0_index= self.m_vertex0_index as usize;
-        let vertex1_index= self.m_vertex1_index as usize;
-        let vertex2_index= self.m_vertex2_index as usize;
-
-        let vertex0 = &self.m_mesh_ptr.m_vertex_position[vertex0_index];
-        let vertex1 = &self.m_mesh_ptr.m_vertex_position[vertex1_index];
-        let vertex2 = &self.m_mesh_ptr.m_vertex_position[vertex2_index];
+        let vertex0 = &self.m_mesh_ptr.m_vertex_position[self.m_vertex_index[0]];
+        let vertex1 = &self.m_mesh_ptr.m_vertex_position[self.m_vertex_index[1]];
+        let vertex2 = &self.m_mesh_ptr.m_vertex_position[self.m_vertex_index[2]];
 
         let v10 = *vertex0 - *vertex1;
         let v20 = *vertex0 - *vertex2;
@@ -134,9 +96,9 @@ impl Geometry for MeshTriangle
         if solution.x + solution.y > 1.0 { return Ok(false) }
         if solution.z < KEPSILON { return Ok(false) }
 
-        let normal0 = &self.m_mesh_ptr.m_normals[vertex0_index];
-        let normal1 = &self.m_mesh_ptr.m_normals[vertex1_index];
-        let normal2 = &self.m_mesh_ptr.m_normals[vertex2_index];
+        let normal0 = &self.m_mesh_ptr.m_normals[self.m_vertex_index[0]];
+        let normal1 = &self.m_mesh_ptr.m_normals[self.m_vertex_index[1]];
+        let normal2 = &self.m_mesh_ptr.m_normals[self.m_vertex_index[2]];
 
         shaderecord.m_normal = self.interpolate_normal(solution.x, solution.y, normal0, normal1, normal2);
         *time = solution.z;
@@ -149,14 +111,14 @@ impl Shadable for MeshTriangle
 {
     fn get_material(&self) -> Arc<dyn Material>
     {
-        self.m_mesh_ptr.m_material.clone()
+        unimplemented!()
     }
 
     fn shadow_hit(&self, shadow_ray: &Ray, tmin: &mut f32) -> bool
     {
-        let vertex0 = &self.m_mesh_ptr.m_vertex_position[self.m_vertex0_index as usize];
-        let vertex1 = &self.m_mesh_ptr.m_vertex_position[self.m_vertex1_index as usize];
-        let vertex2 = &self.m_mesh_ptr.m_vertex_position[self.m_vertex2_index as usize];
+        let vertex0 = &self.m_mesh_ptr.m_vertex_position[self.m_vertex_index.x];
+        let vertex1 = &self.m_mesh_ptr.m_vertex_position[self.m_vertex_index.y];
+        let vertex2 = &self.m_mesh_ptr.m_vertex_position[self.m_vertex_index.z];
 
         let v10 = *vertex0 - *vertex1;
         let v20 = *vertex0 - *vertex2;
@@ -201,27 +163,40 @@ pub struct TriMesh
     m_mtl: Vec<obj::Mtl>, // Currently not supporting rendering materials defined in Mtl
     m_normals: Vec<Vector3<f32>>,
     m_texture: Vec<Vector2<f32>>,
-    pub m_material: Arc<dyn Material>,
+    m_material: Option<Arc<dyn Material>>,
+    pub m_bbox: BBox,
 }
 
 impl TriMesh
 {
-    pub fn new(objdata: &ObjData, material_ptr: Arc<dyn Material>) -> TriMesh
+    pub fn new(objdata: &ObjData) -> TriMesh
     {
-        let test = objdata.objects[0].groups[0].polys[0].0.clone();
+        let bbox_vert_0 = Vector3::new(objdata.position[0].iter()
+                                           .fold(INFINITY, |max, &val| if val < max{ val } else{ max }),
+                                       objdata.position[1].iter()
+                                           .fold(INFINITY, |max, &val| if val < max{ val } else{ max }),
+                                       objdata.position[2].iter()
+                                           .fold(INFINITY, |max, &val| if val < max{ val } else{ max }));
+        let bbox_vert_1 = Vector3::new(objdata.position[0].iter()
+                                           .fold(-INFINITY, |max, &val| if val > max { val } else { max }),
+                                       objdata.position[1].iter()
+                                           .fold(-INFINITY, |max, &val| if val > max { val } else { max }),
+                                       objdata.position[2].iter()
+                                           .fold(-INFINITY, |max, &val| if val > max { val } else { max }));
         TriMesh
         {
             m_vertex_position: TriMesh::convert_to_vector3(&objdata.position),
             m_mtl: (*objdata).material_libs.clone(),
             m_normals: TriMesh::convert_to_vector3(&objdata.normal),
-            m_texture: TriMesh::convert_t0_vector2(&objdata.texture),
-            m_material: material_ptr.clone(),
+            m_texture: TriMesh::convert_to_vector2(&objdata.texture),
+            m_material: None,
+            m_bbox: BBox::new(bbox_vert_0, bbox_vert_1),
         }
     }
 
     pub fn set_material(&mut self, material_ptr: Arc<dyn Material>)
     {
-        self.m_material = material_ptr.clone();
+        self.m_material = Some(material_ptr);
     }
 
     fn convert_to_vector3(v: &Vec<[f32; 3]>) -> Vec<Vector3<f32>>
@@ -229,7 +204,7 @@ impl TriMesh
         v.iter().map(| position| Vector3::new(position[0], position[1], position[2])).collect()
     }
 
-    fn convert_t0_vector2(v: &Vec<[f32; 2]>) -> Vec<Vector2<f32>>
+    fn convert_to_vector2(v: &Vec<[f32; 2]>) -> Vec<Vector2<f32>>
     {
         v.iter().map(| position| Vector2::new(position[0], position[1])).collect()
     }
@@ -244,10 +219,18 @@ pub fn create_meshtriangles(mesh_ptr: Arc<TriMesh>, objdata: &ObjData) -> Vec<Me
         {
             for poly in group.polys.iter()
             {
-                v.push(MeshTriangle::new(poly.0[0].0 as u32, poly.0[1].0 as u32, poly.0[2].0 as u32, mesh_ptr.clone()));
+                v.push(MeshTriangle::new(
+                    poly.0[0].0,
+                    poly.0[1].0,
+                    poly.0[2].0,
+                    mesh_ptr.clone()));
+
                 if poly.0.len() == 4
                 {
-                    v.push(MeshTriangle::new(poly.0[0].0 as u32, poly.0[2].0 as u32, poly.0[3].0 as u32, mesh_ptr.clone()));
+                    v.push(MeshTriangle::new(poly.0[0].0,
+                                             poly.0[2].0,
+                                             poly.0[3].0,
+                                             mesh_ptr.clone()));
                 }
             }
         }

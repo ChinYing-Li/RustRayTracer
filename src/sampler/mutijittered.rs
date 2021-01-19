@@ -3,12 +3,12 @@ use cgmath::{Vector2, Vector3, ElementWise};
 use rand::Rng;
 use rand::rngs::ThreadRng;
 use std::cell::RefCell;
+use std::ops::Deref;
 
 #[derive(Clone, Debug)]
 pub struct MultiJittered
 {
     m_core: SamplerCore,
-    m_rng: RefCell<ThreadRng>,
 }
 
 impl MultiJittered
@@ -21,7 +21,6 @@ impl MultiJittered
         MultiJittered
         {
             m_core: core,
-            m_rng: RefCell::new(rand::thread_rng()),
         }
     }
 }
@@ -33,7 +32,8 @@ impl Sampler for MultiJittered
 
         let sqrt_samples_per_pattern = (self.m_core.m_sample_per_pattern as f32).sqrt() as u16;
         let inv_sqrt = 1.0 / sqrt_samples_per_pattern as f32;
-        let mut rng_ref = self.m_rng.borrow_mut();
+        let mut rng_ref = self.m_core.m_rng.borrow_mut().clone();
+
         for _ in 0..self.m_core.m_num_pattern
         {
             for row in 0..sqrt_samples_per_pattern
@@ -79,15 +79,14 @@ impl Sampler for MultiJittered
         self.m_core.set_map_to_hemisphere(flag, e);
     }
 
-    fn get_unit_square_sample(&mut self) -> Vector2<f32>
+    fn get_unit_square_samples(&self) -> &Vec<Vector2<f32>>
     {
-        self.m_core.get_unit_square_sample()
+        self.m_core.get_unit_square_samples()
     }
 
-    fn get_disk_sample(&self) -> Vector2<f32>
+    fn get_disk_samples(&self) -> &Vec<Vector2<f32>>
     {
-        let index = self.m_rng.borrow_mut().gen::<u16>() as usize;
-        match self.m_core.get_disk_sample(index)
+        match self.m_core.get_disk_samples()
         {
             Ok(sample) => sample,
             _ =>
@@ -97,14 +96,23 @@ impl Sampler for MultiJittered
         }
     }
 
-    fn get_hemisphere_sample(&self) -> Vector3<f32>
+    fn get_disk_sample(&self) -> Vector2<f32>
     {
-        let index = self.m_rng.borrow_mut().gen::<u16>() as usize;
-        match self.m_core.get_hemisphere_sample(index)
+        self.m_core.get_disk_sample()
+    }
+
+    fn get_hemisphere_samples(&self) -> &Vec<Vector3<f32>>
+    {
+        match self.m_core.get_hemisphere_samples()
         {
             Ok(sample) => sample,
             _ => panic!("The MultiJittered Sampler isn't set to generate samples on hemisphere")
         }
+    }
+
+    fn get_hemisphere_sample(&self) -> Vector3<f32>
+    {
+        self.m_core.get_hemisphere_sample()
     }
 }
 

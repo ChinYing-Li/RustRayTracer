@@ -1,7 +1,6 @@
 use cgmath::{Vector3, InnerSpace, ElementWise};
 use std::sync::Arc;
 use std::f32::INFINITY;
-use std::borrow::BorrowMut;
 use std::cell::RefCell;
 
 use crate::light::Light;

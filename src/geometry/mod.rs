@@ -4,6 +4,8 @@ pub mod trimesh;
 pub mod triangle;
 pub mod cuboid;
 pub mod bbox;
+pub mod sphere;
+// pub mod kdtree_backup;
 
 use std::fmt;
 use std::sync::Arc;
@@ -16,7 +18,6 @@ use crate::utils::colorconstant::COLOR_BLACK;
 use crate::geometry::bbox::BBox;
 use crate::world::shaderec::ShadeRec;
 
-pub mod sphere;
 pub const KEPSILON: f32 = 0.0001;
 /// This trait
 

@@ -44,15 +44,27 @@ impl Sampler for NRooks
         unimplemented!()
     }
 
-    fn get_unit_square_sample(&mut self) -> Vector2<f32> {
+    fn get_unit_square_samples(&self) -> &Vec<Vector2<f32>> {
         unimplemented!()
     }
 
-    fn get_disk_sample(&self) -> Vector2<f32> {
+    fn get_disk_samples(&self) -> &Vec<Vector2<f32>>
+    {
         unimplemented!()
     }
 
-    fn get_hemisphere_sample(&self) -> Vector3<f32> {
+    fn get_disk_sample(&self) -> Vector2<f32>
+    {
+        self.m_core.get_disk_sample()
+    }
+
+    fn get_hemisphere_samples(&self) -> &Vec<Vector3<f32>>
+    {
         unimplemented!()
+    }
+
+    fn get_hemisphere_sample(&self) -> Vector3<f32>
+    {
+        self.m_core.get_hemisphere_sample()
     }
 }
