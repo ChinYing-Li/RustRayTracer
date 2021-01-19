@@ -1,4 +1,11 @@
-use cgmath::{Vector3, InnerSpace, dot, ElementWise, Zero, Vector2};
+pub mod pinhole;
+
+use cgmath::{Vector3,
+             InnerSpace,
+             dot,
+             ElementWise,
+             Zero,
+             Vector2};
 use std::{f32,
           sync::Arc};
 use crate::{world::world::World,
@@ -38,8 +45,8 @@ impl CamStruct
         }
     }
 
-    /// Compute the world denotation of axis of camera's local coordinate system
-    pub fn ComputeUVW(&mut self)
+    /// Compute the world denotation of axis of render's local coordinate system
+    pub fn compute_uvw(&mut self)
     {
         self.m_w = (self.m_eye - self.m_lookat).normalize();
 
@@ -57,13 +64,10 @@ impl CamStruct
 pub trait Camera
 {
     fn get_ray_direction(&self, vp_coords: Vector2<f32>) -> Vector3<f32>;
-    fn render_scene<'a>(&mut self, worldptr: Arc<World>,
-                   tracer: &'a dyn Tracer,
-                   outmgr: &'a mut dyn OutputManager,
-                   zoom: f32);
+    fn render_scene<'a>(&mut self, worldptr: Arc<World>, outmgr: &'a mut dyn OutputManager);
+    fn set_zoom(&mut self, zoom: f32);
+    fn get_zoom(&mut self) -> f32;
 }
-
-pub mod pinhole;
 
 #[cfg(test)]
 mod CamStructTest
@@ -72,14 +76,14 @@ mod CamStructTest
     use approx::{assert_relative_eq};
 
     #[test]
-    fn compute_uvwtest()
+    fn compute_uvw_test()
     {
         let lookat = Vector3::new(3.0,4.0,5.0);
         let eye = Vector3::new(2.0, 7.0, 8.0);
         let up = Vector3::unit_z();
         let mut cs = CamStruct::new(eye, lookat, up);
 
-        cs.ComputeUVW();
+        cs.compute_uvw();
         assert_relative_eq!(cs.m_w, Vector3::new(-0.22941573387056174, 0.6882472016116852, 0.6882472016116852));
     }
 }

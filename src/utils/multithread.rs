@@ -5,7 +5,7 @@ use scoped_threadpool::Pool;
 use crate::world::world::World;
 use std::sync::Arc;
 use crate::output::OutputManager;
-use crate::camera::Camera;
+use crate::render::cam::Camera;
 use crate::utils::computequeue::ComputeQueue;
 use cgmath::{Vector2, Vector3};
 

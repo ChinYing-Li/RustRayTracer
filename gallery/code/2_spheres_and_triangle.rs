@@ -94,7 +94,7 @@ fn main()
     ph.m_zoom = 1.0;
     ph.m_core.m_exposure_time = 0.05;
     let worldptr = Arc::new(world);
-    ph.render_scene(worldptr, &tracer, &mut imgwriter,1.0);
+    ph.render_scene(worldptr, &mut imgwriter,1.0);
     imgwriter.output();
 }
 

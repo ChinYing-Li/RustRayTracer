@@ -106,20 +106,16 @@ fn main()
     ph.m_zoom = 1.0;
     ph.m_core.m_exposure_time = 0.05;
     let worldptr = Arc::new(world);
-    ph.render_scene(worldptr, &tracer, &mut imgwriter,1.0);
+    ph.render_scene(worldptr, &mut imgwriter, 1.0);
     imgwriter.output();
 }
 
 fn set_up_lights(world: &mut World)
 {
     let point = PointLight::new(0.2, COLOR_WHITE, Vector3::new(-30.0, 20.0, -20.0));
-    // let point1 = PointLight::new(0.5, COLOR_RED, Vector3::new(30.0, 10.0, -5.0));
-    // let point2 = PointLight::new(0.6, COLOR_YELLOW, Vector3::new(70.0, 40.0, 5.0));
     let mut ambient = Ambient::new(COLOR_WHITE);
     ambient.set_radiance_scaling_factor(0.02);
     world.add_light(Arc::new(point));
-    // world.add_light(Arc::new(point1));
-    // world.add_light(Arc::new(point2));
     set_up_ambient_occluder(world);
 }
 

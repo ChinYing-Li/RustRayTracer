@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 pub mod brdf;
-pub mod camera;
+pub mod render;
 //pub mod gallery;
 pub mod geometry;
 pub mod light;

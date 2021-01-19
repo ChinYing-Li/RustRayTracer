@@ -74,15 +74,13 @@ fn main()
     let objdata = Obj::load("/home/chin-ying/Pictures/bunny.obj")
         .unwrap_or_else(|err| panic!(err)).data;
     let mesh = TriMesh::new(&objdata);
-    let mesh_bbox = mesh.m_bbox.clone();
     let mut kdtree = KDTree::<MeshTriangle>::new(
         create_meshtriangles(Arc::new(mesh), &objdata),
-        20.0,
-        10.0,
-        10.0,
+        40.0,
+        1.0,
+        0.5,
         3,
         0);
-    kdtree.m_bounds = mesh_bbox;
     kdtree.init();
 
     let kdtree_ptr = Arc::new(Mutex::new(kdtree));
@@ -103,7 +101,7 @@ fn main()
     }
 
     set_up_lights(&mut world);
-    let mut ph = setUpCamera();
+    let mut ph = set_up_camera();
     ph.m_distance_from_vp = 100.0;
     ph.m_zoom = 1.0;
     ph.m_core.m_exposure_time = 0.05;
@@ -156,10 +154,10 @@ fn setUpMaterial(r: f32, g: f32, b: f32, material_type: &str) -> Arc<dyn Materia
 
 }
 
-fn setUpCamera() -> Pinhole
+fn set_up_camera() -> Pinhole
 {
     let eye = Vector3::new(0.0, -30.0, 30.0);
-    let lookat = Vector3::new(20.0, 40.0, 0.0);
+    let lookat = Vector3::new(0.0, 0.0, 0.0);
     let up = Vector3::new(0.0, 1.0, 0.0);
     Pinhole::new(eye, lookat, up)
 }

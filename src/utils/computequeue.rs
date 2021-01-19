@@ -19,7 +19,7 @@ impl ComputeQueue
     pub fn new(img_dim: Vector2<u32>, 
                block_dim: Vector2<u32>) -> ComputeQueue
     {
-        if img_dim[0] % block_dim[0] || img_dim[1] % block_dim[1]
+        if img_dim[0] % block_dim[0] != 0 || img_dim[1] % block_dim[1] != 0
         {
             panic!("Image dimensions are not multiples for block dimensions");
         }
@@ -57,5 +57,14 @@ impl ComputeQueue
         let index = self.m_next.fetch_add(1, atomic::Ordering::AcqRel);
         if index >= self.m_block_indices.len() { None }
         else { Some(self.m_block_indices[index]) }
+    }
+}
+
+impl<'a> Iterator for ComputeQueueIter<'a>
+{
+    type Item = Vector2<u32>;
+    fn next(&mut self) -> Option<Vector2<u32>>
+    {
+        self.m_queue.next()
     }
 }

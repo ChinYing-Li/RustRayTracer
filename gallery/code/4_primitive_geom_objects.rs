@@ -41,14 +41,12 @@ use raytracer::geometry::{cuboid::Cuboid,
                           kdtree::KDTree,
                           instance::Instance,
                           triangle::Triangle,
-                          trimesh::{TriMesh, MeshTriangle, create_meshtriangles},\
+                          trimesh::{TriMesh, MeshTriangle, create_meshtriangles},
                           Shadable,
                           sphere::Sphere};
 
 fn main()
 {
-    let tracer = Whitted::new();
-
     let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(MultiJittered::new(32, 3))));
     let vp_hres = 800;
     let vp_vres = 600;
@@ -58,7 +56,7 @@ fn main()
     boxed_vp.set_gamma(1.8);
 
     let mut imgwriter = ImageWriter::new("3_reflective_spheres.jpg", vp_hres, vp_vres);
-    let mut world = World::new(boxed_vp);
+    let mut world = World::new(boxed_vp, "whitted");
 
     let mut sphereA = Arc::new(Mutex::new(Sphere::new(10.0,
                                                       Vector3::new(12.0, 20.0, 15.0),
@@ -103,7 +101,7 @@ fn main()
     ph.m_zoom = 1.0;
     ph.m_core.m_exposure_time = 0.05;
     let worldptr = Arc::new(world);
-    ph.render_scene(worldptr, &tracer, &mut imgwriter,1.0);
+    ph.render_scene(worldptr, &mut imgwriter,1.0);
     imgwriter.output();
 }
 
