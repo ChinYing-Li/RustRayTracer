@@ -36,10 +36,6 @@ impl Tracer for Whitted
                 {
                     return material.shade(&mut sr);
                 }
-                /*
-                sr.m_material.clone()
-                    .map(|material|  material.shade(&mut sr)).unwrap()
-                */
             }
             worldptr.as_ref().m_backgroundcolor
         }

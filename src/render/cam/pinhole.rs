@@ -1,5 +1,4 @@
 use cgmath::{Vector3, Vector2, Zero, ElementWise, InnerSpace};
-use rand::Rng;
 use std::sync::Arc;
 
 use crate::{render::cam::{CamStruct, Camera},
@@ -44,9 +43,7 @@ impl Camera for Pinhole
         let mut clr = COLOR_BLACK;
         let vp = worldptr.m_viewplaneptr.as_ref();
         let mut ray = Ray::new(self.m_core.m_eye, Vector3::new(0.0, 0.0, 1.0));
-        let mut sq_sample_point = 0.0;
         let mut actual_sample_point = Vector2::zero();
-        let mut rng = rand::thread_rng();
 
         for x in 0..vp.m_hres
         {
@@ -54,15 +51,15 @@ impl Camera for Pinhole
             {
                 clr = COLOR_BLACK;
 
-                for _i in 0..vp.m_sampler.get_sample_per_pattern()
+                for sample in vp.m_sampler.get_unit_square_samples()
                 {
-                    // TODO use Sampler !!!
-                    sq_sample_point = rng.gen_range(0.0, 1.0);
+                    // TODO: Shall we make sampler a member of viewplane ?
                     actual_sample_point = vp.get_coordinate_from_index(x, y)
                                             .unwrap_or(Vector2::zero())
-                                            .add_element_wise(sq_sample_point);
+                                            .add_element_wise(*sample);
                     ray.m_direction = self.get_ray_direction(actual_sample_point);
                     clr += worldptr.as_ref().m_tracer.trace_ray(worldptr.clone(), &ray, 0);
+                    // TODO: Why should Tracer be part of the World class
                 }
                 let r_before = clr.m_g;
                 // print!("r_before {}", r_before.to_string());

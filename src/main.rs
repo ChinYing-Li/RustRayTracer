@@ -47,8 +47,9 @@ use raytracer::geometry::{cuboid::Cuboid,
 
 fn main()
 {
-    let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(
-        MultiJittered::new(32, 3))));
+    let mut sampler = MultiJittered::new(32, 3);
+    sampler.generate_sample_pattern();
+    let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(sampler)));
     let vp_hres = 800;
     let vp_vres = 600;
     let zoom = 1.0_f32;
@@ -71,7 +72,6 @@ fn main()
     world.add_object(sphereB);
     world.add_object(triangle);
 
-    let c = vec![COLOR_BLUE, COLOR_RED, Colorf::new(0.0, 1.0, 1.0)];
     let objlen= world.m_objects.len();
     let materials: Vec<Phong> = (0..objlen)
         .collect::<Vec<_>>()
@@ -91,7 +91,7 @@ fn main()
     ph.set_zoom(zoom);
     ph.m_core.m_exposure_time = 0.05;
     let worldptr = Arc::new(world);
-    ph.render_scene(worldptr, &mut imgwriter,1.0);
+    ph.render_scene(worldptr, &mut imgwriter);
     imgwriter.output();
 }
 

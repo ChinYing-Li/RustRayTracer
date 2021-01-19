@@ -61,8 +61,8 @@ impl BRDF for Lambertian
         let v = jittered_up.cross(w).normalize();
         let u = v.cross(w);
 
-        let sample_point = self.m_samplerptr.as_ref().unwrap().get_hemisphere_sample();
-        Colorf::new(0.0, 0.0, 0.0)
+        // let sample_point = self.m_samplerptr.as_ref().unwrap().get_hemisphere_sample();
+        Colorf::new(0.0, 0.0, 0.0) // ??? What is this?
     }
 
     fn rho(&self, sr: &ShadeRec, w_o: Vector3<f32>) -> Colorf

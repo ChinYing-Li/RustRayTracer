@@ -64,29 +64,37 @@ impl Sampler for Jittered
         self.m_core.set_map_to_hemisphere(flag, e);
     }
 
-    fn get_unit_square_sample(&mut self) -> Vector2<f32>
+    fn get_unit_square_samples(&self) -> &Vec<Vector2<f32>>
     {
-        self.m_core.get_unit_square_sample()
+        self.m_core.get_unit_square_samples()
     }
 
-    fn get_disk_sample(&self) -> Vector2<f32>
+    fn get_disk_samples(&self) -> &Vec<Vector2<f32>>
     {
-        let index = self.m_rng.borrow_mut().gen::<u16>() as usize;
-        match self.m_core.get_disk_sample(index)
+        match self.m_core.get_disk_samples()
         {
             Ok(sample) => sample,
             _ => panic!("The Jittered Sampler isn't set to generate samples on disk")
         }
     }
 
-    fn get_hemisphere_sample(&self) -> Vector3<f32>
+    fn get_disk_sample(&self) -> Vector2<f32>
     {
-        let index = self.m_rng.borrow_mut().gen::<u16>() as usize;
-        match self.m_core.get_hemisphere_sample(index)
+        self.m_core.get_disk_sample()
+    }
+
+    fn get_hemisphere_samples(&self) -> &Vec<Vector3<f32>>
+    {
+        match self.m_core.get_hemisphere_samples()
         {
             Ok(sample) => sample,
             _ => panic!("The Jittered Sampler isn't set to generate samples on hemisphere")
         }
+    }
+
+    fn get_hemisphere_sample(&self) -> Vector3<f32>
+    {
+        self.m_core.get_hemisphere_sample()
     }
 }
 

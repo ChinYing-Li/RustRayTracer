@@ -53,7 +53,6 @@ impl ViewPlane
         self.m_pixsize_adjusted = self.m_pixsize / zoom;
     }
 
-    //
     pub fn get_coordinate_from_index(&self, i: u16, j: u16) -> Result<Vector2<f32>, &str>
     {
         match self.is_coordinates_valid(i, j)
