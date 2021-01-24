@@ -28,12 +28,12 @@ impl Sampler for DummySampler
         unimplemented!()
     }
 
-    fn get_unit_square_samples(&self) -> &Vec<Vector2<f32>>
+    fn get_unit_square_pattern(&self) -> &Vec<Vector2<f32>>
     {
         unimplemented!()
     }
 
-    fn get_disk_samples(&self) -> &Vec<Vector2<f32>> {
+    fn get_disk_pattern(&self) -> &Vec<Vector2<f32>> {
         unimplemented!()
     }
 
@@ -41,7 +41,7 @@ impl Sampler for DummySampler
         unimplemented!()
     }
 
-    fn get_hemisphere_samples(&self) -> &Vec<Vector3<f32>> {
+    fn get_hemisphere_pattern(&self) -> &Vec<Vector3<f32>> {
         unimplemented!()
     }
 

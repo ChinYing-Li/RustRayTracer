@@ -8,6 +8,8 @@ use crate::output::OutputManager;
 use crate::render::cam::Camera;
 use crate::utils::computequeue::ComputeQueue;
 use cgmath::{Vector2, Vector3};
+use crate::render::renderbuffer::RenderBuffer;
+use crate::sampler::Sampler;
 
 const BLOCK_DIM: Vector2<u32> = Vector2::new(8, 8);
 
@@ -53,7 +55,11 @@ impl MultiThread
     }
 }
 
-fn work(queue: &ComputeQueue)
+fn work(queue: &ComputeQueue,
+        world: Arc<World>,
+        camera: &Camera,
+        renderbuffer: &RenderBuffer,
+        sampler: &mut Sampler)
 {
     let block_dim = queue.get_block_dim();
     for block in queue.iter()

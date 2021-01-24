@@ -3,7 +3,7 @@ pub mod nrooks;
 pub mod jittered;
 pub mod dummy;
 
-use cgmath::{Vector2, Vector3, ElementWise};
+use cgmath::{Vector2, Vector3, ElementWise, Zero};
 use std::{f32};
 use cgmath::num_traits::Inv;
 use rand::{Rng, seq::SliceRandom, thread_rng};
@@ -19,11 +19,11 @@ struct SamplerCore
 {
     pub m_sample_per_pattern: usize,
     pub m_num_pattern: usize,
-    m_samples: Vec<Vector2<f32>>,
+    m_samples: Vec<Vec<Vector2<f32>>>, // TODO: use 2D Vec instead of 1D
     m_map_to_disk: bool,
     m_map_to_hemisphere: bool,
-    m_samples_on_disk: Option<Vec<Vector2<f32>>>,
-    m_samples_on_hemisphere: Option<Vec<Vector3<f32>>>,
+    m_samples_on_disk: Vec<Vec<Vector2<f32>>>,
+    m_samples_on_hemisphere: Vec<Vec<Vector3<f32>>>,
 
     pub m_shuffled_indices: Vec<u32>,
     m_rng: RefCell<ThreadRng>
@@ -37,11 +37,11 @@ impl SamplerCore
         {
             m_sample_per_pattern: sample_per_pattern,
             m_num_pattern: num_pattern,
-            m_samples : Vec::with_capacity((sample_per_pattern as usize * num_pattern) as usize),
+            m_samples : vec![vec![Vector2::zero(); sample_per_pattern]; num_pattern],
             m_map_to_disk: false,
             m_map_to_hemisphere: false,
-            m_samples_on_disk: None,
-            m_samples_on_hemisphere: None,
+            m_samples_on_disk: Vec::with_capacity(num_pattern),
+            m_samples_on_hemisphere: Vec::with_capacity(num_pattern),
 
             m_shuffled_indices: SamplerCore::setup_shuffled_indices(num_pattern, sample_per_pattern),
             m_rng: RefCell::new(rand::thread_rng()),
@@ -73,75 +73,91 @@ impl SamplerCore
         }
     }
 
-    fn get_unit_square_samples(&self) -> &Vec<Vector2<f32>>
+    fn get_unit_square_pattern(&self) -> &Vec<Vector2<f32>>
     {
-        &self.m_samples
+        let pattern_index = self.get_pattern_index();
+        &self.m_samples[pattern_index]
     }
 
-    fn get_disk_samples(&self) -> Result<&Vec<Vector2<f32>>, &str>
+    fn get_disk_pattern(&self) -> Result<&Vec<Vector2<f32>>, &str>
     {
         if !self.m_map_to_disk { return Err("Didn't yet generate disk samples") }
-        Ok(self.m_samples_on_disk.as_ref().unwrap())
+        let pattern_index = self.get_pattern_index();
+        Ok(&self.m_samples_on_disk[pattern_index])
     }
 
     fn get_disk_sample(&self) -> Vector2<f32>
     {
-        if let Some(samples) = &self.m_samples_on_disk
+        if self.m_samples_on_disk.len() != 0
         {
-            let index = self.m_rng.borrow_mut().gen::<usize>() % samples.len();
-            samples[index]
+            let pattern_index = self.get_pattern_index();
+            let sample_index = self.m_rng.borrow_mut().gen::<usize>() % self.m_sample_per_pattern;
+            self.m_samples_on_disk[pattern_index][sample_index]
         }
         else { panic!("Didn't yet generate hemisphere samples") }
     }
 
-    fn get_hemisphere_samples(&self) -> Result<&Vec<Vector3<f32>>, &str>
+    fn get_hemisphere_pattern(&self) -> Result<&Vec<Vector3<f32>>, &str>
     {
         if !self.m_map_to_hemisphere { return Err("") }
-        Ok(self.m_samples_on_hemisphere.as_ref().unwrap())
+        let pattern_index = self.get_pattern_index();
+        Ok(&self.m_samples_on_hemisphere[pattern_index])
     }
 
     fn get_hemisphere_sample(&self) -> Vector3<f32>
     {
-        if let Some(samples) = &self.m_samples_on_hemisphere
+        if self.m_samples_on_hemisphere.len() != 0
         {
-            let index = self.m_rng.borrow_mut().gen::<usize>() % samples.len();
-            samples[index]
+            let pattern_index = self.get_pattern_index();
+            let sample_index = self.m_rng.borrow_mut().gen::<usize>() % self.m_sample_per_pattern;
+            self.m_samples_on_hemisphere[pattern_index][sample_index]
         }
         else { panic!("Didn't yet generate hemisphere samples") }
     }
 
     fn shuffle_x_coordinates(&mut self)
     {
-        assert_eq!(self.m_samples.len(), self.m_num_pattern * self.m_sample_per_pattern);
+        assert_eq!(self.m_samples.len(), self.m_num_pattern);
+        assert_eq!(self.m_samples[0].len(), self.m_sample_per_pattern);
         let mut rng = rand::thread_rng();
 
         for i in 0..self.m_num_pattern
         {
             for j in 0..self.m_sample_per_pattern
             {
+                let target_sample_index = rng.gen::<usize>() % self.m_sample_per_pattern;
+                let temp = self.m_samples[i][j].x;
+                self.m_samples[i][j].x = self.m_samples[i][target_sample_index].x;
+                self.m_samples[i][target_sample_index].x = temp;
+                /*
                 let target = rng.gen::<usize>() % self.m_sample_per_pattern + i * self.m_sample_per_pattern;
                 let temp = self.m_samples[j + i * self.m_sample_per_pattern].x;
-
                 self.m_samples[j + i * self.m_sample_per_pattern].x = self.m_samples[target].x;
                 self.m_samples[target].x = temp;
+                 */
             }
         }
     }
 
     fn shuffle_y_coordinates(&mut self)
     {
-        assert_eq!(self.m_samples.len(), self.m_num_pattern * self.m_sample_per_pattern);
-
+        assert_eq!(self.m_samples.len(), self.m_num_pattern);
+        assert_eq!(self.m_samples[0].len(), self.m_sample_per_pattern);
+        
         let mut rng = rand::thread_rng();
         for i in 0..self.m_num_pattern
         {
             for j in 0..self.m_sample_per_pattern
             {
-                let target = rng.gen::<usize>() % self.m_sample_per_pattern + i * self.m_sample_per_pattern;
+                let target_sample_index = rng.gen::<usize>() % self.m_sample_per_pattern;
+                let temp = self.m_samples[i][j].y;
+                self.m_samples[i][j].y = self.m_samples[i][target_sample_index].y;
+                self.m_samples[i][target_sample_index].y = temp;
+                /*
                 let temp = self.m_samples[j + i * self.m_sample_per_pattern].y;
-
                 self.m_samples[j + i * self.m_sample_per_pattern].y = self.m_samples[target].y;
                 self.m_samples[target].y = temp;
+                */
             }
         }
     }
@@ -162,7 +178,7 @@ impl SamplerCore
 
     fn map_sample_to_disk(&mut self)
     {
-        if self.m_samples_on_disk != None
+        if self.m_samples_on_disk.len() != 0
         { return; }
         let mut radius = 0.0;
         let mut phi = 0.0;
@@ -172,61 +188,77 @@ impl SamplerCore
         let mut diskpattern = Vec::with_capacity(n);
         let identityvec = Vector2::new(1.0, 1.0);
 
-        for square_sample in self.m_samples.iter()
+        for pattern in self.m_samples.iter()
         {
-            samp = square_sample.mul_element_wise(2.0) - identityvec;
-            if samp.x > -samp.y
+            for square_sample in pattern.iter()
             {
-                if samp.x > samp.y
+                samp = square_sample.mul_element_wise(2.0) - identityvec;
+                if samp.x > -samp.y
                 {
-                    radius = samp.x;
-                    phi = samp.y / samp.x;
+                    if samp.x > samp.y
+                    {
+                        radius = samp.x;
+                        phi = samp.y / samp.x;
+                    }
+                    else
+                    {
+                        radius = samp.y;
+                        phi = 2.0 - samp.x / samp.y;
+                    }
                 }
                 else
                 {
-                    radius = samp.y;
-                    phi = 2.0 - samp.x / samp.y;
-                }
-            }
-            else
-            {
-                if samp.x < samp.y
-                {
-                    radius = - samp.x;
-                    phi = 4.0 + samp.y / samp.x;
-                }
-                else {
-                    radius = - samp.y;
-                    if samp.y != 0.0
+                    if samp.x < samp.y
                     {
-                        phi = 6.0 - samp.x / samp.y;
+                        radius = - samp.x;
+                        phi = 4.0 + samp.y / samp.x;
                     }
-                    else { phi = 0.0; }
+                    else {
+                        radius = - samp.y;
+                        if samp.y != 0.0
+                        {
+                            phi = 6.0 - samp.x / samp.y;
+                        }
+                        else { phi = 0.0; }
+                    }
                 }
-            }
 
-            phi *= f32::consts::PI / 4.0;
-            diskpattern.push(Vector2::new(radius * phi.cos(), radius * phi.sin()));
+                phi *= f32::consts::PI / 4.0;
+                diskpattern.push(Vector2::new(radius * phi.cos(), radius * phi.sin()));
+            }
         }
-        self.m_samples_on_disk = Some(diskpattern);
+
+        self.m_samples_on_disk = (0..self.m_num_pattern)
+            .map(|pattern_index| diskpattern[pattern_index * self.m_sample_per_pattern..(pattern_index+1) * self.m_sample_per_pattern].to_vec())
+            .collect();
     }
 
     fn map_sample_to_hemisphere(&mut self, e: f32)
     {
         let n = self.m_num_pattern * self.m_sample_per_pattern;
         let mut hemisphere_pattern = Vec::with_capacity(n);
-        for s in self.m_samples.iter()
+        for pattern in self.m_samples.iter()
         {
-            let cos_phi = (2.0 * f32::consts::PI * s.x).cos();
-            let sin_phi = (2.0 * f32::consts::PI * s.x).sin();
-            let cos_theta = (1.0 - s.y).powf((e + 1.0).inv());
-            let sin_theta = (1.0 - cos_theta.powf(2.0)).sqrt();
-            let pu = sin_theta * cos_phi;
-            let pv = sin_theta * sin_phi;
-            let pw = cos_theta;
-            hemisphere_pattern.push(Vector3::new(pu, pv, pw));
+            for s in pattern.iter()
+            {
+                let cos_phi = (2.0 * f32::consts::PI * s.x).cos();
+                let sin_phi = (2.0 * f32::consts::PI * s.x).sin();
+                let cos_theta = (1.0 - s.y).powf((e + 1.0).inv());
+                let sin_theta = (1.0 - cos_theta.powf(2.0)).sqrt();
+                let pu = sin_theta * cos_phi;
+                let pv = sin_theta * sin_phi;
+                let pw = cos_theta;
+                hemisphere_pattern.push(Vector3::new(pu, pv, pw));
+            }
         }
-        self.m_samples_on_hemisphere = Some(hemisphere_pattern);
+        self.m_samples_on_hemisphere = (0..self.m_num_pattern)
+            .map(|pattern_index| hemisphere_pattern[pattern_index * self.m_sample_per_pattern..(pattern_index+1) * self.m_sample_per_pattern].to_vec())
+            .collect();
+    }
+
+    fn get_pattern_index(&self) -> usize
+    {
+        self.m_rng.borrow_mut().gen::<usize>() % self.m_num_pattern
     }
 }
 
@@ -236,10 +268,10 @@ pub trait Sampler
     fn get_sample_per_pattern(&self) -> usize { 1 }
     fn set_map_to_disk(&mut self, flag: bool);
     fn set_map_to_hemisphere(&mut self, flag: bool, e: f32);
-    fn get_unit_square_samples(&self) -> &Vec<Vector2<f32>>;
-    fn get_disk_samples(&self) -> &Vec<Vector2<f32>>;
+    fn get_unit_square_pattern(&self) -> &Vec<Vector2<f32>>;
+    fn get_disk_pattern(&self) -> &Vec<Vector2<f32>>;
     fn get_disk_sample(&self) -> Vector2<f32>;
-    fn get_hemisphere_samples(&self) -> &Vec<Vector3<f32>>;
+    fn get_hemisphere_pattern(&self) -> &Vec<Vector3<f32>>;
     fn get_hemisphere_sample(&self) -> Vector3<f32>;
 }
 
@@ -262,15 +294,15 @@ mod ConvertSampleTest
     fn checkMap2Disk()
     {
         let mut core = SamplerCore::new(4, 2);
-        core.m_samples.push(Vector2::new(0.8, 0.7));
-        core.m_samples.push(Vector2::new(0.5, 0.6));
-        core.m_samples.push(Vector2::new(0.7, 0.3));
-        core.m_samples.push(Vector2::new(0.1, 0.2));
-        core.m_samples.push(Vector2::new(0.5, 0.0));
-        core.m_samples.push(Vector2::new(0.0, 0.0));
+        core.m_samples[0].push(Vector2::new(0.8, 0.7));
+        core.m_samples[0].push(Vector2::new(0.5, 0.6));
+        core.m_samples[0].push(Vector2::new(0.7, 0.3));
+        core.m_samples[0].push(Vector2::new(0.1, 0.2));
+        core.m_samples[1].push(Vector2::new(0.5, 0.0));
+        core.m_samples[1].push(Vector2::new(0.0, 0.0));
         // place holder
-        core.m_samples.push(Vector2::new(0.0, 0.0));
-        core.m_samples.push(Vector2::new(0.0, 0.0));
+        core.m_samples[1].push(Vector2::new(0.0, 0.0));
+        core.m_samples[1].push(Vector2::new(0.0, 0.0));
 
         core.map_sample_to_disk();
 

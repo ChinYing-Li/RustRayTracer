@@ -27,21 +27,22 @@ impl MultiJittered
 
 impl Sampler for MultiJittered
 {
-    fn generate_sample_pattern(&mut self) {
-        self.m_core.m_samples.clear();
-
-        let sqrt_samples_per_pattern = (self.m_core.m_sample_per_pattern as f32).sqrt() as u16;
+    fn generate_sample_pattern(&mut self)
+    {
+        let sqrt_samples_per_pattern = (self.m_core.m_sample_per_pattern as f32).sqrt() as usize;
         let inv_sqrt = 1.0 / sqrt_samples_per_pattern as f32;
         let mut rng_ref = self.m_core.m_rng.borrow_mut().clone();
+        print!("sample patter, {}", self.m_core.m_samples.len());
 
-        for _ in 0..self.m_core.m_num_pattern
+        for pattern in 0..self.m_core.m_num_pattern
         {
-            for row in 0..sqrt_samples_per_pattern
+            for j in 0..sqrt_samples_per_pattern
             {
                 for i in 0..sqrt_samples_per_pattern
                 {
-                    self.m_core.m_samples.push(Vector2::new((row as f32 + rng_ref.gen_range(0.0, 1.0)) * inv_sqrt.powf(2.0),
-                                                            (i as f32 + rng_ref.gen_range(0.0, 1.0)) * inv_sqrt.powf(2.0)));
+                    self.m_core.m_samples[pattern][i * sqrt_samples_per_pattern + j] =
+                        (Vector2::new((j as f32 + rng_ref.gen_range(0.0, 1.0)) * inv_sqrt.powf(2.0),
+                                      (i as f32 + rng_ref.gen_range(0.0, 1.0)) * inv_sqrt.powf(2.0)));
                 }
             }
         }
@@ -55,7 +56,7 @@ impl Sampler for MultiJittered
             {
                 for i in 0..sqrt_samples_per_pattern
                 {
-                    self.m_core.m_samples[p * self.m_core.m_sample_per_pattern + (row * sqrt_samples_per_pattern + i) as usize]
+                    self.m_core.m_samples[p][(row * sqrt_samples_per_pattern + i) as usize]
                         .add_assign_element_wise(Vector2::new(row as f32 * inv_sqrt, i as f32 * inv_sqrt));
                 }
             }
@@ -79,14 +80,14 @@ impl Sampler for MultiJittered
         self.m_core.set_map_to_hemisphere(flag, e);
     }
 
-    fn get_unit_square_samples(&self) -> &Vec<Vector2<f32>>
+    fn get_unit_square_pattern(&self) -> &Vec<Vector2<f32>>
     {
-        self.m_core.get_unit_square_samples()
+        self.m_core.get_unit_square_pattern()
     }
 
-    fn get_disk_samples(&self) -> &Vec<Vector2<f32>>
+    fn get_disk_pattern(&self) -> &Vec<Vector2<f32>>
     {
-        match self.m_core.get_disk_samples()
+        match self.m_core.get_disk_pattern()
         {
             Ok(sample) => sample,
             _ =>
@@ -101,9 +102,9 @@ impl Sampler for MultiJittered
         self.m_core.get_disk_sample()
     }
 
-    fn get_hemisphere_samples(&self) -> &Vec<Vector3<f32>>
+    fn get_hemisphere_pattern(&self) -> &Vec<Vector3<f32>>
     {
-        match self.m_core.get_hemisphere_samples()
+        match self.m_core.get_hemisphere_pattern()
         {
             Ok(sample) => sample,
             _ => panic!("The MultiJittered Sampler isn't set to generate samples on hemisphere")
