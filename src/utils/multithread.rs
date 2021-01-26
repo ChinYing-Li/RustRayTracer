@@ -8,6 +8,9 @@ use crate::output::OutputManager;
 use crate::render::cam::Camera;
 use crate::utils::computequeue::ComputeQueue;
 use cgmath::{Vector2, Vector3};
+use crate::render::renderbuffer::RenderBuffer;
+use crate::sampler::Sampler;
+use crate::render::renderdata::RenderMeta;
 
 const BLOCK_DIM: Vector2<u32> = Vector2::new(8, 8);
 
@@ -27,20 +30,28 @@ impl MultiThread
     }
 
     // We also need to know the dimensions of the view plane
-    fn render_scene(&mut self,
-                    world: Arc<World>,
-                    img_writer: &mut dyn OutputManager,
-                    camera: &mut dyn Camera)
+    pub fn render_to_buffer(&mut self,
+                        world: Arc<World>,
+                        camera: &dyn Camera,
+                        buffer: &mut RenderBuffer)
     {
-        let vp_hres = 800;
-        let vp_wres = 600;
+        let vp_hres = 800_usize;
+        let vp_wres = 600_usize;
 
-        let queue = ComputeQueue::new(Vector2::new(vp_wres, vp_hres),
-                                                    BLOCK_DIM);
+        // let queue = ComputeQueue::new(Vector2::new(vp_wres, vp_hres),BLOCK_DIM);
+        // let mut buffer = RenderBuffer::new((vp_hres, vp_wres), (100, 100));
         let n_thread = self.m_pool.thread_count();
 
-        self.m_pool.scoped(|scope|
+        self.m_pool.scoped(|scoped|
             {
+                for blockmeta in buffer.iter()
+                {
+                    scoped.execute(move ||
+                        {
+                            buffer.read(camera.render(world.clone(), &blockmeta), &blockmeta);
+                        });
+                }
+                /*
                 for _ in 0..n_thread
                 {
                     let q = &queue;
@@ -49,15 +60,15 @@ impl MultiThread
 
                         });
                 }
+
+                 */
             });
     }
 }
 
-fn work(queue: &ComputeQueue)
+fn work(world: Arc<World>,
+        camera: &dyn Camera,
+        rendermeta: &RenderMeta)
 {
-    let block_dim = queue.get_block_dim();
-    for block in queue.iter()
-    {
-
-    }
+    camera.render(world, rendermeta);
 }

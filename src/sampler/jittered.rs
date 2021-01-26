@@ -31,18 +31,18 @@ impl Sampler for Jittered
 {
     fn generate_sample_pattern(&mut self)
     {
-        let sqrt_sample_per_pattern = (self.m_core.m_sample_per_pattern as f32).sqrt() as u16;
+        let sqrt_sample_per_pattern = (self.m_core.m_sample_per_pattern as f32).sqrt() as usize;
         let inv_sqrt = 1.0 / sqrt_sample_per_pattern as f32;
         let mut rng_ref = self.m_rng.borrow_mut();
 
-        for _ in 0..self.m_core.m_num_pattern
+        for pattern in 0..self.m_core.m_num_pattern
         {
             for i in 0..sqrt_sample_per_pattern
             {
                 for j in 0..sqrt_sample_per_pattern
                 {
-                    self.m_core.m_samples.push(Vector2::new(i as f32 * inv_sqrt + rng_ref.gen_range(0.0, inv_sqrt),
-                                                                  j as f32 * inv_sqrt + rng_ref.gen_range(0.0, inv_sqrt)));
+                    self.m_core.m_samples_on_square[pattern][i * sqrt_sample_per_pattern + j] = Vector2::new(i as f32 * inv_sqrt + rng_ref.gen_range(0.0, inv_sqrt),
+                                                                                                             j as f32 * inv_sqrt + rng_ref.gen_range(0.0, inv_sqrt));
                 }
             }
         }
@@ -64,35 +64,35 @@ impl Sampler for Jittered
         self.m_core.set_map_to_hemisphere(flag, e);
     }
 
-    fn get_unit_square_samples(&self) -> &Vec<Vector2<f32>>
+    fn get_unit_square_pattern(&mut self) -> &Vec<Vector2<f32>>
     {
-        self.m_core.get_unit_square_samples()
+        self.m_core.get_unit_square_pattern()
     }
 
-    fn get_disk_samples(&self) -> &Vec<Vector2<f32>>
+    fn get_disk_pattern(&mut self) -> &Vec<Vector2<f32>>
     {
-        match self.m_core.get_disk_samples()
+        match self.m_core.get_disk_pattern()
         {
             Ok(sample) => sample,
             _ => panic!("The Jittered Sampler isn't set to generate samples on disk")
         }
     }
 
-    fn get_disk_sample(&self) -> Vector2<f32>
+    fn get_disk_sample(&mut self) -> Vector2<f32>
     {
         self.m_core.get_disk_sample()
     }
 
-    fn get_hemisphere_samples(&self) -> &Vec<Vector3<f32>>
+    fn get_hemisphere_pattern(&mut self) -> &Vec<Vector3<f32>>
     {
-        match self.m_core.get_hemisphere_samples()
+        match self.m_core.get_hemisphere_pattern()
         {
             Ok(sample) => sample,
             _ => panic!("The Jittered Sampler isn't set to generate samples on hemisphere")
         }
     }
 
-    fn get_hemisphere_sample(&self) -> Vector3<f32>
+    fn get_hemisphere_sample(&mut self) -> Vector3<f32>
     {
         self.m_core.get_hemisphere_sample()
     }
@@ -118,16 +118,19 @@ mod JitteredTest
         let width = 256;
         let height = 256;
         let imgname = "test/output/Jittered.jpg";
-        let mut imgwriter = ImageWriter::new(imgname, width as u16, height as u16);
+        let mut imgwriter = ImageWriter::new(imgname, width, height);
 
         let mut sampler = Jittered::new(16, 1);
         sampler.generate_sample_pattern();
 
-        for sample in sampler.m_core.m_samples.iter()
+        for pattern in sampler.m_core.m_samples_on_square.iter()
         {
-            let x = sample.x * (width as f32);
-            let y = sample.y * (height as f32);
-            imgwriter.write_pixel(x as u16, y as u16, COLOR_WHITE, INV_GAMMA);
+            for sample in pattern.iter()
+            {
+                let x = sample.x * (width as f32);
+                let y = sample.y * (height as f32);
+                imgwriter.write_pixel(x as usize, y as usize, COLOR_WHITE, INV_GAMMA);
+            }
         }
 
         imgwriter.output();

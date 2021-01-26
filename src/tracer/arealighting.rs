@@ -5,7 +5,6 @@ use crate::ray::Ray;
 use crate::utils::color::{Colorf};
 use crate::world::world::World;
 use crate::tracer::{Tracer, HUGE_VAL_FOR_TIME};
-use crate::world::shaderec::ShadeRec;
 
 pub struct AreaLighting
 {}

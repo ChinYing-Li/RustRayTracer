@@ -8,20 +8,20 @@ use cgmath::Vector2;
 
 pub struct ImageWriter<'a>
 {
-    m_imgpath: &'a str,
-    m_imgresolution: Vector2<u16>,
+    pub m_imgpath: &'a str,
+    m_imgresolution: (usize, usize),
     m_imgbuffer: RgbaImage,
 }
 
 impl ImageWriter<'_>
 {
-    pub fn new(imgpath: &str, width: u16, height: u16) -> ImageWriter
+    pub fn new(imgpath: &str, width: usize, height: usize) -> ImageWriter
     {
         ImageWriter
         {
             m_imgpath: imgpath,
-            m_imgresolution: Vector2::new(width, height),
-            m_imgbuffer: RgbaImage::new(width.into(), height.into())
+            m_imgresolution: (width, height),
+            m_imgbuffer: RgbaImage::new(width as u32, height as u32)
         }
     }
 
@@ -44,13 +44,18 @@ impl fmt::Debug for ImageWriter<'_>
 
 impl OutputManager for ImageWriter<'_>
 {
-    fn write_pixel(&mut self, x: u16, y: u16, color: Colorf, inv_gamma: f32)
+    fn get_img_dim(&self) -> (usize, usize)
+    {
+        self.m_imgresolution
+    }
+
+    fn write_pixel(&mut self, x: usize, y: usize, color: Colorf, inv_gamma: f32)
     {
         let mut convcolor = Color8bit::from(color);
         convcolor.m_r = ((convcolor.m_r as f32) * inv_gamma.exp()) as u8;
         convcolor.m_g = ((convcolor.m_g as f32) * inv_gamma.exp()) as u8;
         convcolor.m_b = ((convcolor.m_b as f32) * inv_gamma.exp()) as u8;
-        self.m_imgbuffer.put_pixel(x.into(), y.into(), Rgba([convcolor.m_r, convcolor.m_g, convcolor.m_b, 255]));
+        self.m_imgbuffer.put_pixel(x as u32, y as u32, Rgba([convcolor.m_r, convcolor.m_g, convcolor.m_b, 255]));
     }
 
     fn output(&mut self)

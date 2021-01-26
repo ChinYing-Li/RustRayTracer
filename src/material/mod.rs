@@ -10,7 +10,6 @@ use std::error::Error;
 
 use crate::world::shaderec::ShadeRec;
 use crate::utils::color::Colorf;
-use crate::tracer::Tracer;
 
 pub trait Material
 {

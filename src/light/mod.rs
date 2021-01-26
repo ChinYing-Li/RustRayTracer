@@ -12,7 +12,7 @@ pub mod directional;
 pub mod pointlight;
 pub mod ambient;
 
-pub trait Light
+pub trait Light: Send + Sync
 {
     fn get_direction(&self, sr: &ShadeRec) -> Vector3<f32>;
     fn L(&self, sr: &ShadeRec) -> Colorf;

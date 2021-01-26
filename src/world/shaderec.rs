@@ -5,8 +5,6 @@ use std::sync::Arc;
 
 use crate::ray::Ray;
 use crate::world::world::World;
-use crate::utils::color::Colorf;
-use crate::geometry::Geometry;
 use crate::material::Material;
 
 

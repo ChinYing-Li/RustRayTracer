@@ -5,9 +5,11 @@ use crate::{render::cam::{CamStruct, Camera},
             ray::Ray,
             world::world::World};
 use crate::utils::colorconstant::COLOR_BLACK;
-use crate::tracer::Tracer;
 use crate::output::OutputManager;
 use cgmath::num_traits::Inv;
+use crate::render::renderbuffer::RenderBuffer;
+use crate::render::renderdata::RenderMeta;
+use crate::utils::color::Colorf;
 
 
 pub struct Pinhole
@@ -37,7 +39,7 @@ impl Camera for Pinhole
              - self.m_core.m_w.mul_element_wise(self.m_distance_from_vp))
              .normalize()
     }
-
+    // Should render to buffer...
     fn render_scene<'a>(&mut self, worldptr: Arc<World>, outmgr: &'a mut dyn OutputManager)
     {
         let mut clr = COLOR_BLACK;
@@ -51,7 +53,7 @@ impl Camera for Pinhole
             {
                 clr = COLOR_BLACK;
 
-                for sample in vp.m_sampler.get_unit_square_samples()
+                for sample in vp.m_sampler.get_unit_square_pattern()
                 {
                     // TODO: Shall we make sampler a member of viewplane ?
                     actual_sample_point = vp.get_coordinate_from_index(x, y)
@@ -70,6 +72,44 @@ impl Camera for Pinhole
                 outmgr.write_pixel(x.into(), y.into(), clr, vp.get_inv_gamma());
             }
         }
+    }
+
+    fn render(&self, world_ptr: Arc<World>, rendermeta: &RenderMeta) -> Vec<Colorf>
+    {
+        let mut clr = COLOR_BLACK;
+        let vp = world_ptr.m_viewplaneptr.as_ref();
+        let mut ray = Ray::new(self.m_core.m_eye, Vector3::new(0.0, 0.0, 1.0));
+        let mut actual_sample_point = Vector2::zero();
+        let start_coords = rendermeta.get_start_coords();
+        let end_coords = rendermeta.get_end_coords();
+        let mut samples = Vec::with_capacity(rendermeta.m_area);
+
+        for x in start_coords.0..end_coords.0
+        {
+            for y in start_coords.1..end_coords.1
+            {
+                clr = COLOR_BLACK;
+
+                for sample in vp.m_sampler.get_unit_square_pattern()
+                {
+                    // TODO: Shall we make sampler a member of viewplane ?
+                    actual_sample_point = vp.get_coordinate_from_index(x as u16, y as u16)
+                        .unwrap_or(Vector2::zero())
+                        .add_element_wise(*sample);
+                    ray.m_direction = self.get_ray_direction(actual_sample_point);
+                    clr += world_ptr.as_ref().m_tracer.trace_ray(world_ptr.clone(), &ray, 0);
+                    // TODO: Why should Tracer be part of the World class
+                }
+                let r_before = clr.m_g;
+                // print!("r_before {}", r_before.to_string());
+                clr /= (vp.m_sampler.get_sample_per_pattern() as f32); // this seems quite fishy
+                // print!("r_after {}", clr.m_g.to_string());
+                clr *= self.m_core.m_exposure_time;
+                clr.clamp();
+                samples.push(clr);
+            }
+        }
+        samples
     }
 
     fn set_zoom(&mut self, zoom: f32)

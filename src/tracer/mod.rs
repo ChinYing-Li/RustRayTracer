@@ -11,7 +11,7 @@ use crate::utils::colorconstant::COLOR_BLACK;
 
 const HUGE_VAL_FOR_TIME: f32 = 1e9;
 
-pub trait Tracer
+pub trait Tracer: Send + Sync
 {
     fn trace_ray(&self, worldptr: Arc<World>, ray: &Ray, depth: u16) -> Colorf;
     fn trace_ray_with_time(&self, worldptr: Arc<World>, ray: &Ray, time: &mut f32, depth: u16) -> Colorf
