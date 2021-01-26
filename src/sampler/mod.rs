@@ -9,6 +9,7 @@ use cgmath::num_traits::Inv;
 use rand::{Rng, seq::SliceRandom};
 use std::error::Error;
 use std::fmt;
+use rand::prelude::StdRng;
 
 type Point2<T> = Vector2<T>;
 
@@ -21,8 +22,8 @@ struct SamplerCore
     m_map_to_hemisphere: bool,
     m_samples_on_square: Vec<Vec<Vector2<f32>>>,
     m_samples_on_disk: Vec<Vec<Vector2<f32>>>,
-    m_samples_on_hemisphere: Vec<Vec<Vector3<f32>>>,
-
+    m_samples_on_hemisphere: Vec<VeVector3<f32>>>,
+    m_rng: StdRng,
     pub m_shuffled_indices: Vec<u32>,
 }
 

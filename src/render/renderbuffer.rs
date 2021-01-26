@@ -1,6 +1,5 @@
 use cgmath::{Vector3, InnerSpace, dot, ElementWise, Zero, Vector2};
 use std::sync::{Mutex, atomic};
-use image::error::UnsupportedErrorKind::Color;
 use std::iter;
 
 use crate::utils::color::Colorf;

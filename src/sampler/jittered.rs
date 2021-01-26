@@ -5,12 +5,12 @@ use std::borrow::BorrowMut;
 use std::cell::RefCell;
 
 use crate::sampler::{Sampler, SamplerCore};
+use rand::prelude::StdRng;
 
 #[derive(Clone, Debug)]
 pub struct Jittered
 {
     m_core: SamplerCore,
-    m_rng: RefCell<ThreadRng>,
 }
 
 impl Jittered
@@ -22,7 +22,6 @@ impl Jittered
         Jittered
         {
             m_core: core,
-            m_rng: RefCell::new(rand::thread_rng()),
         }
     }
 }
@@ -33,7 +32,7 @@ impl Sampler for Jittered
     {
         let sqrt_sample_per_pattern = (self.m_core.m_sample_per_pattern as f32).sqrt() as usize;
         let inv_sqrt = 1.0 / sqrt_sample_per_pattern as f32;
-        let mut rng_ref = self.m_rng.borrow_mut();
+        let mut rng = StdRng;
 
         for pattern in 0..self.m_core.m_num_pattern
         {
@@ -41,8 +40,8 @@ impl Sampler for Jittered
             {
                 for j in 0..sqrt_sample_per_pattern
                 {
-                    self.m_core.m_samples_on_square[pattern][i * sqrt_sample_per_pattern + j] = Vector2::new(i as f32 * inv_sqrt + rng_ref.gen_range(0.0, inv_sqrt),
-                                                                                                             j as f32 * inv_sqrt + rng_ref.gen_range(0.0, inv_sqrt));
+                    self.m_core.m_samples_on_square[pattern][i * sqrt_sample_per_pattern + j] = Vector2::new(i as f32 * inv_sqrt + rng.gen_range(0.0, inv_sqrt),
+                                                                                                             j as f32 * inv_sqrt + rng.gen_range(0.0, inv_sqrt));
                 }
             }
         }

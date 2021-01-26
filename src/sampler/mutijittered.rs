@@ -4,6 +4,7 @@ use rand::Rng;
 use rand::rngs::ThreadRng;
 use std::cell::RefCell;
 use std::ops::Deref;
+use rand::prelude::StdRng;
 
 #[derive(Clone, Debug)]
 pub struct MultiJittered
@@ -31,7 +32,7 @@ impl Sampler for MultiJittered
     {
         let sqrt_samples_per_pattern = (self.m_core.m_sample_per_pattern as f32).sqrt() as usize;
         let inv_sqrt = 1.0 / sqrt_samples_per_pattern as f32;
-        let mut rng_ref = &self.m_core.m_rng;
+        let mut rng = StdRng;
         print!("sample patter, {}", self.m_core.m_samples_on_square.len());
 
         for pattern in 0..self.m_core.m_num_pattern
@@ -41,8 +42,8 @@ impl Sampler for MultiJittered
                 for i in 0..sqrt_samples_per_pattern
                 {
                     self.m_core.m_samples_on_square[pattern][i * sqrt_samples_per_pattern + j] =
-                        (Vector2::new((j as f32 + rng_ref.gen_range(0.0, 1.0)) * inv_sqrt.powf(2.0),
-                                      (i as f32 + rng_ref.gen_range(0.0, 1.0)) * inv_sqrt.powf(2.0)));
+                        (Vector2::new((j as f32 + rng.gen_range(0.0, 1.0)) * inv_sqrt.powf(2.0),
+                                      (i as f32 + rng.gen_range(0.0, 1.0)) * inv_sqrt.powf(2.0)));
                 }
             }
         }
