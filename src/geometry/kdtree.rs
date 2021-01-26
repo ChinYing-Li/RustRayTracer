@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use cgmath::{Vector3, Zero, ElementWise, Array};
+use cgmath::{Vector3, Zero, ElementWise};
 use std::cmp::{max, min, Ordering};
 use crate::geometry::kdtree::EdgeType::{ET_start, ET_end};
 use std::f32::INFINITY;
@@ -12,13 +12,12 @@ use obj::Obj;
 
 use crate::world::shaderec::ShadeRec;
 use crate::ray::Ray;
-use crate::geometry::trimesh::{TriMesh, MeshTriangle};
+use crate::geometry::trimesh::TriMesh;
 use crate::material::Material;
 use crate::utils::color::Colorf;
 use crate::geometry::{Boundable, Geometry, GeomError, BoundedConcrete, Shadable};
 use crate::geometry::bbox::BBox;
 use std::ptr::null;
-use cgmath::num_traits::real::Real;
 
 // TODO: Fix fatal bugs in this implementation
 /// KDTree is implemented for accelerating ray tracing. The implementation takes reference from

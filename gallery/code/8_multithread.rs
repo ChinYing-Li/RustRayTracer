@@ -17,6 +17,8 @@ use raytracer::ray::Ray;
 use raytracer::world::shaderec::ShadeRec;
 use raytracer::output::imagewriter::ImageWriter;
 use raytracer::output::OutputManager;
+use raytracer::camera::pinhole::Pinhole;
+use raytracer::camera::Camera;
 use raytracer::material::phong::Phong;
 use raytracer::material::glossyreflector::GlossyReflector;
 use raytracer::brdf::lambertian::Lambertian;
@@ -32,17 +34,17 @@ use raytracer::sampler::mutijittered::MultiJittered;
 use raytracer::sampler::Sampler;
 use raytracer::geometry::cuboid::Cuboid;
 use raytracer::geometry::instance::Instance;
+use raytracer::geometry::trimesh::{TriMesh, MeshTriangle, create_meshtriangles};
+use raytracer::geometry::kdtree::KDTree;
+use raytracer::geometry::Shadable;
 use std::path::Path;
 use rand::rngs::ThreadRng;
 use rand::{thread_rng, Rng};
-use raytracer::render::cam::pinhole::Pinhole;
-use raytracer::render::cam::Camera;
-use raytracer::render::renderbuffer::RenderBuffer;
-use raytracer::utils::multithread::MultiThread;
-use std::time::Instant;
 
 fn main()
 {
+    let tracer = Whitted::new();
+
     let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(MultiJittered::new(32, 3))));
     let vp_hres = 800;
     let vp_vres = 600;
@@ -51,13 +53,15 @@ fn main()
     boxed_vp.m_pixsize = 0.5;
     boxed_vp.set_gamma(1.8);
 
-    let mut imgwriter = ImageWriter::new("4_bunny.jpg", vp_hres as usize, vp_vres as usize);
+    let mut imgwriter = ImageWriter::new("4_bunny.jpg", vp_hres, vp_vres);
     let mut world = World::new(boxed_vp, "whitted");
 
     let mut sphere = Arc::new(Mutex::new(Sphere::new(10.0,
-                                                     Vector3::new(0.0, 0.0, 5.0))));
+                                                     Vector3::new(0.0, 0.0, 5.0),
+                                                     Colorf::new(0.0, 1.0, 0.0))));
     let mut cuboid = Arc::new(Mutex::new(Cuboid::new(Vector3::new(0.0, 0.0, 0.0),
-                                                     Vector3::new(10.0, 10.0, 10.))));
+                                                     Vector3::new(10.0, 10.0, 10.),
+                                                     Colorf::new(1.0, 0.0, 0.0))));
 
     let mut rng = thread_rng();
 
@@ -125,17 +129,11 @@ fn main()
 
     setUpLights(&mut world);
     let mut ph = setUpCamera();
+    ph.m_distance_from_vp = 100.0;
+    ph.m_zoom = 1.0;
+    ph.m_core.m_exposure_time = 0.05;
     let worldptr = Arc::new(world);
-    let mut buffer = RenderBuffer::new((800, 600), (100, 100));
-    let n_thread = 8;
-    let mut multithread = MultiThread::new(n_thread);
-
-    let start_time = Instant::now();
-    multithread.render_to_buffer(worldptr, &ph, &mut buffer);
-    let duration = Instant::now() - start_time;
-    println!("{} milliseconds using {} threads...", duration.as_millis(), n_thread);
-
-    buffer.write(&mut imgwriter);
+    ph.render_scene(worldptr, &mut imgwriter,1.0);
     imgwriter.output();
 }
 
@@ -183,14 +181,25 @@ fn setUpLights(world: &mut World)
     world.set_ambient(Arc::new(ambient));
 }
 
+fn setUpAmbientOccluder(world: &mut World)
+{
+    let mut mj= MultiJittered::new(32, 3);
+    mj.set_map_to_hemisphere(true, 1.0);
+    mj.generate_sample_pattern();
+
+    let mut ambocc = AmbientOccluder::new(0.0, 0.3, Arc::new(mj));
+    ambocc.set_color(COLOR_BLUE);
+    world.add_light(Arc::new(ambocc));
+
+    let mut ambient = Ambient::new(COLOR_WHITE);
+    ambient.set_radiance_scaling_factor(0.1);
+    world.set_ambient(Arc::new(ambient));
+}
+
 fn setUpCamera() -> Pinhole
 {
     let eye = Vector3::new(20.0, 30.0, -100.0);
     let lookat = Vector3::new(20.0, 30.0, 100.0);
     let up = Vector3::new(0.0, 1.0, 0.0);
-    let mut ph = Pinhole::new(eye, lookat, up);
-    ph.m_distance_from_vp = 100.0;
-    ph.set_zoom(1.0);
-    ph.m_core.m_exposure_time = 0.05;
-    ph
+    Pinhole::new(eye, lookat, up)
 }

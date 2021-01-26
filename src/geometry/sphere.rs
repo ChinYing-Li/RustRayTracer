@@ -10,7 +10,6 @@ use std::fmt;
 use crate::utils::color::Colorf;
 use crate::material::Material;
 use std::sync::Arc;
-use std::ops::Deref;
 use crate::geometry::bbox::BBox;
 use std::f32::consts::SQRT_2;
 

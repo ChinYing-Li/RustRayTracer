@@ -31,8 +31,8 @@ impl Sampler for MultiJittered
     {
         let sqrt_samples_per_pattern = (self.m_core.m_sample_per_pattern as f32).sqrt() as usize;
         let inv_sqrt = 1.0 / sqrt_samples_per_pattern as f32;
-        let mut rng_ref = self.m_core.m_rng.borrow_mut().clone();
-        print!("sample patter, {}", self.m_core.m_samples.len());
+        let mut rng_ref = &self.m_core.m_rng;
+        print!("sample patter, {}", self.m_core.m_samples_on_square.len());
 
         for pattern in 0..self.m_core.m_num_pattern
         {
@@ -40,7 +40,7 @@ impl Sampler for MultiJittered
             {
                 for i in 0..sqrt_samples_per_pattern
                 {
-                    self.m_core.m_samples[pattern][i * sqrt_samples_per_pattern + j] =
+                    self.m_core.m_samples_on_square[pattern][i * sqrt_samples_per_pattern + j] =
                         (Vector2::new((j as f32 + rng_ref.gen_range(0.0, 1.0)) * inv_sqrt.powf(2.0),
                                       (i as f32 + rng_ref.gen_range(0.0, 1.0)) * inv_sqrt.powf(2.0)));
                 }
@@ -56,7 +56,7 @@ impl Sampler for MultiJittered
             {
                 for i in 0..sqrt_samples_per_pattern
                 {
-                    self.m_core.m_samples[p][(row * sqrt_samples_per_pattern + i) as usize]
+                    self.m_core.m_samples_on_square[p][(row * sqrt_samples_per_pattern + i) as usize]
                         .add_assign_element_wise(Vector2::new(row as f32 * inv_sqrt, i as f32 * inv_sqrt));
                 }
             }
@@ -80,12 +80,12 @@ impl Sampler for MultiJittered
         self.m_core.set_map_to_hemisphere(flag, e);
     }
 
-    fn get_unit_square_pattern(&self) -> &Vec<Vector2<f32>>
+    fn get_unit_square_pattern(&mut self) -> &Vec<Vector2<f32>>
     {
         self.m_core.get_unit_square_pattern()
     }
 
-    fn get_disk_pattern(&self) -> &Vec<Vector2<f32>>
+    fn get_disk_pattern(&mut self) -> &Vec<Vector2<f32>>
     {
         match self.m_core.get_disk_pattern()
         {
@@ -97,12 +97,12 @@ impl Sampler for MultiJittered
         }
     }
 
-    fn get_disk_sample(&self) -> Vector2<f32>
+    fn get_disk_sample(&mut self) -> Vector2<f32>
     {
         self.m_core.get_disk_sample()
     }
 
-    fn get_hemisphere_pattern(&self) -> &Vec<Vector3<f32>>
+    fn get_hemisphere_pattern(&mut self) -> &Vec<Vector3<f32>>
     {
         match self.m_core.get_hemisphere_pattern()
         {
@@ -111,7 +111,7 @@ impl Sampler for MultiJittered
         }
     }
 
-    fn get_hemisphere_sample(&self) -> Vector3<f32>
+    fn get_hemisphere_sample(&mut self) -> Vector3<f32>
     {
         self.m_core.get_hemisphere_sample()
     }
@@ -137,16 +137,16 @@ mod MultiJitteredTest
         let width = 256;
         let height = 256;
         let imgname = "test/output/MultiJittered_square.jpg";
-        let mut imgwriter = ImageWriter::new(imgname, width as u16, height as u16);
+        let mut imgwriter = ImageWriter::new(imgname, width, height);
 
         let mut sampler = MultiJittered::new(32, 2);
         sampler.generate_sample_pattern();
 
-        for sample in sampler.m_core.m_samples.iter()
+        for sample in sampler.m_core.m_samples_on_square.iter()
         {
             let x = sample.x * (width as f32);
             let y = sample.y * (height as f32);
-            imgwriter.write_pixel(min(x as u16, width -1), min(y as u16, height -1), COLOR_WHITE, INV_GAMMA as f32);
+            imgwriter.write_pixel(min(x, width -1), min(y, height -1), COLOR_WHITE, INV_GAMMA as f32);
         }
         assert_eq!(sampler.get_sample_per_pattern(), 25);
         imgwriter.output();
@@ -158,7 +158,7 @@ mod MultiJitteredTest
         let width = 256;
         let height = 256;
         let imgname = "test/output/MultiJittered_Disk.jpg";
-        let mut imgwriter = ImageWriter::new(imgname, width as u16, height as u16);
+        let mut imgwriter = ImageWriter::new(imgname, width, height);
 
         let mut sampler = MultiJittered::new(144, 3);
         sampler.set_map_to_disk(true);
@@ -170,13 +170,13 @@ mod MultiJitteredTest
             println!("sample on disk");
             let x = sample.x * radius + radius;
             let y = sample.y * radius + radius;
-            imgwriter.write_pixel(min(x as u16, width-1), min(y as u16, height-1), COLOR_WHITE, INV_GAMMA as f32);
+            imgwriter.write_pixel(min(x, width-1), min(y, height-1), COLOR_WHITE, INV_GAMMA as f32);
         }
 
         for theta in 0..360
         {
-            imgwriter.write_pixel((radius * (theta as f32 * INV_PI).cos() + radius) as u16,
-                                  (radius * (theta as f32 * INV_PI).sin() + radius) as u16,
+            imgwriter.write_pixel((radius * (theta as f32 * INV_PI).cos() + radius) as usize,
+                                  (radius * (theta as f32 * INV_PI).sin() + radius) as usize,
                                     COLOR_GREEN, INV_GAMMA as f32);
         }
         imgwriter.output();
@@ -188,25 +188,28 @@ mod MultiJitteredTest
         let width = 256;
         let height = 256;
         let imgname = "test/output/MultiJittered_Hemisphere.jpg";
-        let mut imgwriter = ImageWriter::new(imgname, width as u16, height as u16);
+        let mut imgwriter = ImageWriter::new(imgname, width, height);
 
         let mut sampler = MultiJittered::new(256, 2);
         sampler.set_map_to_hemisphere(true, 1.0);
         sampler.generate_sample_pattern();
 
         let radius = (min(width, height) / 2 - 2 ) as f32;
-        for sample in sampler.m_core.m_samples_on_hemisphere.unwrap().iter()
+        for pattern in sampler.m_core.m_samples_on_hemisphere.iter()
         {
-            println!("sample on hemisphere");
-            let x = sample.x * radius + radius;
-            let y = sample.y * radius + radius;
-            imgwriter.write_pixel(x as u16, y as u16, COLOR_WHITE, INV_GAMMA as f32);
+            for sample in pattern.iter()
+            {
+                println!("sample on hemisphere");
+                let x = sample.x * radius + radius;
+                let y = sample.y * radius + radius;
+                imgwriter.write_pixel(x as usize, y as usize, COLOR_WHITE, INV_GAMMA as f32);
+            }
         }
 
         for theta in 0..360
         {
-            imgwriter.write_pixel((radius * (theta as f32 * INV_PI).cos() + radius) as u16,
-                                  (radius * (theta as f32 * INV_PI).sin() + radius) as u16,
+            imgwriter.write_pixel((radius * (theta as f32 * INV_PI).cos() + radius) as usize,
+                                  (radius * (theta as f32 * INV_PI).sin() + radius) as usize,
                                   COLOR_GREEN, INV_GAMMA as f32);
         }
         imgwriter.output();

@@ -14,12 +14,12 @@ pub mod tracer;
 pub mod utils;
 pub mod world;
 
-extern crate enum_set as enum_set;
-extern crate rand;
-extern crate obj;
 extern crate arrayvec;
+extern crate enum_set as enum_set;
+extern crate obj;
+extern crate rand;
+extern crate time;
 extern crate scoped_threadpool;
-#[macro_use]
 extern crate image;
 extern crate cgmath;
 extern crate approx;

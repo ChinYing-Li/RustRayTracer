@@ -5,11 +5,11 @@ use crate::{render::cam::{CamStruct, Camera},
             ray::Ray,
             world::world::World};
 use crate::utils::colorconstant::COLOR_BLACK;
-use crate::tracer::Tracer;
 use crate::output::OutputManager;
 use cgmath::num_traits::Inv;
 use crate::render::renderbuffer::RenderBuffer;
-use crate::render::renderdata::Subregion;
+use crate::render::renderdata::RenderMeta;
+use crate::utils::color::Colorf;
 
 
 pub struct Pinhole
@@ -74,19 +74,19 @@ impl Camera for Pinhole
         }
     }
 
-    fn render(&mut self, world_ptr: Arc<World>, buffer: &mut RenderBuffer, subregion: &Subregion)
+    fn render(&self, world_ptr: Arc<World>, rendermeta: &RenderMeta) -> Vec<Colorf>
     {
         let mut clr = COLOR_BLACK;
         let vp = world_ptr.m_viewplaneptr.as_ref();
         let mut ray = Ray::new(self.m_core.m_eye, Vector3::new(0.0, 0.0, 1.0));
         let mut actual_sample_point = Vector2::zero();
-        let start_coords = subregion.get_start_coords();
-        let end_coords = subregion.get_end_coords();
-        let mut samples = Vec::with_capacity(subregion.m_area);
+        let start_coords = rendermeta.get_start_coords();
+        let end_coords = rendermeta.get_end_coords();
+        let mut samples = Vec::with_capacity(rendermeta.m_area);
 
-        for x in start_coords.x..end_coords.x
+        for x in start_coords.0..end_coords.0
         {
-            for y in start_coords.y..end_coords.y
+            for y in start_coords.1..end_coords.1
             {
                 clr = COLOR_BLACK;
 
@@ -109,7 +109,7 @@ impl Camera for Pinhole
                 samples.push(clr);
             }
         }
-        buffer.write(&samples, 0, 0);
+        samples
     }
 
     fn set_zoom(&mut self, zoom: f32)

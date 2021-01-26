@@ -1,9 +1,10 @@
-pub mod kdtree;
-pub mod instance;
-pub mod trimesh;
-pub mod triangle;
 pub mod cuboid;
 pub mod bbox;
+pub mod kdtree;
+pub mod instance;
+pub mod meshtriangle;
+pub mod trimesh;
+pub mod triangle;
 pub mod sphere;
 // pub mod kdtree_backup;
 
@@ -42,7 +43,7 @@ impl fmt::Display for GeomError
     }
 }
 
-pub trait Geometry: fmt::Debug
+pub trait Geometry: fmt::Debug + Send + Sync
 {
     fn hit(&self, incomeray: &Ray, time: &mut f32, shaderecord: &mut ShadeRec) -> Result<bool, GeomError>;
 }

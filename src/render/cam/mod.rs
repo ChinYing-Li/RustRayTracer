@@ -12,7 +12,8 @@ use crate::{world::world::World,
             tracer::Tracer,
             output::OutputManager};
 use crate::render::renderbuffer::RenderBuffer;
-use crate::render::renderdata::Subregion;
+use crate::render::renderdata::RenderMeta;
+use crate::utils::color::Colorf;
 
 type Point3<T> = Vector3<T>;
 
@@ -66,8 +67,9 @@ impl CamStruct
 pub trait Camera
 {
     fn get_ray_direction(&self, vp_coords: Vector2<f32>) -> Vector3<f32>;
+    // TODO: remove render_scene, as it directly writes to OutputManager
     fn render_scene<'a>(&mut self, worldptr: Arc<World>, outmgr: &'a mut dyn OutputManager);
-    fn render(&mut self, world_ptr: Arc<World>, buffer: &mut RenderBuffer, subregion: &Subregion);
+    fn render(&self, world_ptr: Arc<World>, rendermeta: &RenderMeta) -> Vec<Colorf>;
     fn set_zoom(&mut self, zoom: f32);
     fn get_zoom(&mut self) -> f32;
 }
