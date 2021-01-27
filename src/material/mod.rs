@@ -11,7 +11,7 @@ use std::error::Error;
 use crate::world::shaderec::ShadeRec;
 use crate::utils::color::Colorf;
 
-pub trait Material
+pub trait Material: Send + Sync
 {
     fn shade(&self, sr: &mut ShadeRec) -> Colorf;
     fn area_light_shade(&self, sr: &mut ShadeRec) -> Colorf;

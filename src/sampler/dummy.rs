@@ -20,6 +20,11 @@ impl Sampler for DummySampler
         unimplemented!()
     }
 
+    fn get_sample_per_pattern(&self) -> usize
+    {
+        1
+    }
+
     fn set_map_to_disk(&mut self, flag: bool) {
         unimplemented!()
     }
@@ -28,24 +33,24 @@ impl Sampler for DummySampler
         unimplemented!()
     }
 
-    fn get_unit_square_pattern(&mut self) -> &Vec<Vector2<f32>>
+    fn get_unit_square_pattern(&self) -> &Vec<Vector2<f32>>
     {
         unimplemented!()
     }
 
-    fn get_disk_pattern(&mut self) -> &Vec<Vector2<f32>> {
+    fn get_disk_pattern(&self) -> &Vec<Vector2<f32>> {
         unimplemented!()
     }
 
-    fn get_disk_sample(&mut self) -> Vector2<f32> {
+    fn get_disk_sample(&self) -> Vector2<f32> {
         unimplemented!()
     }
 
-    fn get_hemisphere_pattern(&mut self) -> &Vec<Vector3<f32>> {
+    fn get_hemisphere_pattern(&self) -> &Vec<Vector3<f32>> {
         unimplemented!()
     }
 
-    fn get_hemisphere_sample(&mut self) -> Vector3<f32> {
+    fn get_hemisphere_sample(&self) -> Vector3<f32> {
         unimplemented!()
     }
 }

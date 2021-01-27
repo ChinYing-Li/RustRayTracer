@@ -36,7 +36,7 @@ impl Material for GlossyReflector
         let mut w_i = Vector3::zero();
         let mut pdf = 0.0_f32;
 
-        let fr = self.m_glossyspec_brdf.sampleFunc(sr, &mut w_i, &mut w_o, &mut pdf);
+        let fr = self.m_glossyspec_brdf.sample_func(sr, &mut w_i, &mut w_o, &mut pdf);
         let reflected_ray = Ray::new(sr.m_hitpoint, w_i);
 
         clr += fr * sr.m_worldptr.m_tracer.trace_ray(sr.m_worldptr.clone(), &reflected_ray, sr.m_depth +1)
@@ -51,7 +51,7 @@ impl Material for GlossyReflector
         let mut w_i = Vector3::zero();
         let mut pdf = 0.0_f32;
 
-        let fr = self.m_glossyspec_brdf.sampleFunc(sr,&mut w_i, &mut w_o, &mut pdf);
+        let fr = self.m_glossyspec_brdf.sample_func(sr, &mut w_i, &mut w_o, &mut pdf);
         let reflected_ray = Ray::new(sr.m_hitpoint, w_i);
 
         clr += fr * sr.m_worldptr.clone().m_tracer.trace_ray(sr.m_worldptr.clone(), &reflected_ray, sr.m_depth +1)

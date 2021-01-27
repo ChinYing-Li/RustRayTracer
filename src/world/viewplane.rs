@@ -90,8 +90,8 @@ mod ViewPlaneTest
     #[test]
     fn testCoordinateIsValid()
     {
-        let sampler = MultiJittered::new(16, 3);
-        let mut vp = ViewPlane::new(Arc::new(sampler));
+        let sampler = Arc::new(MultiJittered::new(16, 3));
+        let mut vp = ViewPlane::new(sampler);
         vp.m_hres = 500;
         vp.m_vres = 300;
         assert!(!vp.is_coordinates_valid(501, 14));
@@ -100,8 +100,8 @@ mod ViewPlaneTest
     #[test]
     fn testGetCoordinate()
     {
-        let sampler = MultiJittered::new(16, 3);
-        let mut vp = ViewPlane::new(Arc::new(sampler));
+        let sampler = Arc::new(MultiJittered::new(16, 3));
+        let mut vp = ViewPlane::new(sampler);
         vp.m_hres = 500;
         vp.m_vres = 300;
         vp.m_pixsize = 0.5;

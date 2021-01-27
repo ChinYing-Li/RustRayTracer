@@ -43,7 +43,9 @@ use std::time::Instant;
 
 fn main()
 {
-    let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(MultiJittered::new(32, 3))));
+    let sampler = MultiJittered::new(32, 3);
+    let sampler_ptr = Arc::new(sampler);
+    let mut boxed_vp = Box::new(ViewPlane::new(sampler_ptr.clone()));
     let vp_hres = 800;
     let vp_vres = 600;
     boxed_vp.m_hres = vp_hres;
@@ -51,7 +53,7 @@ fn main()
     boxed_vp.m_pixsize = 0.5;
     boxed_vp.set_gamma(1.8);
 
-    let mut imgwriter = ImageWriter::new("4_bunny.jpg", vp_hres as usize, vp_vres as usize);
+    let mut imgwriter = ImageWriter::new("8_multhreading.jpg", vp_hres as usize, vp_vres as usize);
     let mut world = World::new(boxed_vp, "whitted");
 
     let mut sphere = Arc::new(Mutex::new(Sphere::new(10.0,
@@ -92,21 +94,24 @@ fn main()
         .map(|x| setUpMaterial(rng.gen_range(0.0, 1.0) * (*x) as f32,
                                rng.gen_range(0.0, 1.0) * (*x) as f32,
                                rng.gen_range(0.0, 1.0) * (*x) as f32,
-                               "matte"))
+                               "matte",
+                               sampler_ptr.clone()))
         .collect::<Vec<Arc<dyn Material>>>();
 
     let phong_materials: Vec<Arc<dyn Material>> = (0..4).collect::<Vec<_>>().iter()
         .map(|x| setUpMaterial(rng.gen_range(0.0, 1.0)* (*x) as f32,
                                rng.gen_range(0.0, 1.0) * (*x) as f32,
                                rng.gen_range(0.0, 1.0)* (*x) as f32,
-                               "phong"))
+                               "phong",
+                        sampler_ptr.clone()))
         .collect::<Vec<Arc<dyn Material>>>();
 
     let glossy_materials: Vec<Arc<dyn Material>> = (0..4).collect::<Vec<_>>().iter()
         .map(|x| setUpMaterial(rng.gen_range(0.0, 1.0)* (*x) as f32,
                                rng.gen_range(0.0, 1.0) * (*x) as f32,
                                rng.gen_range(0.0, 1.0)* (*x) as f32,
-                               "glossy"))
+                               "glossy",
+                                sampler_ptr.clone()))
         .collect::<Vec<Arc<dyn Material>>>();
 
     let mut rand_uint = 0 as u8;
@@ -127,23 +132,26 @@ fn main()
     let mut ph = setUpCamera();
     let worldptr = Arc::new(world);
     let mut buffer = RenderBuffer::new((800, 600), (100, 100));
-    let n_thread = 8;
+    let n_thread = 3;
     let mut multithread = MultiThread::new(n_thread);
 
     let start_time = Instant::now();
-    multithread.render_to_buffer(worldptr, &ph, &mut buffer);
+    // print!("{}", bufferiter.m_queue.len());
+
+    multithread.render_to_buffer(worldptr, &ph, &buffer);
+    println!("{} threads used", multithread.get_thread_count());
     let duration = Instant::now() - start_time;
-    println!("{} milliseconds using {} threads...", duration.as_millis(), n_thread);
+    println!("{} nanoseconds using {} threads...", duration.as_nanos(), n_thread);
 
     buffer.write(&mut imgwriter);
     imgwriter.output();
 }
 
-fn setUpMaterial(r: f32, g: f32, b: f32, material_type: &str) -> Arc<dyn Material>
+fn setUpMaterial(r: f32, g: f32, b: f32, material_type: &str, sampler: Arc<dyn Sampler>) -> Arc<dyn Material>
 {
     let color = Colorf::new(r, g, b);
     let random_lambertian = Arc::new(Lambertian::new(0.5*g, color.clone()));
-    let glossy = Arc::new(GlossySpecular::new(r, color.clone()));
+    let glossy = Arc::new(GlossySpecular::new(r, color.clone(), sampler));
     let phong = Arc::new(Phong::new(random_lambertian.clone(), random_lambertian.clone(),
                                     glossy.clone()));
 

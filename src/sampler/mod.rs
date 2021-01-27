@@ -6,13 +6,15 @@ pub mod dummy;
 use cgmath::{Vector2, Vector3, ElementWise, Zero};
 use std::{f32};
 use cgmath::num_traits::Inv;
-use rand::{Rng, seq::SliceRandom};
+use rand::{seq::SliceRandom, Rng, thread_rng, SeedableRng};
 use std::error::Error;
 use std::fmt;
+use std::sync::RwLock;
+use rand::prelude::StdRng;
 
 type Point2<T> = Vector2<T>;
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 struct SamplerCore
 {
     pub m_sample_per_pattern: usize,
@@ -22,7 +24,7 @@ struct SamplerCore
     m_samples_on_square: Vec<Vec<Vector2<f32>>>,
     m_samples_on_disk: Vec<Vec<Vector2<f32>>>,
     m_samples_on_hemisphere: Vec<Vec<Vector3<f32>>>,
-
+    m_rng: RwLock<StdRng>,
     pub m_shuffled_indices: Vec<u32>,
 }
 
@@ -39,9 +41,8 @@ impl SamplerCore
             m_map_to_hemisphere: false,
             m_samples_on_disk: Vec::with_capacity(num_pattern),
             m_samples_on_hemisphere: Vec::with_capacity(num_pattern),
-
-            m_shuffled_indices: SamplerCore::setup_shuffled_indices(num_pattern, sample_per_pattern),
-            m_rng: StdRng::new(),
+            m_rng: RwLock::new(StdRng::from_rng(thread_rng()).unwrap()),
+            m_shuffled_indices: SamplerCore::setup_shuffled_indices(num_pattern, sample_per_pattern)
         }
     }
 
@@ -70,43 +71,45 @@ impl SamplerCore
         }
     }
 
-    fn get_unit_square_pattern(&mut self) -> &Vec<Vector2<f32>>
+    fn get_unit_square_pattern(&self) -> &Vec<Vector2<f32>>
     {
         let pattern_index = self.get_pattern_index();
         &self.m_samples_on_square[pattern_index]
     }
 
-    fn get_disk_pattern(&mut self) -> Result<&Vec<Vector2<f32>>, &str>
+    fn get_disk_pattern(&self) -> Result<&Vec<Vector2<f32>>, &str>
     {
         if !self.m_map_to_disk { return Err("Didn't yet generate disk samples") }
         let pattern_index = self.get_pattern_index();
         Ok(&self.m_samples_on_disk[pattern_index])
     }
 
-    fn get_disk_sample(&mut self) -> Vector2<f32>
+    fn get_disk_sample(&self) -> Vector2<f32>
     {
         if self.m_samples_on_disk.len() != 0
         {
             let pattern_index = self.get_pattern_index();
-            let sample_index = self.m_rng.gen::<usize>() % self.m_sample_per_pattern;
+            let sample_index = self.m_rng.write().unwrap()
+                .gen::<usize>() % self.m_sample_per_pattern;
             self.m_samples_on_disk[pattern_index][sample_index]
         }
         else { panic!("Didn't yet generate hemisphere samples") }
     }
 
-    fn get_hemisphere_pattern(&mut self) -> Result<&Vec<Vector3<f32>>, &str>
+    fn get_hemisphere_pattern(&self) -> Result<&Vec<Vector3<f32>>, &str>
     {
         if !self.m_map_to_hemisphere { return Err("") }
         let pattern_index = self.get_pattern_index();
         Ok(&self.m_samples_on_hemisphere[pattern_index])
     }
 
-    fn get_hemisphere_sample(&mut self) -> Vector3<f32>
+    fn get_hemisphere_sample(&self) -> Vector3<f32>
     {
         if self.m_samples_on_hemisphere.len() != 0
         {
             let pattern_index = self.get_pattern_index();
-            let sample_index = self.m_rng.gen::<usize>() % self.m_sample_per_pattern;
+            let sample_index = self.m_rng.write().unwrap()
+                .gen::<usize>() % self.m_sample_per_pattern;
             self.m_samples_on_hemisphere[pattern_index][sample_index]
         }
         else { panic!("Didn't yet generate hemisphere samples") }
@@ -116,13 +119,13 @@ impl SamplerCore
     {
         assert_eq!(self.m_samples_on_square.len(), self.m_num_pattern);
         assert_eq!(self.m_samples_on_square[0].len(), self.m_sample_per_pattern);
-        let mut rng = rand::thread_rng();
 
         for i in 0..self.m_num_pattern
         {
             for j in 0..self.m_sample_per_pattern
             {
-                let target_sample_index = rng.gen::<usize>() % self.m_sample_per_pattern;
+                let target_sample_index = self.m_rng.write().unwrap()
+                    .gen::<usize>() % self.m_sample_per_pattern;
                 let temp = self.m_samples_on_square[i][j].x;
                 self.m_samples_on_square[i][j].x = self.m_samples_on_square[i][target_sample_index].x;
                 self.m_samples_on_square[i][target_sample_index].x = temp;
@@ -145,7 +148,7 @@ impl SamplerCore
         {
             for j in 0..self.m_sample_per_pattern
             {
-                let target_sample_index = self.m_rng.gen::<usize>() % self.m_sample_per_pattern;
+                let target_sample_index = self.m_rng.write().unwrap().gen::<usize>() % self.m_sample_per_pattern;
                 let temp = self.m_samples_on_square[i][j].y;
                 self.m_samples_on_square[i][j].y = self.m_samples_on_square[i][target_sample_index].y;
                 self.m_samples_on_square[i][target_sample_index].y = temp;
@@ -252,23 +255,23 @@ impl SamplerCore
             .collect();
     }
 
-    fn get_pattern_index(&mut self) -> usize
+    fn get_pattern_index(&self) -> usize
     {
-        self.m_rng.gen::<usize>() % self.m_num_pattern
+        self.m_rng.write().unwrap().gen::<usize>() % self.m_num_pattern
     }
 }
 
 pub trait Sampler: Send + Sync
 {
     fn generate_sample_pattern(&mut self);
-    fn get_sample_per_pattern(&mut self) -> usize { 1 }
+    fn get_sample_per_pattern(&self) -> usize;
     fn set_map_to_disk(&mut self, flag: bool);
     fn set_map_to_hemisphere(&mut self, flag: bool, e: f32);
-    fn get_unit_square_pattern(&mut self) -> &Vec<Vector2<f32>>;
-    fn get_disk_pattern(&mut self) -> &Vec<Vector2<f32>>;
-    fn get_disk_sample(&mut self) -> Vector2<f32>;
-    fn get_hemisphere_pattern(&mut self) -> &Vec<Vector3<f32>>;
-    fn get_hemisphere_sample(&mut self) -> Vector3<f32>;
+    fn get_unit_square_pattern(&self) -> &Vec<Vector2<f32>>;
+    fn get_disk_pattern(&self) -> &Vec<Vector2<f32>>;
+    fn get_disk_sample(&self) -> Vector2<f32>;
+    fn get_hemisphere_pattern(&self) -> &Vec<Vector3<f32>>;
+    fn get_hemisphere_sample(&self) -> Vector3<f32>;
 }
 
 impl fmt::Debug for dyn Sampler

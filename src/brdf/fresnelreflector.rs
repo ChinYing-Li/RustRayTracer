@@ -34,7 +34,7 @@ impl BRDF for FresnelReflector
 
     /// For computing the direction of the reflected ray
     ///
-    fn sampleFunc(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>, pdf: &mut f32) -> Colorf
+    fn sample_func(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>, pdf: &mut f32) -> Colorf
     {
         let n_dot_w_o = sr.m_normal.dot(*w_o);
         let new_w_i = -*w_o + sr.m_normal.mul_element_wise(n_dot_w_o * 2.0);

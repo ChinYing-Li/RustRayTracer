@@ -62,7 +62,7 @@ impl BRDF for PerfectTransmitter
 
     /// For computing the direction of the reflected ray
     ///
-    fn sampleFunc(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>, pdf: &mut f32) -> Colorf {
+    fn sample_func(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>, pdf: &mut f32) -> Colorf {
         unimplemented!()
     }
 

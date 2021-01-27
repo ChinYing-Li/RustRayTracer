@@ -1,16 +1,13 @@
 use cgmath::{Vector2, Vector3};
-use rand::Rng;
-use rand::rngs::ThreadRng;
-use std::borrow::BorrowMut;
-use std::cell::RefCell;
 
 use crate::sampler::{Sampler, SamplerCore};
+use rand::prelude::StdRng;
+use rand::{Rng, thread_rng, SeedableRng};
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Jittered
 {
     m_core: SamplerCore,
-    m_rng: RefCell<ThreadRng>,
 }
 
 impl Jittered
@@ -22,7 +19,6 @@ impl Jittered
         Jittered
         {
             m_core: core,
-            m_rng: RefCell::new(rand::thread_rng()),
         }
     }
 }
@@ -33,7 +29,7 @@ impl Sampler for Jittered
     {
         let sqrt_sample_per_pattern = (self.m_core.m_sample_per_pattern as f32).sqrt() as usize;
         let inv_sqrt = 1.0 / sqrt_sample_per_pattern as f32;
-        let mut rng_ref = self.m_rng.borrow_mut();
+        let mut rng = thread_rng();
 
         for pattern in 0..self.m_core.m_num_pattern
         {
@@ -41,8 +37,8 @@ impl Sampler for Jittered
             {
                 for j in 0..sqrt_sample_per_pattern
                 {
-                    self.m_core.m_samples_on_square[pattern][i * sqrt_sample_per_pattern + j] = Vector2::new(i as f32 * inv_sqrt + rng_ref.gen_range(0.0, inv_sqrt),
-                                                                                                             j as f32 * inv_sqrt + rng_ref.gen_range(0.0, inv_sqrt));
+                    self.m_core.m_samples_on_square[pattern][i * sqrt_sample_per_pattern + j] = Vector2::new(i as f32 * inv_sqrt + rng.gen_range(0.0, inv_sqrt),
+                                                                                                             j as f32 * inv_sqrt + rng.gen_range(0.0, inv_sqrt));
                 }
             }
         }
@@ -64,12 +60,12 @@ impl Sampler for Jittered
         self.m_core.set_map_to_hemisphere(flag, e);
     }
 
-    fn get_unit_square_pattern(&mut self) -> &Vec<Vector2<f32>>
+    fn get_unit_square_pattern(&self) -> &Vec<Vector2<f32>>
     {
         self.m_core.get_unit_square_pattern()
     }
 
-    fn get_disk_pattern(&mut self) -> &Vec<Vector2<f32>>
+    fn get_disk_pattern(&self) -> &Vec<Vector2<f32>>
     {
         match self.m_core.get_disk_pattern()
         {
@@ -78,12 +74,12 @@ impl Sampler for Jittered
         }
     }
 
-    fn get_disk_sample(&mut self) -> Vector2<f32>
+    fn get_disk_sample(&self) -> Vector2<f32>
     {
         self.m_core.get_disk_sample()
     }
 
-    fn get_hemisphere_pattern(&mut self) -> &Vec<Vector3<f32>>
+    fn get_hemisphere_pattern(&self) -> &Vec<Vector3<f32>>
     {
         match self.m_core.get_hemisphere_pattern()
         {
@@ -92,7 +88,7 @@ impl Sampler for Jittered
         }
     }
 
-    fn get_hemisphere_sample(&mut self) -> Vector3<f32>
+    fn get_hemisphere_sample(&self) -> Vector3<f32>
     {
         self.m_core.get_hemisphere_sample()
     }
