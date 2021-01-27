@@ -28,7 +28,7 @@ pub struct GlossySpecular
 
 impl GlossySpecular
 {
-    pub fn new(kd: f32, colord: Colorf, sampler: &Arc<dyn Sampler>) -> GlossySpecular
+    pub fn new(kd: f32, colord: Colorf, sampler: Arc<dyn Sampler>) -> GlossySpecular
     {
         GlossySpecular
         {
@@ -37,7 +37,7 @@ impl GlossySpecular
             m_ks: 0.0,
             m_colors: COLOR_RED,
             m_exp: 1.0,
-            m_samplerptr: sampler.clone(),
+            m_samplerptr: sampler,
         }
     }
 

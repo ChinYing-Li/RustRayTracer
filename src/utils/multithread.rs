@@ -9,7 +9,6 @@ use crate::render::cam::Camera;
 use crate::utils::computequeue::ComputeQueue;
 use cgmath::{Vector2, Vector3};
 use crate::render::renderbuffer::RenderBuffer;
-use crate::sampler::Sampler;
 use crate::render::renderdata::RenderMeta;
 
 const BLOCK_DIM: Vector2<u32> = Vector2::new(8, 8);
@@ -29,46 +28,41 @@ impl MultiThread
         }
     }
 
-    // We also need to know the dimensions of the view plane
-    pub fn render_to_buffer(&mut self,
-                        world: Arc<World>,
-                        camera: &dyn Camera,
-                        buffer: &mut RenderBuffer)
+    pub fn get_thread_count(&self) -> u32
     {
-        let vp_hres = 800_usize;
-        let vp_wres = 600_usize;
+        self.m_pool.thread_count()
+    }
 
-        // let queue = ComputeQueue::new(Vector2::new(vp_wres, vp_hres),BLOCK_DIM);
-        // let mut buffer = RenderBuffer::new((vp_hres, vp_wres), (100, 100));
-        let n_thread = self.m_pool.thread_count();
-
+    // We also need to know the dimensions of the view plane
+    pub fn render_to_buffer<'a>(&mut self,
+                                world: Arc<World>,
+                                camera: &dyn Camera,
+                                buffer: &'a RenderBuffer)
+    {
+        let n_threads = self.get_thread_count();
         self.m_pool.scoped(|scoped|
             {
-                for blockmeta in buffer.iter()
+                for _ in 0..n_threads
                 {
-                    scoped.execute(| |
+                    let b = &buffer;
+                    let w = world.clone();
+                    scoped.execute( move ||
                         {
-                            buffer.read(camera.render(world.clone(), &blockmeta.clone()), &blockmeta);
-                        });
+                            work(w, camera, b);
+                        }
+                    );
                 }
-                /*
-                for _ in 0..n_thread
-                {
-                    let q = &queue;
-                    scope.execute(move ||
-                        {
-
-                        });
-                }
-
-                 */
             });
     }
 }
 
-fn work(world: Arc<World>,
-        camera: &dyn Camera,
-        rendermeta: &RenderMeta)
+fn work<'a>(world: Arc<World>,
+            camera: &dyn Camera,
+            buffer: &'a RenderBuffer)
 {
-    camera.render(world, rendermeta);
+    for rendermeta in buffer.iter()
+    {
+        let samples = camera.render(world.clone(), &rendermeta);
+        buffer.read(samples, &rendermeta);
+    }
 }
