@@ -43,7 +43,8 @@ use std::time::Instant;
 
 fn main()
 {
-    let mut boxed_vp = Box::new(ViewPlane::new(Arc::new(MultiJittered::new(32, 3))));
+    let sampler_ptr = Arc::new(MultiJittered::new(32, 3));
+    let mut boxed_vp = Box::new(ViewPlane::new(sampler_ptr.clone()));
     let vp_hres = 800;
     let vp_vres = 600;
     boxed_vp.m_hres = vp_hres;
@@ -92,21 +93,24 @@ fn main()
         .map(|x| setUpMaterial(rng.gen_range(0.0, 1.0) * (*x) as f32,
                                rng.gen_range(0.0, 1.0) * (*x) as f32,
                                rng.gen_range(0.0, 1.0) * (*x) as f32,
-                               "matte"))
+                               "matte",
+                               &sampler_ptr))
         .collect::<Vec<Arc<dyn Material>>>();
 
     let phong_materials: Vec<Arc<dyn Material>> = (0..4).collect::<Vec<_>>().iter()
         .map(|x| setUpMaterial(rng.gen_range(0.0, 1.0)* (*x) as f32,
                                rng.gen_range(0.0, 1.0) * (*x) as f32,
                                rng.gen_range(0.0, 1.0)* (*x) as f32,
-                               "phong"))
+                               "phong",
+                        &sampler_ptr))
         .collect::<Vec<Arc<dyn Material>>>();
 
     let glossy_materials: Vec<Arc<dyn Material>> = (0..4).collect::<Vec<_>>().iter()
         .map(|x| setUpMaterial(rng.gen_range(0.0, 1.0)* (*x) as f32,
                                rng.gen_range(0.0, 1.0) * (*x) as f32,
                                rng.gen_range(0.0, 1.0)* (*x) as f32,
-                               "glossy"))
+                               "glossy",
+                                &sampler_ptr))
         .collect::<Vec<Arc<dyn Material>>>();
 
     let mut rand_uint = 0 as u8;
@@ -139,11 +143,11 @@ fn main()
     imgwriter.output();
 }
 
-fn setUpMaterial(r: f32, g: f32, b: f32, material_type: &str) -> Arc<dyn Material>
+fn setUpMaterial(r: f32, g: f32, b: f32, material_type: &str, sampler: &Arc<dyn Sampler>) -> Arc<dyn Material>
 {
     let color = Colorf::new(r, g, b);
     let random_lambertian = Arc::new(Lambertian::new(0.5*g, color.clone()));
-    let glossy = Arc::new(GlossySpecular::new(r, color.clone()));
+    let glossy = Arc::new(GlossySpecular::new(r, color.clone(), sampler));
     let phong = Arc::new(Phong::new(random_lambertian.clone(), random_lambertian.clone(),
                                     glossy.clone()));
 

@@ -46,9 +46,9 @@ impl MultiThread
             {
                 for blockmeta in buffer.iter()
                 {
-                    scoped.execute(move ||
+                    scoped.execute(| |
                         {
-                            buffer.read(camera.render(world.clone(), &blockmeta), &blockmeta);
+                            buffer.read(camera.render(world.clone(), &blockmeta.clone()), &blockmeta);
                         });
                 }
                 /*

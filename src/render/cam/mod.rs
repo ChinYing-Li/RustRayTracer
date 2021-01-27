@@ -9,7 +9,6 @@ use cgmath::{Vector3,
 use std::{f32,
           sync::Arc};
 use crate::{world::world::World,
-            tracer::Tracer,
             output::OutputManager};
 use crate::render::renderbuffer::RenderBuffer;
 use crate::render::renderdata::RenderMeta;
@@ -64,7 +63,7 @@ impl CamStruct
     }
 }
 
-pub trait Camera
+pub trait Camera: Send + Sync
 {
     fn get_ray_direction(&self, vp_coords: Vector2<f32>) -> Vector3<f32>;
     // TODO: remove render_scene, as it directly writes to OutputManager

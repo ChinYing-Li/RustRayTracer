@@ -40,7 +40,7 @@ impl Material for Reflective
         let mut w_o = -sr.m_ray.m_direction;
         let mut w_i = Vector3::zero();
         let mut dummy = 0.0;
-        let f_reflect = self.m_reflective_brdf.sampleFunc(sr, &mut w_i, &mut w_o, &mut dummy);
+        let f_reflect = self.m_reflective_brdf.sample_func(sr, &mut w_i, &mut w_o, &mut dummy);
         let reflected_ray = Ray::new(sr.m_hitpoint, w_i);
 
         // TODO: Holy crap we are using the tracer of world here!!!

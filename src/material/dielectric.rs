@@ -14,8 +14,8 @@ use crate::brdf::{BRDF,
                   fresneltransmitter::FresnelTransmitter,
                   Transmitter};
 
-/// Calls FresnelReflector::sampleFunc, FresnelTransmitter::total_internal_reflection
-/// and FresnelTransmitter::sampleFunc
+/// Calls FresnelReflector::sample_func, FresnelTransmitter::total_internal_reflection
+/// and FresnelTransmitter::sample_func
 pub struct Dielectric
 {
     m_phong: Arc<Phong>,
@@ -52,7 +52,7 @@ impl Material for Dielectric
         let mut w_i = Vector3::zero();
         let mut w_o = -sr.m_ray.m_direction;
         let mut dummy = 0.0_f32;
-        let fr = BRDF::sampleFunc(self.m_fresnel_brdf.as_ref(), sr, &mut w_i, &mut w_o, &mut dummy);
+        let fr = BRDF::sample_func(self.m_fresnel_brdf.as_ref(), sr, &mut w_i, &mut w_o, &mut dummy);
         let reflected_ray = Ray::new(sr.m_hitpoint, w_i);
 
         let mut t = INFINITY;

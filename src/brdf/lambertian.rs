@@ -7,6 +7,7 @@ use crate::world::shaderec::ShadeRec;
 use crate::sampler::{mutijittered::MultiJittered,
                      Sampler};
 use crate::utils::color::Colorf;
+use std::sync::Arc;
 
 const INV_PI: f32 = 1.0 / PI;
 
@@ -19,7 +20,6 @@ pub struct Lambertian
 {
     m_kd: f32,
     m_colord: Colorf,
-    m_samplerptr: Option<MultiJittered>
 }
 
 impl Lambertian
@@ -30,7 +30,6 @@ impl Lambertian
         {
             m_kd: kd,
             m_colord: colord,
-            m_samplerptr: None,
         }
     }
 
@@ -49,12 +48,12 @@ impl Lambertian
 
 impl BRDF for Lambertian
 {
-    fn func(&self, sr: &ShadeRec, w_i: Vector3<f32>, w_o: Vector3<f32>) -> Colorf
+    fn func(&self, _sr: &ShadeRec, _w_i: Vector3<f32>, _w_o: Vector3<f32>) -> Colorf
     {
         self.m_colord * INV_PI * self.m_kd
     }
 
-    fn sampleFunc(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>, pdf: &mut f32) -> Colorf
+    fn sample_func(&self, sr: &ShadeRec, w_i: &mut Vector3<f32>, w_o: &mut Vector3<f32>, pdf: &mut f32) -> Colorf
     {
         let w = sr.m_normal.normalize();
         let jittered_up = Vector3::new(0.00034, 0.00012, 1.0);

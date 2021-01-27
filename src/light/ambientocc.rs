@@ -1,5 +1,5 @@
 use cgmath::{Vector3, InnerSpace, ElementWise};
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 use std::f32::INFINITY;
 use std::cell::RefCell;
 
@@ -12,9 +12,9 @@ use crate::utils::colorconstant::COLOR_BLACK;
 
 pub struct AmbientOccluder
 {
-    pub m_u: RefCell<Vector3<f32>>,
-    pub m_v: RefCell<Vector3<f32>>,
-    pub m_w: RefCell<Vector3<f32>>,
+    pub m_u: RwLock<Vector3<f32>>,
+    pub m_v: RwLock<Vector3<f32>>,
+    pub m_w: RwLock<Vector3<f32>>,
     m_color: Colorf,
     m_ls: f32,
     pub m_min_color: Colorf,
@@ -27,9 +27,9 @@ impl AmbientOccluder
     {
         AmbientOccluder
         {
-            m_u: RefCell::new(Vector3::unit_x()),
-            m_v: RefCell::new(Vector3::unit_y()),
-            m_w: RefCell::new(Vector3::unit_z()),
+            m_u: RwLock::new(Vector3::unit_x()),
+            m_v: RwLock::new(Vector3::unit_y()),
+            m_w: RwLock::new(Vector3::unit_z()),
             m_color: COLOR_BLACK,
             m_ls: ls,
             m_min_color: min_color,
@@ -51,20 +51,20 @@ impl Light for AmbientOccluder
 {
     fn get_direction(&self, sr: &ShadeRec) -> Vector3<f32>
     {
-        let sample = self.m_samplerptr.get_hemisphere_sample();
-        let result = (self.m_u.borrow().mul_element_wise(sample.x)
-            + self.m_v.borrow().mul_element_wise(sample.y )
-            + self.m_w.borrow().mul_element_wise(sample.z )).normalize();
+        let sample = self.m_samplerptr.as_ref().get_hemisphere_sample();
+        let result = (self.m_u.read().unwrap().mul_element_wise(sample.x)
+            + self.m_v.read().unwrap().mul_element_wise(sample.y )
+            + self.m_w.read().unwrap().mul_element_wise(sample.z )).normalize();
         //println!("{}, {}, {}", result.x, result.y, result.z);
         result
     }
 
     fn L(&self, sr: &ShadeRec) -> Colorf
     {
-        *self.m_w.borrow_mut() = sr.m_normal;
+        *self.m_w.write().unwrap() = sr.m_normal;
         let jittered_up = Vector3::new(0.00031, 1.0, 0.00021).normalize();
-        *self.m_v.borrow_mut() = self.m_w.borrow().cross(jittered_up).normalize();
-        *self.m_u.borrow_mut() = self.m_v.borrow().cross(*self.m_w.borrow()).normalize();
+        *self.m_v.write().unwrap() = self.m_w.read().unwrap().cross(jittered_up).normalize();
+        *self.m_u.write().unwrap() = self.m_v.read().unwrap().cross(*self.m_w.read().unwrap()).normalize();
 
         let shadow_ray = Ray::new(sr.m_hitpoint, self.get_direction(sr));
         if self.is_in_shadow(sr, &shadow_ray)
